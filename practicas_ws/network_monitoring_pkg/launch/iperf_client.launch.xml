@@ -1,0 +1,14 @@
+<?xml version='1.0' ?>
+<launch>
+  <!-- Declare launch argument -->
+  <arg name="server_ip" default="127.0.0.1" description="IP address of the iperf3 server"/>
+
+  <node pkg="network_monitoring_pkg" exec="bandwidth_node" name="bandwidth_node" output="screen">
+    <!-- Load static iperf parameters from YAML -->
+    <param from="$(find-pkg-share network_monitoring_pkg)/config/acoustic_modem.yaml"/>
+    
+    <!-- Override server_ip dynamically from launch argument -->
+    <param name="server_ip" value="$(var server_ip)"/>
+  </node>
+</launch>
+

@@ -1,0 +1,9 @@
+bandwidth_node:
+  ros__parameters:
+    # iperf options grouped in a dictionary for cleaner structure
+    iperf.protocol: "-u"
+    iperf.bandwidth: "20K"
+    iperf.length: "100"
+    iperf.time: "2"
+    iperf.format: "-J"
+
