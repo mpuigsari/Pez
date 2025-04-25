@@ -27,7 +27,7 @@ class PezController:
         # fin_pwm = [rospy.get_param('~fin_default', 231), rospy.get_param('~fin_min', 153.5), rospy.get_param('~fin_max', 307), rospy.get_param('~tail_sens', 25)]
         cam_pwm = [rospy.get_param('~cam_default', 315), rospy.get_param('~cam_min', None), rospy.get_param('~cam_max', None), rospy.get_param('~cam_sens', 25)]
         time_pwm = [rospy.get_param('~time_default', 0.3), rospy.get_param('~time_min', 0.1), rospy.get_param('~time_max', 0.5)]
-
+        self.blend = rospy.get_param('~vel_blend', 0.2)
 
         # Initial control values
         self.tail_pwm = PWMValue(tail_pwm[0], tail_pwm[1], tail_pwm[2], tail_pwm[3])       # [176.1, 303, 434]PWM [30,90,150]º      Ch16
@@ -35,6 +35,9 @@ class PezController:
         self.lat1_pwm = PWMValue(fin_pwm[0], fin_pwm[1], fin_pwm[2], fin_pwm[3])          # [153.5, 231, 307]PWM [45,113,180]º     Ch15
         self.camera_angle = PWMValue(cam_pwm[0], cam_pwm[1], cam_pwm[2], cam_pwm[3])      # [XX, 315, XX]PWM [100,180,260]º        Ch11
         self.timer_movement = PWMValue(time_pwm[0], time_pwm[1], time_pwm[2])
+
+        # Note that during execution tail_pwm.current is an offset for tail_pwm.default
+        # In lat and camera cases default and current are absolute pwm values
 
         self.setup_pwm()
 
@@ -54,12 +57,15 @@ class PezController:
 
     def send_movement(self):
         while not rospy.is_shutdown():
+            # Apply current values
+            tail, fin0, fin1, cam, timer = self.tail_pwm.current, self.lat0_pwm.current,  self.lat1_pwm.current, self.camera_angle.current, self.timer_movement.current
+            
             navigator.set_pwm_channels_values([PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15, PwmChannel.Ch11 ], 
-                                           [self.tail_pwm.current, 
-                                            self.lat0_pwm.current, 
-                                            self.lat1_pwm.current, 
-                                            self.camera_angle.current])
-            time.sleep(self.timer_movement)
+                                           [self.tail_pwm.default + tail, fin0, fin1, cam])
+            time.sleep(timer)
+            navigator.set_pwm_channels_values([PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15, PwmChannel.Ch11 ], 
+                                           [self.tail_pwm.default - tail, fin0, fin1, cam])
+            time.sleep(timer)
         rospy.loginfo("[PezController] Movement thread stopped.")
 
     def controller_callback(self, msg):
@@ -67,7 +73,12 @@ class PezController:
         x = msg.linear.x  # Forward
         y = msg.linear.y  # Left/right
         z = msg.linear.z  # Up/down
+
+        if x != 0: self.set_vel(x)
+        if z != 0: self.up_down(z)
+        self.left_right(y)
         
+
     def minmax(self, value, min_value, max_value):
         """
         Return value clamped. The minimum between top/current value and the maximum between bottom/current value
@@ -80,7 +91,7 @@ class PezController:
 
     def up_down(self, z):
         if z == 0.0:
-            return # No offset
+            return # Holding current position
         
         # Apply sensitivity scale (sense) to input (z) and added to current value
         offset_0 = self.lat0_pwm.sense * z + self.lat0_pwm.current
@@ -97,6 +108,28 @@ class PezController:
 
 
     def set_vel(self, x):
+        if x == 0.0:
+            return
+
+        # Compute Target PWM and Timer by mapping input x
+
+        s = (x + 1.0) / 2.0                                     # Normalize x [0,1]
+        dt = self.timer_movement.max - self.timer_movement.min  # Range of T (deltaT)
+        target_T = self.timer_movement.max - s * dt             # Target T = max - range * x_norm | x=1 T=min | x=-1 T=max
+
+        Amax = (self.tail_pwm.max - self.tail_pwm.min) / 2.0    # Amplitud range | Maximum amplitud from center
+        k = 1.0 - abs(x)                                        # x=+-1 k=0 A=0 (will be clamped before that case)
+        target_pwm = Amax * k                                   # Amplitud inversed proportional to velocity desired
+
+        # move a fraction toward it each call
+        blend = self.blend  # % of the gap per update
+        self.timer_movement.current += (target_T - self.timer_movement.current) * blend
+        self.tail_pwm.current       += (target_pwm - self.tail_pwm.current) * blend
+
+        # clamp
+        self.timer_movement.current = self.minmax(self.timer_movement.current, self.timer_movement.min, self.timer_movement.max)
+        self.tail_pwm.current = self.minmax(self.tail_pwm.current, 0, Amax)
+
         rospy.loginfo("[PezController] Velocitying.")
 
 
