@@ -40,6 +40,7 @@ class PezController:
         # In lat and camera cases default and current are absolute pwm values
 
         self.setup_pwm()
+        self.sync_flag = True # Flag sync. While computing input message wait for sending output movement
 
         # Start Movement Control Loop ¿Service?
         self.thread = threading.Thread(target=self.send_movement)
@@ -56,10 +57,17 @@ class PezController:
         rospy.loginfo("[PezController] PWM Values Initialized.")
 
     def send_movement(self):
-        while not rospy.is_shutdown():
-            # Apply current values
+        while not rospy.is_shutdown():        
+            """
+            Option 1: While computing values do not send output
+            if self.sync_flag == False: 
+                continue
             tail, fin0, fin1, cam, timer = self.tail_pwm.current, self.lat0_pwm.current,  self.lat1_pwm.current, self.camera_angle.current, self.timer_movement.current
-            
+            """
+            #Option 2: While computing values do not modify output values but maintain previous send
+            if self.sync_flag == True:
+                tail, fin0, fin1, cam, timer = self.tail_pwm.current, self.lat0_pwm.current,  self.lat1_pwm.current, self.camera_angle.current, self.timer_movement.current
+
             navigator.set_pwm_channels_values([PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15, PwmChannel.Ch11 ], 
                                            [self.tail_pwm.default + tail, fin0, fin1, cam])
             time.sleep(timer)
@@ -69,6 +77,8 @@ class PezController:
         rospy.loginfo("[PezController] Movement thread stopped.")
 
     def controller_callback(self, msg):
+        
+        self.sync_flag = False
         # Map Twist linear velocities to PWM signals
         x = msg.linear.x  # Forward
         y = msg.linear.y  # Left/right
@@ -77,6 +87,8 @@ class PezController:
         if x != 0: self.set_vel(x)
         if z != 0: self.up_down(z)
         self.left_right(y)
+        
+        self.sync_flag = True
         
 
     def minmax(self, value, min_value, max_value):
