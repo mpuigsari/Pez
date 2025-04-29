@@ -1,0 +1,25 @@
+# config/pez_params.yaml
+
+tail_pwm:
+  default:       303
+  min:           176
+  max:           434
+
+fins_pwm:
+  default:       231
+  min:           153.5
+  max:           307
+
+timer_movement:
+  default:       0.3
+  min:           0.1
+  max:           0.5
+
+# Tuning for the axis controllers
+tail_max_deflect: 100
+tail_blend:       0.2
+fin_max_deflect:  60
+fin_blend:        0.5
+
+# Velocity blend
+vel_blend:        0.2

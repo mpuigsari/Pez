@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(pez_mov_control)
+project(pez)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   rospy
   std_msgs
+  joy
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -160,10 +162,16 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
  catkin_install_python(PROGRAMS
+   scripts/joystick.py
+   scripts/pez_axis_controller.py
    scripts/movement_ctrl.py
-   scripts/movement_ctrl_axisctrl.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
+
+ install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  FILES_MATCHING PATTERN "*.launch"
+)
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html

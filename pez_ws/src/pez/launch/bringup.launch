@@ -1,0 +1,7 @@
+<launch>
+  <!-- 1) Joystick teleop (joy_node + cmd_vel publisher) -->
+  <include file="$(find pez)/launch/joy_teleop.launch" />
+
+  <!-- 2) Fish movement controller (loads YAML & starts pez_move_controller) -->
+  <include file="$(find pez)/launch/controller.launch" />
+</launch>

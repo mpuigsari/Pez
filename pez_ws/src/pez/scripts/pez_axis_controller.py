@@ -45,7 +45,7 @@ class PezController:
         tail_params = rospy.get_param('~tail_pwm', {'default': 303, 'min': 176, 'max': 434})
         self.tail_pwm = PWMValue(tail_params['default'], tail_params['min'], tail_params['max'])
 
-        fin_params = rospy.get_param('~left_fin_pwm', {'default': 231, 'min': 153.5, 'max': 307})
+        fin_params = rospy.get_param('~fins_pwm', {'default': 231, 'min': 153.5, 'max': 307})
         self.left_fin_pwm = PWMValue(fin_params['default'], fin_params['min'], fin_params['max'])
         self.right_fin_pwm = PWMValue(fin_params['default'], fin_params['min'], fin_params['max'])
 

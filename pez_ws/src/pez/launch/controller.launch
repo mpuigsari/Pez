@@ -1,0 +1,14 @@
+<launch>
+  <!-- Load all PezController params from YAML into the node’s private namespace -->
+  <rosparam
+    file="$(find pez)/config/pez_params.yaml"
+    command="load"
+    ns="pez_controller"/>
+
+  <!-- Launch the movement controller node (it will pick up params from above) -->
+  <node
+    pkg="pez"
+    type="pez_axis_controller.py"
+    name="pez_controller"
+    output="screen"/>
+</launch>
