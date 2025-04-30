@@ -11,14 +11,14 @@ fins_pwm:
   max:           307
 
 timer_movement:
-  default:       0.3
-  min:           0.1
-  max:           0.5
+  default:       0.6
+  min:           0.3
+  max:           1.5
 
 # Tuning for the axis controllers
-tail_max_deflect: 100
+tail_max_deflect: 125
 tail_blend:       0.2
-fin_max_deflect:  60
+fin_max_deflect:  75
 fin_blend:        0.5
 
 # Velocity blend

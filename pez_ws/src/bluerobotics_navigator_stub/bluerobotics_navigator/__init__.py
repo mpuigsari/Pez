@@ -12,7 +12,8 @@ def set_pwm_freq_hz(hz: float):
     print(f"[navigator stub] set_pwm_freq_hz({hz})")
 
 def set_pwm_channels_values(channels, values):
-    print(f"[navigator stub] set_pwm_channels_values({channels},{values})")
+    formatted = [f"{v:.2f}" for v in values]
+    print(f"[navigator stub] set_pwm_channels_values({channels},{formatted})")
 
 def set_pwm_channel_duty_cycle(channel, duty):
     print(f"[navigator stub] set_pwm_channel_duty_cycle({channel},{duty})")

@@ -16,6 +16,7 @@ class JoystickController:
         # Internal state
         self.mode = -1                  # -1=idle, 0=manual
         self.magnet_on = False
+        self.prev_magnet_btn = False
         self.joy_msg = None
         self.lock = threading.Lock()
 
@@ -61,7 +62,7 @@ class JoystickController:
     def init_services(self):
         def make_proxy(name):
             if name:
-                rospy.wait_for_service(name, timeout=5)
+                rospy.wait_for_service(name, timeout=10)
                 
                 return rospy.ServiceProxy(name, Trigger)
             return None
@@ -84,7 +85,7 @@ class JoystickController:
         b = self.joy_msg.buttons
 
         # Start → enter manual mode (0)
-        if self.start_srv and b[self.buttons['start']]:
+        if self.start_srv and b[self.buttons['start']] and self.mode != 0:
             try:
                 self.start_srv()
                 self.mode = 0
@@ -93,7 +94,7 @@ class JoystickController:
                 rospy.logwarn("[JoystickController] start_service failed: %s", e)
 
         # Stop → idle (-1)
-        if self.stop_srv and b[self.buttons['stop']]:
+        if self.stop_srv and b[self.buttons['stop']] and self.mode != -1:
             try:
                 self.stop_srv()
                 self.mode = -1
@@ -102,14 +103,17 @@ class JoystickController:
                 rospy.logwarn("[JoystickController] stop_service failed: %s", e)
 
         # Toggle electromagnet
-        if self.magnet_srv and b[self.buttons['magnet']]:
+        mag_btn = bool(b[self.buttons['magnet']])
+
+        if self.magnet_srv and mag_btn and not self.prev_magnet_btn:
             self.magnet_on = not self.magnet_on
             try:
                 self.magnet_srv()
-                rospy.loginfo("Magnet → %s", self.magnet_on)
+                rospy.loginfo("[JoystickController] Magnet → %s", self.magnet_on)
             except rospy.ServiceException as e:
                 rospy.logwarn("[JoystickController] magnet_service failed: %s", e)
-
+        self.prev_magnet_btn = mag_btn
+        
         # Direct set to manual mode 0
         if b[self.buttons['mode_0']]:
             if self.mode != 0:

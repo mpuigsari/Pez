@@ -7,8 +7,8 @@
             ns="joy_controller"/>
     <node pkg="joy" type="joy_node" name="joy_node" output="screen">
       <param name="dev"             value="/dev/input/js0"/>
-    <param name="deadzone"        value="0.05"/>
-    <param name="autorepeat_rate" value="20"/>
+    <param name="deadzone"        value="0.2"/>
+    <param name="autorepeat_rate" value="10"/>
     </node>
     <node pkg="pez" type="pez_services.py" name="pez_services" output="screen"/>
     <node pkg="pez" type="pez_joy.py" name="joy_controller" output="screen"/>
