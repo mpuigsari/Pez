@@ -182,22 +182,23 @@ class PezController:
                 pwm.current = pwm.clamp(
                     pwm.current + (tgt - pwm.current) * self.vel_blend)
                 
-    def update_fins(self,y,z):
+    def update_fins(self, y, z):
         for pwm, sign_y in [(self.left_fin_pwm, +1), (self.right_fin_pwm, -1)]:
-            # Calculate combined target explicitly:
-            target = pwm.default
-
-            # Dive contribution (hold last dive angle if z=0)
+            dive_component = 0.0
             if z != 0.0:
-                target += z * pwm.deflect
+                # Apply new dive input
+                dive_component = z * pwm.deflect
             else:
-                # hold last dive angle, don't add dive contribution if z==0
-                target += (pwm.current - pwm.default)
+                # Hold current dive deflection (remove last turn contribution)
+                dive_component = pwm.current - pwm.default - sign_y * y * pwm.deflect
 
-            # Turn contribution (always recenter when y=0)
-            target += sign_y * y * pwm.deflect
+            # Turn contribution (always computed)
+            turn_component = sign_y * y * pwm.deflect
 
-            # Blend toward the combined target
+            # Final target
+            target = pwm.default + dive_component + turn_component
+
+            # Blend and clamp
             pwm.current += (target - pwm.current) * pwm.blend
             pwm.current = pwm.clamp(pwm.current)
 
