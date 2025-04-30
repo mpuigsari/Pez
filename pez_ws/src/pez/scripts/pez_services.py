@@ -25,8 +25,8 @@ def handle_toggle_magnet(req):
 
 if __name__ == "__main__":
     rospy.init_node("pez_services")
-    s1 = rospy.Service("start_swim", Trigger, handle_start)
-    s2 = rospy.Service("stop_swim",  Trigger, handle_stop)
-    s3 = rospy.Service("toggle_magnet", Trigger, handle_toggle_magnet)
+    s1 = rospy.Service("teleoperation/start_swim", Trigger, handle_start)
+    s2 = rospy.Service("teleoperation/stop_swim",  Trigger, handle_stop)
+    s3 = rospy.Service("teleoperation/toggle_magnet", Trigger, handle_toggle_magnet)
     rospy.loginfo("Pez services ready: start_swim, stop_swim, toggle_magnet")
     rospy.spin()

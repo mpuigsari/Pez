@@ -6,6 +6,8 @@ import bluerobotics_navigator as navigator
 from bluerobotics_navigator import PwmChannel
 import time
 import threading
+from std_srvs.srv import Trigger, TriggerResponse
+
 
 
 class PWMValue:
@@ -40,11 +42,12 @@ class PezController:
         navigator.set_pwm_freq_hz(50)
 
         namespace = rospy.get_namespace()
-        rospy.Subscriber(namespace + "/cmd_vel", Twist, self.controller_callback)
+        rospy.Subscriber(namespace + "cmd_vel", Twist, self.controller_callback)
 
         # PWM setup via ROS parameters
         tail_params = rospy.get_param('~tail_pwm', {'default': 303, 'min': 176, 'max': 434})
         self.tail_pwm = PWMValue(tail_params['default'], tail_params['min'], tail_params['max'])
+        self.tail_pwm.current = 0
 
         fin_params = rospy.get_param('~fins_pwm', {'default': 231, 'min': 153.5, 'max': 307})
         self.left_fin_pwm = PWMValue(fin_params['default'], fin_params['min'], fin_params['max'])
@@ -69,7 +72,15 @@ class PezController:
         # Thread sync flag
         self.sync_flag = True
 
+        # start/stop gating
+        self.running = False
+        self._srv_start = rospy.Service('teleoperation/start_swim', Trigger, self.handle_start)
+        self._srv_stop  = rospy.Service('teleoperation/stop_swim',  Trigger, self.handle_stop)
+        self.magnet_on = False
+        self._srv_toggle_magnet = rospy.Service("teleoperation/toggle_magnet", Trigger, self.handle_toggle_magnet)
+
         # Start the thread
+        self.exit_event = threading.Event()
         self.thread = threading.Thread(target=self.send_movement)
         self.thread.start()
 
@@ -77,8 +88,43 @@ class PezController:
 
         rospy.loginfo("[PezController] Initialized.")
 
+    
+    def handle_start(self, req):
+        self.running = True
+        rospy.loginfo("[PezController] Received start_swim → running")
+        return TriggerResponse(success=True, message="started")
+
+    def handle_stop(self, req):
+        self.running = False
+        rospy.loginfo("[PezController] Received stop_swim → stopped")
+        # send a single center command so we don’t leave it oscillating
+        navigator.set_pwm_channels_values(
+            [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
+            [self.tail_pwm.default,
+             self.left_fin_pwm.default,
+             self.right_fin_pwm.default])
+        return TriggerResponse(success=True, message="stopped")
+    
+    def handle_toggle_magnet(self, req):
+        # Flip the state
+        self.magnet_on = not self.magnet_on
+        state_str = "ON" if self.magnet_on else "OFF"
+
+        # Log the new state
+        rospy.loginfo(f"[PezController] Magnet toggled → {state_str}")
+
+        # TODO: actually drive the PWM channel for the electromagnet.
+        
+        return TriggerResponse(success=True, message=f"magnet turned {state_str.lower()}"
+        )
+
     def send_movement(self):
-        while not rospy.is_shutdown():
+        rate = rospy.Rate(50)
+        while not rospy.is_shutdown() and not self.exit_event.is_set():
+            if not self.running:
+                rate.sleep()
+                continue
+
             if self.sync_flag:
                 tail = self.tail_pwm.current
                 left_fin = self.left_fin_pwm.current
@@ -137,7 +183,11 @@ class PezController:
 
     def shutdown(self):
         rospy.loginfo("[PezController] Shutting down.")
-        self.thread.join()
+        # signal the thread to exit immediately
+        self.exit_event.set()
+        # give it a moment to wake up
+        self.thread.join(timeout=1.0)
+        rospy.loginfo("[PezController] Shutdown complete.")
 
     def run(self):
         rospy.spin()

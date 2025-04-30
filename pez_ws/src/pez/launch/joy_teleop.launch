@@ -1,21 +1,17 @@
 <launch>
-  <!-- 1) Load all joystick parameters from YAML into the joy_controller namespace -->
-  <rosparam
-    file="$(find pez)/config/joystick_params.yaml"
-    command="load"
-    ns="pez"/>
-
-  <!-- 2) Start the low-level joystick driver -->
-  <node pkg="joy" type="joy_node" name="joy_node" output="screen">
-    <!-- device and filtering still come from YAML if you prefer, -->
-    <!-- you can remove these if you add them to your joystick_params.yaml -->
-    <param name="dev"             value="/dev/input/js0"/>
+  <!-- group everything under /pez -->
+  <group ns="pez">
+  <!-- load params under that same group -->
+  <rosparam file="$(find pez)/config/joystick_params.yaml"
+            command="load"
+            ns="joy_controller"/>
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen">
+      <param name="dev"             value="/dev/input/js0"/>
     <param name="deadzone"        value="0.05"/>
     <param name="autorepeat_rate" value="20"/>
-  </node>
-
-  <!-- 3) Start your modular joystick→cmd_vel & camera node -->
-  <node pkg="pez" type="joystick.py" name="joy_controller" output="screen">
-    <!-- all axes, buttons, scales and service names are loaded from YAML -->
-  </node>
+    </node>
+    <node pkg="pez" type="pez_services.py" name="pez_services" output="screen"/>
+    <node pkg="pez" type="pez_joy.py" name="joy_controller" output="screen"/>
+    
+  </group>
 </launch>

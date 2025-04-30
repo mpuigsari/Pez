@@ -24,7 +24,7 @@ class JoystickController:
         self.pez_camera_float= Float64()
 
         # Subscribe and start timer
-        rospy.Subscriber(self.namespace+self.joy_topic, Joy, self.joy_callback)
+        rospy.Subscriber(self.joy_topic, Joy, self.joy_callback)
         # 10 Hz timer for publishing commands
         rospy.Timer(rospy.Duration(0.1), self.iterate)
 
@@ -32,15 +32,14 @@ class JoystickController:
         rospy.spin()
 
     def load_params(self):
-        self.namespace = rospy.get_namespace()
         # Topics
-        self.joy_topic     = rospy.get_param('~joy_topic', '/joy')
-        self.cmd_vel_topic = rospy.get_param('~cmd_vel_topic', '/cmd_vel')
-        self.camera_topic  = rospy.get_param('~camera_topic', '/camera_control')
+        self.joy_topic     = rospy.get_param('~joy_topic', 'joy')
+        self.cmd_vel_topic = rospy.get_param('~cmd_vel_topic', 'cmd_vel')
+        self.camera_topic  = rospy.get_param('~camera_topic', 'camera_control')
 
         # Axes mapping & scales
-        self.axes   = rospy.get_param('~axes',   {'forward':1,'turn':0,'dive':4,'camera':3})
-        self.scales = rospy.get_param('~scales', {'forward':1.0,'turn':1.0,'dive':1.0,'camera':1.0})
+        self.axes   = rospy.get_param('~axes',   {'forward':4,'turn':0,'dive':1,'camera':6})
+        self.scales = rospy.get_param('~scales', {'forward':1.0,'turn':-1.0,'dive':1.0,'camera':-1.0})
 
         # Buttons mapping
         self.buttons= rospy.get_param('~buttons', {
@@ -56,14 +55,15 @@ class JoystickController:
         self.magnet_srv_name = rospy.get_param('~magnet_service', '')
 
     def init_publishers(self):
-        self.cmd_vel_pub = rospy.Publisher(self.namespace+self.cmd_vel_topic, Twist,   queue_size=1)
-        self.camera_pub  = rospy.Publisher(self.namespace+self.camera_topic,  Float64, queue_size=1)
+        self.cmd_vel_pub = rospy.Publisher(self.cmd_vel_topic, Twist,   queue_size=1)
+        self.camera_pub  = rospy.Publisher(self.camera_topic,  Float64, queue_size=1)
 
     def init_services(self):
         def make_proxy(name):
             if name:
-                rospy.wait_for_service(self.namespace+name, timeout=5)
-                return rospy.ServiceProxy(self.namespace+name, Trigger)
+                rospy.wait_for_service(name, timeout=5)
+                
+                return rospy.ServiceProxy(name, Trigger)
             return None
 
         self.start_srv  = make_proxy(self.start_srv_name)
@@ -88,18 +88,18 @@ class JoystickController:
             try:
                 self.start_srv()
                 self.mode = 0
-                rospy.loginfo("Mode → %d (manual)", self.mode)
+                rospy.loginfo("[JoystickController] Mode → %d (manual)", self.mode)
             except rospy.ServiceException as e:
-                rospy.logwarn("start_service failed: %s", e)
+                rospy.logwarn("[JoystickController] start_service failed: %s", e)
 
         # Stop → idle (-1)
         if self.stop_srv and b[self.buttons['stop']]:
             try:
                 self.stop_srv()
                 self.mode = -1
-                rospy.loginfo("Mode → %d (idle)", self.mode)
+                rospy.loginfo("[JoystickController] Mode → %d (idle)", self.mode)
             except rospy.ServiceException as e:
-                rospy.logwarn("stop_service failed: %s", e)
+                rospy.logwarn("[JoystickController] stop_service failed: %s", e)
 
         # Toggle electromagnet
         if self.magnet_srv and b[self.buttons['magnet']]:
@@ -108,13 +108,13 @@ class JoystickController:
                 self.magnet_srv()
                 rospy.loginfo("Magnet → %s", self.magnet_on)
             except rospy.ServiceException as e:
-                rospy.logwarn("magnet_service failed: %s", e)
+                rospy.logwarn("[JoystickController] magnet_service failed: %s", e)
 
         # Direct set to manual mode 0
         if b[self.buttons['mode_0']]:
             if self.mode != 0:
                 self.mode = 0
-                rospy.loginfo("Mode → %d (manual)", self.mode)
+                rospy.loginfo("[JoystickController] Mode → %d (manual)", self.mode)
 
     def process_axes(self):
         # Build the Twist and Float64 commands
@@ -135,7 +135,7 @@ class JoystickController:
             if self.mode == 0:  # manual teleop
                 self.cmd_vel_pub.publish(self.pez_body_cmd)
                 self.camera_pub.publish(self.pez_camera_float)
-                rospy.logdebug("Iterate pub  cmd_vel x=%.2f y=%.2f z=%.2f | cam=%.2f",
+                rospy.logdebug("[JoystickController] Iterate pub  cmd_vel x=%.2f y=%.2f z=%.2f | cam=%.2f",
                     self.pez_body_cmd.linear.x,
                     self.pez_body_cmd.linear.y,
                     self.pez_body_cmd.linear.z,
