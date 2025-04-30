@@ -18,8 +18,9 @@ class PezController:
         navigator.set_pwm_enable(True)
         navigator.set_pwm_freq_hz(50)
 
+        namespace = rospy.get_namespace()
         # Subscribe to /cmd_vel
-        rospy.Subscriber("/cmd_vel", Twist, self.controller_callback)
+        rospy.Subscriber(namespace + "/cmd_vel", Twist, self.controller_callback)
 
         # Parameters declared [default, min, max]
         tail_pwm = [rospy.get_param('~tail_default', 303), rospy.get_param('~tail_min', 303), rospy.get_param('~tail_max', 303), rospy.get_param('~tail_sens', 25)]

@@ -33,13 +33,14 @@ class AxisController:
 
 class PezController:
     def __init__(self):
-        rospy.init_node('pez_move_controller', anonymous=True)
+        rospy.init_node('move_controller', anonymous=True)
 
         navigator.init()
         navigator.set_pwm_enable(True)
         navigator.set_pwm_freq_hz(50)
 
-        rospy.Subscriber("/cmd_vel", Twist, self.controller_callback)
+        namespace = rospy.get_namespace()
+        rospy.Subscriber(namespace + "/cmd_vel", Twist, self.controller_callback)
 
         # PWM setup via ROS parameters
         tail_params = rospy.get_param('~tail_pwm', {'default': 303, 'min': 176, 'max': 434})

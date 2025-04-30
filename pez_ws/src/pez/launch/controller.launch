@@ -3,12 +3,12 @@
   <rosparam
     file="$(find pez)/config/pez_params.yaml"
     command="load"
-    ns="pez_controller"/>
+    ns="pez"/>
 
   <!-- Launch the movement controller node (it will pick up params from above) -->
   <node
     pkg="pez"
     type="pez_axis_controller.py"
-    name="pez_controller"
+    name="move_controller"
     output="screen"/>
 </launch>

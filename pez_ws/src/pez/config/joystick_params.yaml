@@ -1,0 +1,53 @@
+# config/joystick_params.yaml
+
+# Topic names
+joy_topic:     "/joy"
+cmd_vel_topic: "/cmd_vel"
+camera_topic:  "/camera_control"
+
+# Axes mapping (indices into sensor_msgs/Joy.axes)
+axes:
+  forward: 1    # LEFT_STICK vertical
+  turn:    0    # LEFT_STICK horizontal
+  dive:    4    # RIGHT_STICK vertical
+  camera:  3    # RIGHT_STICK horizontal
+
+# Axis scale factors
+scales:
+  forward: 1.0
+  turn:    1.0
+  dive:    1.0
+  camera:  1.0
+
+# Buttons mapping (indices into sensor_msgs/Joy.buttons)
+buttons:
+  start:   7    # OPTIONS / START
+  stop:    6    # SHARE  / BACK
+  magnet:  2    # X button
+  mode_0:  3    # Y button
+
+# Service names (empty = disabled)
+start_service:   "/start_swim"
+stop_service:    "/stop_swim"
+magnet_service:  "/toggle_magnet"
+
+# JOYSTICK DEFINITION (for future reference):
+# LEFT_JOY_HORIZONTAL = 0   # LEFT_STICK horizontal (LEFT+, RIGHT-)
+# LEFT_JOY_VERTICAL   = 1   # LEFT_STICK vertical   (UP+, DOWN-)
+# LEFT_TRIGGER        = 2   # LEFT_TRIGGER         (NOT PRESS 1, PRESS -1)
+# RIGHT_JOY_HORIZONTAL= 3   # RIGHT_STICK horizontal
+# RIGHT_JOY_VERTICAL  = 4   # RIGHT_STICK vertical
+# RIGHT_TRIGGER       = 5   # RIGHT_TRIGGER
+# CROSS_HORIZONTAL    = 6   # D-PAD horizontal
+# CROSS_VERTICAL      = 7   # D-PAD vertical
+# BUTTON_A            = 0
+# BUTTON_B            = 1
+# BUTTON_X            = 2
+# BUTTON_Y            = 3
+# BUTTON_LEFT_BUMPER  = 4
+# BUTTON_RIGHT_BUMPER = 5
+# BUTTON_BACK         = 6
+# BUTTON_START        = 7
+# BUTTON_LOGITECH     = 8
+# BUTTON_LEFT_STICK   = 9
+# BUTTON_RIGHT_STICK  = 10
