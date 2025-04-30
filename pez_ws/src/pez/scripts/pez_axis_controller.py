@@ -16,35 +16,11 @@ class PWMValue:
         self.current = default
         self.min = min_
         self.max = max_
+        self.deflect = 0
+        self.blend = 0
 
     def clamp(self, value):
         return min(max(value, self.min), self.max)
-
-
-class AxisController:
-    def __init__(self, pwm, max_deflect, blend):
-        self.pwm = pwm
-        self.max_deflect = max_deflect
-        self.blend = blend
-
-    def update_hold(self, val, sign=1):
-        """
-        Only move when val≠0; if val==0, leave `current` unchanged.
-        """
-        if val == 0.0:
-            return
-        target = self.pwm.default + sign * val * self.max_deflect
-        self.pwm.current += (target - self.pwm.current) * self.blend
-        self.pwm.current  = self.pwm.clamp(self.pwm.current)
-
-    def update_center(self, val, sign=1):
-        """
-        Always move toward default+val*max_deflect.
-        If val==0, this blends current back toward default.
-        """
-        target = self.pwm.default + sign * val * self.max_deflect
-        self.pwm.current += (target - self.pwm.current) * self.blend
-        self.pwm.current  = self.pwm.clamp(self.pwm.current)
 
 
 class PezController:
@@ -70,7 +46,7 @@ class PezController:
         Amax = min(abs(tail_offset_min), abs(tail_offset_max))
         # Tail offset and amplitude values
         self.tail_offset = PWMValue(0, tail_offset_min, tail_offset_max)  # from turning (y input)
-        self.tail_amplitude = PWMValue(0, 0, Amax) # [10%,100%] Amplitude
+        self.tail_amplitude = PWMValue(0, int(Amax*0.1), Amax) # [10%,100%] Amplitude
         
         #Fins
         fin_params = rospy.get_param('~fins_pwm', {'default': 231, 'min': 153.5, 'max': 307})
@@ -80,17 +56,12 @@ class PezController:
         timer_params = rospy.get_param('~timer_movement', {'default': 0.6, 'min': 0.3, 'max': 1.5})
         self.timer_movement = PWMValue(timer_params['default'], timer_params['min'], timer_params['max'])
 
-        # Axis Controllers via simplified ROS parameters
-        tail_deflect = rospy.get_param('~tail_max_deflect', 125)
-        tail_blend   = rospy.get_param('~tail_blend', 0.2)
-        fin_deflect  = rospy.get_param('~fin_max_deflect', 75)
-        fin_blend    = rospy.get_param('~fin_blend', 0.5)
-        vel_blend = rospy.get_param('~vel_blend', 0.2)
+        self.tail_pwm.deflect = rospy.get_param('~tail_max_deflect', 125)
+        self.tail_pwm.blend   = rospy.get_param('~tail_blend', 0.2)
+        self.left_fin_pwm.deflect = self.right_fin_pwm.deflect = rospy.get_param('~fin_max_deflect', 75)
+        self.left_fin_pwm.blend = self.right_fin_pwm.blend = rospy.get_param('~fin_blend', 0.5)
+        self.vel_blend = rospy.get_param('~vel_blend', 0.2)
 
-        self.left_fin_axis  = AxisController(self.left_fin_pwm, max_deflect=fin_deflect,  blend=fin_blend)
-        self.right_fin_axis = AxisController(self.right_fin_pwm,max_deflect=fin_deflect,  blend=fin_blend)
-        self.tail_offset_axis = AxisController(self.tail_offset,max_deflect=tail_deflect,  blend=tail_blend)
-        self.tail_amplitude_axis = AxisController(self.tail_amplitude,max_deflect=Amax,  blend=vel_blend)
 
 
         # Thread sync flag
@@ -188,16 +159,14 @@ class PezController:
         if x != 0.0:
             self.update_x(x)
         # 2) turning → offset = y
-        self.tail_offset_axis.update_center(y)
+        target = self.tail_offset.default + y * self.tail_pwm.deflect
+        self.tail_offset.current += (target - self.tail_offset.current) * self.tail_pwm.blend
+        self.tail_offset.current  = self.tail_offset.clamp(self.tail_offset.current)
         
         # Fins:
         #   - dive: hold last position if z==0
         #   - turn: auto-center when y==0
-        self.left_fin_axis.update_hold(z)
-        self.left_fin_axis.update_center(y)
-
-        self.right_fin_axis.update_hold  (z)
-        self.right_fin_axis.update_center(y, -1)
+        self.update_fins(y,z)
 
 
         self.sync_flag = True
@@ -211,7 +180,27 @@ class PezController:
             # blend BOTH amplitude & timer by the same vel_blend factor
             for pwm, tgt in ((self.tail_amplitude, amp_t),(self.timer_movement, tim_t)):
                 pwm.current = pwm.clamp(
-                    pwm.current + (tgt - pwm.current) * self.tail_amplitude_axis.blend)
+                    pwm.current + (tgt - pwm.current) * self.vel_blend)
+                
+    def update_fins(self,y,z):
+        for pwm, sign_y in [(self.left_fin_pwm, +1), (self.right_fin_pwm, -1)]:
+            # Calculate combined target explicitly:
+            target = pwm.default
+
+            # Dive contribution (hold last dive angle if z=0)
+            if z != 0.0:
+                target += z * pwm.deflect
+            else:
+                # hold last dive angle, don't add dive contribution if z==0
+                target += (pwm.current - pwm.default)
+
+            # Turn contribution (always recenter when y=0)
+            target += sign_y * y * pwm.deflect
+
+            # Blend toward the combined target
+            pwm.current += (target - pwm.current) * pwm.blend
+            pwm.current = pwm.clamp(pwm.current)
+
 
     def shutdown(self):
         rospy.loginfo("[PezController] Shutting down.")
