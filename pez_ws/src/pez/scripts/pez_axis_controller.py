@@ -11,16 +11,18 @@ from std_srvs.srv import Trigger, TriggerResponse
 
 
 class PWMValue:
-    def __init__(self, default, min_, max_):
+    def __init__(self, default, min_, max_, deflect_= 0, blend_= 0 ):
         self.default = default
         self.current = default
         self.min = min_
         self.max = max_
-        self.deflect = 0
-        self.blend = 0
+        self.deflect = deflect_
+        self.blend = blend_
 
     def clamp(self, value):
         return min(max(value, self.min), self.max)
+    def clamp_deflect(self, v):
+        return min(max(v, -self.deflect), self.deflect)
 
 
 class PezController:
@@ -46,7 +48,7 @@ class PezController:
         Amax = min(abs(tail_offset_min), abs(tail_offset_max))
         # Tail offset and amplitude values
         self.tail_offset = PWMValue(0, tail_offset_min, tail_offset_max)  # from turning (y input)
-        self.tail_amplitude = PWMValue(0, int(Amax*0.1), Amax) # [10%,100%] Amplitude
+        self.tail_amplitude = PWMValue(0, 0, Amax) # [10%,100%] Amplitude
         
         #Fins
         fin_params = rospy.get_param('~fins_pwm', {'default': 231, 'min': 153.5, 'max': 307})
@@ -58,11 +60,15 @@ class PezController:
 
         self.tail_pwm.deflect = rospy.get_param('~tail_max_deflect', 125)
         self.tail_pwm.blend   = rospy.get_param('~tail_blend', 0.2)
-        self.left_fin_pwm.deflect = self.right_fin_pwm.deflect = rospy.get_param('~fin_max_deflect', 75)
-        self.left_fin_pwm.blend = self.right_fin_pwm.blend = rospy.get_param('~fin_blend', 0.5)
+        fin_deflect = rospy.get_param('~fin_max_deflect', 75)
+        fin_blend = rospy.get_param('~fin_blend', 0.5)
+        self.left_fin_pwm.deflect = self.right_fin_pwm.deflect = fin_deflect
+        self.left_fin_pwm.blend = self.right_fin_pwm.blend = fin_blend
         self.vel_blend = rospy.get_param('~vel_blend', 0.2)
 
-
+        # Fins Compònents
+        self.fin_dive_ref   = PWMValue(0, -fin_deflect, fin_deflect, blend_=fin_blend, deflect_=fin_deflect)
+        self.fin_turn_off   = PWMValue(0, -fin_deflect, fin_deflect, blend_=fin_blend, deflect_=fin_deflect)
 
         # Thread sync flag
         self.sync_flag = True
@@ -87,8 +93,8 @@ class PezController:
     def handle_start(self, req):
         self.tail_amplitude.current = self.tail_amplitude.default
         self.tail_offset.current = self.tail_offset.default
-        self.right_fin_pwm.current = self.right_fin_pwm.default
-        self.left_fin_pwm.current = self.right_fin_pwm.default
+        self.fin_dive_ref.current   = 0
+        self.fin_turn_off.current   = 0
         
         self.running = True
         rospy.loginfo("[PezController] Received start_swim → running")
@@ -97,8 +103,8 @@ class PezController:
     def handle_stop(self, req):
         self.tail_amplitude.current = self.tail_amplitude.default
         self.tail_offset.current = self.tail_offset.default
-        self.right_fin_pwm.current = self.right_fin_pwm.default
-        self.left_fin_pwm.current = self.right_fin_pwm.default
+        self.fin_dive_ref.current   = 0
+        self.fin_turn_off.current   = 0
 
         self.running = False
         rospy.loginfo("[PezController] Received stop_swim → stopped")
@@ -130,26 +136,26 @@ class PezController:
                 continue
 
             if self.sync_flag:
-                left_fin = self.left_fin_pwm.current
-                right_fin = self.right_fin_pwm.current
-                timer = self.timer_movement.current
-
                 # center swings around default + offset
                 tail_center = self.tail_pwm.default + self.tail_offset.current
                 tail_amp    = self.tail_amplitude.current
 
                 tail_high = self.tail_pwm.clamp(tail_center + tail_amp)
                 tail_low  = self.tail_pwm.clamp(tail_center - tail_amp)
+                # fins
+                lf = self.left_fin_pwm.current
+                rf = self.right_fin_pwm.current
+                t  = self.timer_movement.current
 
                 navigator.set_pwm_channels_values(
                     [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
-                    [tail_high, left_fin, right_fin])
-                time.sleep(timer)
+                    [tail_high, lf, rf])
+                time.sleep(t)
                 if not self.exit_event.is_set():
                     navigator.set_pwm_channels_values(
                         [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
-                        [tail_low, left_fin, right_fin])
-                    time.sleep(timer)
+                        [tail_low, lf, rf])
+                    time.sleep(t)
 
     def controller_callback(self, msg):
         self.sync_flag = False
@@ -183,24 +189,19 @@ class PezController:
                     pwm.current + (tgt - pwm.current) * self.vel_blend)
                 
     def update_fins(self, y, z):
-        for pwm, sign_y in [(self.left_fin_pwm, +1), (self.right_fin_pwm, -1)]:
-            dive_component = 0.0
-            if z != 0.0:
-                # Apply new dive input
-                dive_component = z * pwm.deflect
-            else:
-                # Hold current dive deflection (remove last turn contribution)
-                dive_component = pwm.current - pwm.default - sign_y * y * pwm.deflect
+        # compact blend helper
+        def blend(comp, val):
+            tgt = val * comp.deflect
+            comp.current = comp.clamp_deflect(comp.current + (tgt - comp.current) * comp.blend)
 
-            # Turn contribution (always computed)
-            turn_component = sign_y * y * pwm.deflect
+        # 1) update dive_ref (hold when z==0) and turn_off (auto-center when y==0)
+        if z != 0.0: blend(self.fin_dive_ref, z)
+        blend(self.fin_turn_off, y)
 
-            # Final target
-            target = pwm.default + dive_component + turn_component
-
-            # Blend and clamp
-            pwm.current += (target - pwm.current) * pwm.blend
-            pwm.current = pwm.clamp(pwm.current)
+        # 2) apply both to each fin
+        for pwm, sign in ((self.left_fin_pwm, +1), (self.right_fin_pwm, -1)):
+            tgt = pwm.default + self.fin_dive_ref.current + sign * self.fin_turn_off.current
+            pwm.current = pwm.clamp(pwm.current + (tgt - pwm.current) * pwm.blend)
 
 
     def shutdown(self):
