@@ -10,7 +10,6 @@ RUN rm -f /etc/ros/rosdep/sources.list.d/20-default.list \
  && rosdep init \
  && rosdep update
 
-WORKDIR /root/pez_ws
 
 # copy in your catkin workspace src  
 WORKDIR /root/pez_ws
