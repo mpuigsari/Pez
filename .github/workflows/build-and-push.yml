@@ -25,8 +25,8 @@ jobs:
     - name: Build & Push
       uses: docker/build-push-action@v5
       with:
-        context: pez_ws
+        context: ./pez_ws
         file: docker_pez_ros/Dockerfile
         platforms: linux/arm/v7
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/pez-ros-noetic-nav:arm32v7
+        tags: mapuigsari/pez-ros-noetic-nav:arm32v7
