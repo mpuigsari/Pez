@@ -1,0 +1,34 @@
+[0.299s] Invoking command in '/pez_ws/build/pez_control': PYTHONPATH=/pez_ws/build/pez_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/pez_ws/install/pez_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /pez_ws/build/pez_control/build --no-deps symlink_data
+[0.428s] running develop
+[0.483s] running egg_info
+[0.483s] creating pez_control.egg-info
+[0.483s] writing pez_control.egg-info/PKG-INFO
+[0.484s] writing dependency_links to pez_control.egg-info/dependency_links.txt
+[0.484s] writing entry points to pez_control.egg-info/entry_points.txt
+[0.484s] writing requirements to pez_control.egg-info/requires.txt
+[0.484s] writing top-level names to pez_control.egg-info/top_level.txt
+[0.485s] writing manifest file 'pez_control.egg-info/SOURCES.txt'
+[0.487s] reading manifest file 'pez_control.egg-info/SOURCES.txt'
+[0.489s] writing manifest file 'pez_control.egg-info/SOURCES.txt'
+[0.489s] running build_ext
+[0.489s] Creating /pez_ws/install/pez_control/lib/python3.10/site-packages/pez-control.egg-link (link to .)
+[0.490s] Installing axis_controller script to /pez_ws/install/pez_control/lib/pez_control
+[0.491s] Installing joy_node script to /pez_ws/install/pez_control/lib/pez_control
+[0.491s] Installing pez_services script to /pez_ws/install/pez_control/lib/pez_control
+[0.492s] 
+[0.492s] Installed /pez_ws/build/pez_control
+[0.492s] running symlink_data
+[0.492s] creating /pez_ws/install/pez_control/share
+[0.493s] creating /pez_ws/install/pez_control/share/ament_index
+[0.493s] creating /pez_ws/install/pez_control/share/ament_index/resource_index
+[0.493s] creating /pez_ws/install/pez_control/share/ament_index/resource_index/packages
+[0.493s] symbolically linking /pez_ws/build/pez_control/resource/pez_control -> /pez_ws/install/pez_control/share/ament_index/resource_index/packages
+[0.493s] creating /pez_ws/install/pez_control/share/pez_control
+[0.493s] symbolically linking /pez_ws/build/pez_control/package.xml -> /pez_ws/install/pez_control/share/pez_control
+[0.494s] creating /pez_ws/install/pez_control/share/pez_control/config
+[0.494s] symbolically linking /pez_ws/build/pez_control/config/joystick_params.yaml -> /pez_ws/install/pez_control/share/pez_control/config
+[0.494s] symbolically linking /pez_ws/build/pez_control/config/axis_params.yaml -> /pez_ws/install/pez_control/share/pez_control/config
+[0.494s] symbolically linking /pez_ws/build/pez_control/config/pez.perspective -> /pez_ws/install/pez_control/share/pez_control/config
+[0.496s] creating /pez_ws/install/pez_control/share/pez_control/launch
+[0.496s] error: can't copy '/pez_ws/build/pez_control/launch/pez_launch.py': doesn't exist or not a regular file
+[0.511s] Invoked command in '/pez_ws/build/pez_control' returned '1': PYTHONPATH=/pez_ws/build/pez_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/pez_ws/install/pez_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /pez_ws/build/pez_control/build --no-deps symlink_data

@@ -1,0 +1,33 @@
+[0.013s] Invoking command in '/pez_ws/build/bluerobotics_navigator_stub': /usr/bin/cmake /pez_ws/src/bluerobotics_navigator_stub -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/pez_ws/install/bluerobotics_navigator_stub
+[0.096s] -- The C compiler identification is GNU 11.4.0
+[0.156s] -- The CXX compiler identification is GNU 11.4.0
+[0.166s] -- Detecting C compiler ABI info
+[0.239s] -- Detecting C compiler ABI info - done
+[0.245s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.246s] -- Detecting C compile features
+[0.246s] -- Detecting C compile features - done
+[0.250s] -- Detecting CXX compiler ABI info
+[0.320s] -- Detecting CXX compiler ABI info - done
+[0.328s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.328s] -- Detecting CXX compile features
+[0.328s] -- Detecting CXX compile features - done
+[0.336s] [31mCMake Error at CMakeLists.txt:10 (find_package):
+[0.336s]   By not providing "Findcatkin.cmake" in CMAKE_MODULE_PATH this project has
+[0.337s]   asked CMake to find a package configuration file provided by "catkin", but
+[0.337s]   CMake did not find one.
+[0.337s] 
+[0.337s]   Could not find a package configuration file provided by "catkin" with any
+[0.339s]   of the following names:
+[0.340s] 
+[0.340s]     catkinConfig.cmake
+[0.341s]     catkin-config.cmake
+[0.341s] 
+[0.342s]   Add the installation prefix of "catkin" to CMAKE_PREFIX_PATH or set
+[0.342s]   "catkin_DIR" to a directory containing one of the above files.  If "catkin"
+[0.342s]   provides a separate development package or SDK, be sure it has been
+[0.342s]   installed.
+[0.342s] 
+[0.342s] [0m
+[0.342s] -- Configuring incomplete, errors occurred!
+[0.342s] See also "/pez_ws/build/bluerobotics_navigator_stub/CMakeFiles/CMakeOutput.log".
+[0.343s] Invoked command in '/pez_ws/build/bluerobotics_navigator_stub' returned '1': /usr/bin/cmake /pez_ws/src/bluerobotics_navigator_stub -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/pez_ws/install/bluerobotics_navigator_stub

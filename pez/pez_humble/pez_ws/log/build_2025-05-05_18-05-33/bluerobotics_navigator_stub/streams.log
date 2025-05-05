@@ -1,0 +1,3 @@
+[0.012s] Invoking command in '/pez_ws/build/bluerobotics_navigator_stub': /usr/bin/cmake /pez_ws/bluerobotics_navigator_stub -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/pez_ws/install/bluerobotics_navigator_stub
+[0.016s] [0mCMake Error: The source "/pez_ws/bluerobotics_navigator_stub/CMakeLists.txt" does not match the source "/pez_ws/src/bluerobotics_navigator_stub/CMakeLists.txt" used to generate cache.  Re-run cmake with a different source directory.[0m
+[0.144s] Invoked command in '/pez_ws/build/bluerobotics_navigator_stub' returned '1': /usr/bin/cmake /pez_ws/bluerobotics_navigator_stub -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/pez_ws/install/bluerobotics_navigator_stub

@@ -1,0 +1,19 @@
+[0.321s] Invoking command in '/pez_ws/build/pez_control': PYTHONPATH=/pez_ws/build/pez_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/pez_ws/install/pez_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /pez_ws/build/pez_control/build --no-deps symlink_data
+[0.453s] running develop
+[0.514s] running egg_info
+[0.515s] writing pez_control.egg-info/PKG-INFO
+[0.515s] writing dependency_links to pez_control.egg-info/dependency_links.txt
+[0.515s] writing entry points to pez_control.egg-info/entry_points.txt
+[0.517s] writing requirements to pez_control.egg-info/requires.txt
+[0.517s] writing top-level names to pez_control.egg-info/top_level.txt
+[0.520s] reading manifest file 'pez_control.egg-info/SOURCES.txt'
+[0.523s] writing manifest file 'pez_control.egg-info/SOURCES.txt'
+[0.524s] running build_ext
+[0.524s] Creating /pez_ws/install/pez_control/lib/python3.10/site-packages/pez-control.egg-link (link to .)
+[0.526s] Installing axis_controller script to /pez_ws/install/pez_control/lib/pez_control
+[0.527s] Installing joy_node script to /pez_ws/install/pez_control/lib/pez_control
+[0.527s] 
+[0.528s] Installed /pez_ws/build/pez_control
+[0.528s] running symlink_data
+[0.530s] symbolically linking /pez_ws/build/pez_control/launch/joy_launch.py -> /pez_ws/install/pez_control/share/pez_control/launch
+[0.549s] Invoked command in '/pez_ws/build/pez_control' returned '0': PYTHONPATH=/pez_ws/build/pez_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/pez_ws/install/pez_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /pez_ws/build/pez_control/build --no-deps symlink_data

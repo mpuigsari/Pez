@@ -1,0 +1,1 @@
+[0mCMake Error: The source "/pez_ws/bluerobotics_navigator_stub/CMakeLists.txt" does not match the source "/pez_ws/src/bluerobotics_navigator_stub/CMakeLists.txt" used to generate cache.  Re-run cmake with a different source directory.[0m

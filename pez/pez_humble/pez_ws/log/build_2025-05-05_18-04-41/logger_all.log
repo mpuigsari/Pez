@@ -1,0 +1,148 @@
+[0.098s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--symlink-install']
+[0.098s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=True, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=20, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x7ff0714c6650>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7ff0715cf520>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7ff0715cf520>>, mixin_verb=('build',))
+[0.194s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.195s] INFO:colcon.colcon_metadata.package_discovery.colcon_meta:Using configuration from '/root/.colcon/metadata/default/Gazebo.meta'
+[0.196s] INFO:colcon.colcon_metadata.package_discovery.colcon_meta:Using configuration from '/root/.colcon/metadata/default/fastrtps.meta'
+[0.196s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.196s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.196s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.196s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.197s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.197s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/pez_ws'
+[0.197s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.197s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.197s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.197s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.198s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.198s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.198s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.198s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.198s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.205s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.205s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.205s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.206s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.206s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.206s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.206s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.206s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.206s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.206s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.207s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.207s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.207s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.207s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.208s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src/bluerobotics_navigator_stub) by extensions ['ignore', 'ignore_ament_install']
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src/bluerobotics_navigator_stub) by extension 'ignore'
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src/bluerobotics_navigator_stub) by extension 'ignore_ament_install'
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src/bluerobotics_navigator_stub) by extensions ['colcon_pkg']
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src/bluerobotics_navigator_stub) by extension 'colcon_pkg'
+[0.209s] Level 1:colcon.colcon_core.package_identification:_identify(src/bluerobotics_navigator_stub) by extensions ['colcon_meta']
+[0.210s] Level 1:colcon.colcon_core.package_identification:_identify(src/bluerobotics_navigator_stub) by extension 'colcon_meta'
+[0.210s] Level 1:colcon.colcon_core.package_identification:_identify(src/bluerobotics_navigator_stub) by extensions ['ros']
+[0.210s] Level 1:colcon.colcon_core.package_identification:_identify(src/bluerobotics_navigator_stub) by extension 'ros'
+[0.212s] DEBUG:colcon.colcon_core.package_identification:Package 'src/bluerobotics_navigator_stub' with type 'ros.catkin' and name 'bluerobotics_navigator_stub'
+[0.213s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extensions ['ignore', 'ignore_ament_install']
+[0.213s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extension 'ignore'
+[0.213s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extension 'ignore_ament_install'
+[0.213s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extensions ['colcon_pkg']
+[0.213s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extension 'colcon_pkg'
+[0.213s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extensions ['colcon_meta']
+[0.213s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extension 'colcon_meta'
+[0.213s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extensions ['ros']
+[0.213s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extension 'ros'
+[0.215s] DEBUG:colcon.colcon_core.package_identification:Found ROS schema reference in package manifest in 'src/pez_control'
+[0.215s] WARNING:colcon.colcon_core.package_identification:Failed to parse ROS package manifest in 'src/pez_control': Error(s) in package 'src/pez_control/package.xml':
+Error(s):
+- The generic dependency on 'sensor_msgs' is redundant with: build_depend, build_export_depend, exec_depend
+[0.215s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extensions ['cmake', 'python']
+[0.215s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extension 'cmake'
+[0.215s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extension 'python'
+[0.215s] DEBUG:colcon.colcon_core.package_identification:Python package in 'src/pez_control' passes arguments to the setup() function which requires a different identification extension than 'python'
+[0.215s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extensions ['python_setup_py']
+[0.215s] Level 1:colcon.colcon_core.package_identification:_identify(src/pez_control) by extension 'python_setup_py'
+[0.348s] DEBUG:colcon.colcon_core.package_identification:Package 'src/pez_control' with type 'python' and name 'pez_control'
+[0.348s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.348s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.348s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.348s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.348s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.364s] Level 5:colcon.colcon_core.verb:set package 'bluerobotics_navigator_stub' build argument 'cmake_args' from command line to 'None'
+[0.364s] Level 5:colcon.colcon_core.verb:set package 'bluerobotics_navigator_stub' build argument 'cmake_target' from command line to 'None'
+[0.364s] Level 5:colcon.colcon_core.verb:set package 'bluerobotics_navigator_stub' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.364s] Level 5:colcon.colcon_core.verb:set package 'bluerobotics_navigator_stub' build argument 'cmake_clean_cache' from command line to 'False'
+[0.364s] Level 5:colcon.colcon_core.verb:set package 'bluerobotics_navigator_stub' build argument 'cmake_clean_first' from command line to 'False'
+[0.364s] Level 5:colcon.colcon_core.verb:set package 'bluerobotics_navigator_stub' build argument 'cmake_force_configure' from command line to 'False'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'bluerobotics_navigator_stub' build argument 'ament_cmake_args' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'bluerobotics_navigator_stub' build argument 'catkin_cmake_args' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'bluerobotics_navigator_stub' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.365s] DEBUG:colcon.colcon_core.verb:Building package 'bluerobotics_navigator_stub' with the following arguments: {'ament_cmake_args': None, 'build_base': '/pez_ws/build/bluerobotics_navigator_stub', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/pez_ws/install/bluerobotics_navigator_stub', 'merge_install': False, 'path': '/pez_ws/src/bluerobotics_navigator_stub', 'symlink_install': True, 'test_result_base': None}
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'pez_control' build argument 'cmake_args' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'pez_control' build argument 'cmake_target' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'pez_control' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'pez_control' build argument 'cmake_clean_cache' from command line to 'False'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'pez_control' build argument 'cmake_clean_first' from command line to 'False'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'pez_control' build argument 'cmake_force_configure' from command line to 'False'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'pez_control' build argument 'ament_cmake_args' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'pez_control' build argument 'catkin_cmake_args' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'pez_control' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.365s] DEBUG:colcon.colcon_core.verb:Building package 'pez_control' with the following arguments: {'ament_cmake_args': None, 'build_base': '/pez_ws/build/pez_control', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/pez_ws/install/pez_control', 'merge_install': False, 'path': '/pez_ws/src/pez_control', 'symlink_install': True, 'test_result_base': None}
+[0.365s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.366s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.366s] INFO:colcon.colcon_ros.task.catkin.build:Building ROS package in '/pez_ws/src/bluerobotics_navigator_stub' with build type 'catkin'
+[0.367s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/pez_ws/src/bluerobotics_navigator_stub'
+[0.369s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.369s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.369s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.372s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/pez_ws/src/pez_control'
+[0.372s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.372s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.380s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/pez_ws/build/bluerobotics_navigator_stub': /usr/bin/cmake /pez_ws/src/bluerobotics_navigator_stub -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/pez_ws/install/bluerobotics_navigator_stub
+[0.709s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/pez_ws/build/bluerobotics_navigator_stub' returned '1': /usr/bin/cmake /pez_ws/src/bluerobotics_navigator_stub -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/pez_ws/install/bluerobotics_navigator_stub
+[0.716s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(bluerobotics_navigator_stub)
+[0.719s] Level 1:colcon.colcon_core.environment:checking '/pez_ws/install/bluerobotics_navigator_stub' for CMake module files
+[0.720s] Level 1:colcon.colcon_core.environment:checking '/pez_ws/install/bluerobotics_navigator_stub' for CMake config files
+[0.721s] Level 1:colcon.colcon_core.environment:checking '/pez_ws/install/bluerobotics_navigator_stub/bin'
+[0.721s] Level 1:colcon.colcon_core.environment:checking '/pez_ws/install/bluerobotics_navigator_stub/lib/pkgconfig/bluerobotics_navigator_stub.pc'
+[0.721s] Level 1:colcon.colcon_core.environment:checking '/pez_ws/install/bluerobotics_navigator_stub/lib/python3.10/site-packages'
+[0.721s] Level 1:colcon.colcon_core.environment:checking '/pez_ws/install/bluerobotics_navigator_stub/bin'
+[0.721s] INFO:colcon.colcon_core.shell:Creating package script '/pez_ws/install/bluerobotics_navigator_stub/share/bluerobotics_navigator_stub/package.ps1'
+[0.723s] INFO:colcon.colcon_core.shell:Creating package descriptor '/pez_ws/install/bluerobotics_navigator_stub/share/bluerobotics_navigator_stub/package.dsv'
+[0.724s] INFO:colcon.colcon_core.shell:Creating package script '/pez_ws/install/bluerobotics_navigator_stub/share/bluerobotics_navigator_stub/package.sh'
+[0.725s] INFO:colcon.colcon_core.shell:Creating package script '/pez_ws/install/bluerobotics_navigator_stub/share/bluerobotics_navigator_stub/package.bash'
+[0.726s] INFO:colcon.colcon_core.shell:Creating package script '/pez_ws/install/bluerobotics_navigator_stub/share/bluerobotics_navigator_stub/package.zsh'
+[0.727s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/pez_ws/install/bluerobotics_navigator_stub/share/colcon-core/packages/bluerobotics_navigator_stub)
+[0.739s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[0.739s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[0.739s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '1'
+[0.739s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[0.745s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[0.745s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[0.745s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[0.745s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[0.747s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.Spawn.ExecFailed: /usr/bin/dbus-launch terminated abnormally without any error message
+[0.747s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[0.749s] INFO:colcon.colcon_core.shell:Creating prefix script '/pez_ws/install/local_setup.ps1'
+[0.751s] INFO:colcon.colcon_core.shell:Creating prefix util module '/pez_ws/install/_local_setup_util_ps1.py'
+[0.753s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/pez_ws/install/setup.ps1'
+[0.754s] INFO:colcon.colcon_core.shell:Creating prefix script '/pez_ws/install/local_setup.sh'
+[0.755s] INFO:colcon.colcon_core.shell:Creating prefix util module '/pez_ws/install/_local_setup_util_sh.py'
+[0.756s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/pez_ws/install/setup.sh'
+[0.757s] INFO:colcon.colcon_core.shell:Creating prefix script '/pez_ws/install/local_setup.bash'
+[0.758s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/pez_ws/install/setup.bash'
+[0.759s] INFO:colcon.colcon_core.shell:Creating prefix script '/pez_ws/install/local_setup.zsh'
+[0.760s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/pez_ws/install/setup.zsh'

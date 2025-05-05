@@ -1,0 +1,20 @@
+services:
+  pez:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pez_humble:latest
+    container_name: pez_humble
+    network_mode: host
+    privileged: true
+    volumes:
+      # Bind-mount your workspace
+      - ./pez_ws:/pez_ws
+    devices:
+      # Joystick input
+      - /dev/input/js0:/dev/input/js0
+    stdin_open: true   # keep STDIN open (so you get a shell)
+    tty: true          # allocate a TTY
+
+    # The image's ENTRYPOINT sources ROS and your workspace,
+    # and defaults to `bash`—so `docker-compose up` leaves you at a shell.
