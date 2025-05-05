@@ -21,7 +21,7 @@ WORKDIR /root/pez_ws
 COPY pez_ws/src/pez src/pez
 
 # 4) Install navigator-lib from PyPI (no build required)
-RUN pip3 install --no-cache-dir bluerobotics_navigator :contentReference[oaicite:0]{index=0}
+RUN pip3 install --no-cache-dir bluerobotics-navigator
 
 # 5) Resolve any ROS dependencies for your package
 RUN /bin/bash -lc "source /opt/ros/noetic/setup.bash \
