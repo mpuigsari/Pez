@@ -25,7 +25,7 @@ jobs:
     - name: Build & Push
       uses: docker/build-push-action@v5
       with:
-        context: pez_ws
+        context: .
         file: docker_pez_ros/Dockerfile
         platforms: linux/arm/v7
         push: true

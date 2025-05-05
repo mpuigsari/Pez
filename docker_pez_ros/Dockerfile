@@ -13,7 +13,7 @@ RUN rm -f /etc/ros/rosdep/sources.list.d/20-default.list \
 
 # copy in your catkin workspace src  
 WORKDIR /root/pez_ws
-COPY src/pez      src/pez
+COPY pez_ws/src/pez      src/pez
 
 # clone navigator-lib and build its Python extension
 RUN git clone https://github.com/bluerobotics/navigator-lib.git src/navigator-lib \
