@@ -1,11 +1,9 @@
 # syntax=docker/dockerfile:1
-ARG UBUNTU_CODENAME=jammy
-ARG ROS_DISTRO=humble
 
 ########################################
 # 1) Builder stage: compile ROS 2 from source
 ########################################
-FROM arm32v7/ubuntu:${UBUNTU_CODENAME} AS ros2-builder
+FROM arm32v7/ubuntu:jammy AS ros2-builder
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 LC_ALL=C.UTF-8
 
@@ -18,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
          | gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-         http://packages.ros.org/ros2/ubuntu ${UBUNTU_CODENAME} main" \
+         http://packages.ros.org/ros2/ubuntu jammy main" \
        > /etc/apt/sources.list.d/ros2.list \
     && rm -rf /var/lib/apt/lists/*
 
@@ -28,17 +26,17 @@ RUN apt-get update \
  && rosdep update \
  && mkdir -p /root/ros2_ws/src \
  && vcs import /root/ros2_ws/src \
-      < https://raw.githubusercontent.com/ros2/ros2/${ROS_DISTRO}/ros2.repos \
+      < https://raw.githubusercontent.com/ros2/ros2/humble/ros2.repos \
  && rosdep install --from-paths /root/ros2_ws/src --ignore-src -y \
  && cd /root/ros2_ws \
- && colcon build --install-base /opt/ros/${ROS_DISTRO} \
+ && colcon build --install-base /opt/ros/humble \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
  && rm -rf /var/lib/apt/lists/*
 
 ########################################
 # 2) Runtime stage: package ROS 2 + navigator-lib + BlueOS labels
 ########################################
-FROM arm32v7/ubuntu:${UBUNTU_CODENAME}
+FROM arm32v7/ubuntu:jammy
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 # ——— BlueOS Extension metadata ———
@@ -50,7 +48,7 @@ LABEL permissions='{"NetworkMode": "host", "HostConfig": {"Binds": ["/dev:/dev:r
       tags='["navigation","ros"]'
 
 # Copy the built ROS 2 install
-COPY --from=ros2-builder /opt/ros/${ROS_DISTRO} /opt/ros/${ROS_DISTRO}
+COPY --from=ros2-builder /opt/ros/humble /opt/ros/humble
 
 # Install navigator-lib via pip
 RUN apt-get update \
@@ -59,7 +57,7 @@ RUN apt-get update \
  && pip3 install --no-cache-dir navigator-lib
 
 # Entrypoint: source ROS 2 and exec
-COPY ros_entrypoint.sh /ros_entrypoint.sh
+COPY ./docker_blueos/ros_entrypoint.sh /ros_entrypoint.sh
 RUN chmod +x /ros_entrypoint.sh
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
