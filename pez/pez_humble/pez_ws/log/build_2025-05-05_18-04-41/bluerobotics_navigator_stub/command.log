@@ -1,2 +1,0 @@
-Invoking command in '/pez_ws/build/bluerobotics_navigator_stub': /usr/bin/cmake /pez_ws/src/bluerobotics_navigator_stub -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/pez_ws/install/bluerobotics_navigator_stub
-Invoked command in '/pez_ws/build/bluerobotics_navigator_stub' returned '1': /usr/bin/cmake /pez_ws/src/bluerobotics_navigator_stub -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCATKIN_SYMLINK_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/pez_ws/install/bluerobotics_navigator_stub
