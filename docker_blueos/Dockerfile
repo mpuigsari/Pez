@@ -76,7 +76,7 @@ RUN apt-get update \
  && pip3 install --no-cache-dir navigator-lib
 
 # Entrypoint: source ROS & run whatever follows
-COPY ros_entrypoint.sh /ros_entrypoint.sh
+COPY docker_blueos/ros_entrypoint.sh /ros_entrypoint.sh
 RUN chmod +x /ros_entrypoint.sh
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
