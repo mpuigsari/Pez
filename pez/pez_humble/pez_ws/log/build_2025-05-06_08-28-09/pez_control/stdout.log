@@ -1,0 +1,22 @@
+running develop
+running egg_info
+writing pez_control.egg-info/PKG-INFO
+writing dependency_links to pez_control.egg-info/dependency_links.txt
+writing entry points to pez_control.egg-info/entry_points.txt
+writing requirements to pez_control.egg-info/requires.txt
+writing top-level names to pez_control.egg-info/top_level.txt
+reading manifest file 'pez_control.egg-info/SOURCES.txt'
+writing manifest file 'pez_control.egg-info/SOURCES.txt'
+running build_ext
+Creating /pez_ws/install/pez_control/lib/python3.10/site-packages/pez-control.egg-link (link to .)
+Installing axis_controller script to /pez_ws/install/pez_control/lib/pez_control
+Installing joy_node script to /pez_ws/install/pez_control/lib/pez_control
+
+Installed /pez_ws/build/pez_control
+running symlink_data
+symbolically linking /pez_ws/build/pez_control/resource/pez_control -> /pez_ws/install/pez_control/share/ament_index/resource_index/packages
+symbolically linking /pez_ws/build/pez_control/package.xml -> /pez_ws/install/pez_control/share/pez_control
+symbolically linking /pez_ws/build/pez_control/config/joystick_params.yaml -> /pez_ws/install/pez_control/share/pez_control/config
+symbolically linking /pez_ws/build/pez_control/config/axis_params.yaml -> /pez_ws/install/pez_control/share/pez_control/config
+symbolically linking /pez_ws/build/pez_control/config/pez.perspective -> /pez_ws/install/pez_control/share/pez_control/config
+symbolically linking /pez_ws/build/pez_control/launch/joy_launch.py -> /pez_ws/install/pez_control/share/pez_control/launch

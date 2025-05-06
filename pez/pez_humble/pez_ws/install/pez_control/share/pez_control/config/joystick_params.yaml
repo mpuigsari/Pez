@@ -1,1 +1,25 @@
-/pez_ws/build/pez_control/config/joystick_params.yaml
+joy_controller:
+  ros__parameters:
+    joy_topic:     "joy"
+    cmd_vel_topic: "cmd_vel"
+    camera_topic:  "camera_control"
+
+    axes_forward: 4
+    axes_turn:    0
+    axes_dive:    1
+    axes_camera:  6
+
+    scale_forward:  1.0
+    scale_turn:    -1.0
+    scale_dive:     1.0
+    scale_camera:  -1.0
+
+    button_start:   7
+    button_stop:    6
+    button_magnet:  2
+    button_mode_0:  3
+
+    # (If you later parameterize your service names)
+    start_service:   "teleoperation/start_swim"
+    stop_service:    "teleoperation/stop_swim"
+    magnet_service:  "teleoperation/toggle_magnet"

@@ -12,34 +12,31 @@ def generate_launch_description():
 
     # Paths to your YAML & perspective files in <pkg>/config
     joy_params    = os.path.join(pkg_share, 'config', 'joystick_params.yaml')
-    axis_params   = os.path.join(pkg_share, 'config', 'axis_params.yaml')
-    rqt_persp     = os.path.join(pkg_share, 'config', 'pez.perspective')
-
     return LaunchDescription([
         GroupAction([
             # everything lives under /pez
             launch_ros.actions.PushRosNamespace('pez'),
 
+            # joy_node from the joy package
+            launch_ros.actions.Node(
+                package='joy',
+                executable='joy_node',
+                name='joy_node',
+                output='screen',
+                parameters=[{
+                    'dev': '/dev/input/js0',
+                    'deadzone': 0.2,
+                    'autorepeat_rate': 10.0
+                }]
+            ),
+
             # Joy → cmd_vel publisher
             launch_ros.actions.Node(
                 package='pez_control',
-                executable='joy_node',
+                executable='pez_joy',
                 name='joy_controller',
                 output='screen',
                 parameters=[joy_params],
-            ),
-
-            # RQt with saved perspective
-            launch_ros.actions.Node(
-                package='rqt_gui',
-                executable='rqt_gui',
-                name='rqt',
-                output='screen',
-                arguments=[
-                    '--perspective-file', rqt_persp
-                ],
-                # if you need extra plugins, uncomment below
-                # parameters=[{'plugin_paths': [...]}],
             ),
         ]),
     ])

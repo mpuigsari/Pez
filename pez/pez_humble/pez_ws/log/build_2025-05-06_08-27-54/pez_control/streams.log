@@ -1,0 +1,23 @@
+[0.324s] Invoking command in '/pez_ws/src/pez_control': PYTHONPATH=/pez_ws/build/pez_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/pez_ws/install/pez_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/pez_control build --build-base /pez_ws/build/pez_control/build install --record /pez_ws/build/pez_control/install.log --single-version-externally-managed install_data
+[0.437s] running egg_info
+[0.437s] writing ../../build/pez_control/pez_control.egg-info/PKG-INFO
+[0.438s] writing dependency_links to ../../build/pez_control/pez_control.egg-info/dependency_links.txt
+[0.438s] writing entry points to ../../build/pez_control/pez_control.egg-info/entry_points.txt
+[0.438s] writing requirements to ../../build/pez_control/pez_control.egg-info/requires.txt
+[0.438s] writing top-level names to ../../build/pez_control/pez_control.egg-info/top_level.txt
+[0.441s] reading manifest file '../../build/pez_control/pez_control.egg-info/SOURCES.txt'
+[0.442s] writing manifest file '../../build/pez_control/pez_control.egg-info/SOURCES.txt'
+[0.442s] running build
+[0.443s] running build_py
+[0.443s] running install
+[0.444s] running install_lib
+[0.444s] running install_data
+[0.444s] copying config/joystick_params.yaml -> /pez_ws/install/pez_control/share/pez_control/config
+[0.445s] running install_egg_info
+[0.448s] removing '/pez_ws/install/pez_control/lib/python3.10/site-packages/pez_control-0.1.0-py3.10.egg-info' (and everything under it)
+[0.448s] Copying ../../build/pez_control/pez_control.egg-info to /pez_ws/install/pez_control/lib/python3.10/site-packages/pez_control-0.1.0-py3.10.egg-info
+[0.452s] running install_scripts
+[0.466s] Installing axis_controller script to /pez_ws/install/pez_control/lib/pez_control
+[0.466s] Installing joy_node script to /pez_ws/install/pez_control/lib/pez_control
+[0.467s] writing list of installed files to '/pez_ws/build/pez_control/install.log'
+[0.482s] Invoked command in '/pez_ws/src/pez_control' returned '0': PYTHONPATH=/pez_ws/build/pez_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/pez_ws/install/pez_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/pez_control build --build-base /pez_ws/build/pez_control/build install --record /pez_ws/build/pez_control/install.log --single-version-externally-managed install_data

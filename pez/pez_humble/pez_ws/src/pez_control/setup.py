@@ -33,7 +33,7 @@ setup(
     entry_points={
         'console_scripts': [
             'axis_controller = pez_control.pez_axis_controller_node:main',
-            'joy_node        = pez_control.pez_joy:main',
+            'pez_joy        = pez_control.pez_joy:main',
         ],
     },
 )

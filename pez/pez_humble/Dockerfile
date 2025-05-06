@@ -20,6 +20,7 @@ COPY pez_ws/src src
 RUN rosdep install --from-paths src --ignore-src -r -y
 RUN bash -lc "source /opt/ros/humble/setup.bash && colcon build --symlink-install"
 
+
 # (Optional) navigator-lib if you need it:
 # RUN pip3 install --no-cache-dir git+https://github.com/bluerobotics/navigator-lib.git@v0.1.1
 
