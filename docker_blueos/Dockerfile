@@ -4,13 +4,14 @@
 # 1) Builder stage: compile ROS 2 Humble from source
 ########################################
 FROM arm32v7/ubuntu:jammy AS ros2-builder
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+SHELL ["/bin/bash","-o","pipefail","-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+    LC_ALL=C.UTF-8 \
+    ROS_DISTRO=humble
 
-# 1a) Install core tools & enable universe
+# 1a) Core tools & enable Universe
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       software-properties-common \
@@ -20,10 +21,11 @@ RUN apt-get update \
  && locale-gen en_US.UTF-8 \
  && rm -rf /var/lib/apt/lists/*
 
-# 1b) Add the ROS 2 Humble apt key & repo
+# 1b) Add the ROS 2 apt key & repo
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
       | gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg \
- && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+ && echo "deb [arch=$(dpkg --print-architecture) \
+            signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
       http://packages.ros.org/ros2/ubuntu jammy main" \
     > /etc/apt/sources.list.d/ros2.list
 
@@ -39,12 +41,14 @@ RUN apt-get update \
 RUN rosdep init \
  && rosdep update \
  && mkdir -p /root/ros2_ws/src \
- # <-- Fixed: download the repos file and pipe into vcs import
+ # download the .repos file and pipe to vcs
  && curl -sSL https://raw.githubusercontent.com/ros2/ros2/humble/ros2.repos \
        | vcs import /root/ros2_ws/src \
- && rosdep install --from-paths /root/ros2_ws/src --ignore-src -y \
+ # install all system deps for Humble
+ && rosdep install --from-paths /root/ros2_ws/src --ignore-src \
+      --rosdistro $ROS_DISTRO -y \
  && cd /root/ros2_ws \
- && colcon build --install-base /opt/ros/humble \
+ && colcon build --install-base /opt/ros/$ROS_DISTRO \
       --cmake-args -DCMAKE_BUILD_TYPE=Release \
  && rm -rf /var/lib/apt/lists/*
 
