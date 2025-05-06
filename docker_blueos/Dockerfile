@@ -38,7 +38,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # 1d) Fetch & build all of ROS 2 Humble
-RUN rosdep init \
+RUN apt-get update \
+ && rosdep init \
  && rosdep update \
  && mkdir -p /root/ros2_ws/src \
  # download the .repos file and pipe to vcs
