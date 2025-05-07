@@ -1,26 +1,42 @@
 # syntax=docker/dockerfile:1
 
-########################################
-# Runtime stage: ROS 2 Humble + Navigator-Lib
-########################################
-FROM rclex/arm32v7_ros_docker:humble
+####################################################
+# 1) Base + Navigator install
+####################################################
+FROM --platform=linux/arm64/v8 ros:humble-ros-base-jammy
 
 ENV LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+    LC_ALL=C.UTF-8 \
+    ROS_DOMAIN_ID=21
 
-# ——— Your BlueOS Extension metadata ———
-LABEL permissions='{"NetworkMode":"host","HostConfig":{"Binds":["/dev:/dev:rw"],"Privileged":true,"NetworkMode":"host"}}' \
-      version="0.0.1" \
-      authors='[{"name":"Max","email":"al415556@uji.es"}]' \
-      company='{"name":"CIRTESU","about":"ROS2 Navigator Lib","email":"support@your.org"}' \
-      type="tool" \
-      tags='["navigation","ros"]'
+# Install pip, Navigator, Colcon & build-tools
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      python3-pip \
+      python3-colcon-common-extensions \
+      build-essential \
+ && rm -rf /var/lib/apt/lists/* \
+ && pip3 install --no-cache-dir bluerobotics-navigator
 
-# Install your Python package
-RUN pip3 install --no-cache-dir navigator-lib
+####################################################
+# 2) Copy & Build your local ROS 2 package
+####################################################
+# make the workspace
+RUN mkdir -p /pez_ws/src
 
-# Entrypoint: source ROS 2 & exec user command
-COPY docker_blueos/ros_entrypoint.sh /ros_entrypoint.sh
+# copy your package into the workspace
+COPY pez/pez_humble/pez_ws/src/pez_control /pez_ws/src/pez_control
+
+# build it
+RUN . /opt/ros/humble/setup.bash \
+ && cd /pez_ws \
+ && colcon build --symlink-install \
+ && rm -rf /pez_ws/build /pez_ws/install/log
+
+####################################################
+# 3) Entrypoint
+####################################################
+COPY ros_entrypoint.sh /ros_entrypoint.sh
 RUN chmod +x /ros_entrypoint.sh
 
 ENTRYPOINT ["/ros_entrypoint.sh"]
