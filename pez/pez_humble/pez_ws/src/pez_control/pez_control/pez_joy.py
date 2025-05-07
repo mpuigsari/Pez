@@ -106,7 +106,7 @@ class JoystickController(Node):
         self.prev_magnet_btn = mag_btn
 
     def call_service(self, client, name):
-        if client.wait_for_service(timeout_sec=1.0):
+        if client.wait_for_service(timeout_sec=10.0):
             req = Trigger.Request()
             fut = client.call_async(req)
             rclpy.spin_until_future_complete(self, fut)
