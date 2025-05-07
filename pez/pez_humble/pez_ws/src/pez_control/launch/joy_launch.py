@@ -3,7 +3,7 @@
 import os
 
 from launch import LaunchDescription
-from launch.actions import GroupAction
+from launch.actions import ExecuteProcess, GroupAction, SetEnvironmentVariable
 import launch_ros.actions
 from ament_index_python.packages import get_package_share_directory
 
@@ -11,10 +11,14 @@ def generate_launch_description():
     pkg_share = get_package_share_directory('pez_control')
 
     # Paths to your YAML & perspective files in <pkg>/config
-    joy_params    = os.path.join(pkg_share, 'config', 'joystick_params.yaml')
+    joy_params       = os.path.join(pkg_share, 'config', 'joystick_params.yaml')
+    perspective_file = os.path.join(pkg_share, 'config', 'pez.perspective')
+
     return LaunchDescription([
+        # 0) Force all nodes in this launch to use ROS_DOMAIN_ID=21
+        SetEnvironmentVariable('ROS_DOMAIN_ID', '21'),
+        # 1) Your existing /pez namespace group
         GroupAction([
-            # everything lives under /pez
             launch_ros.actions.PushRosNamespace('pez'),
 
             # joy_node from the joy package
@@ -25,8 +29,7 @@ def generate_launch_description():
                 output='screen',
                 parameters=[{
                     'dev': '/dev/input/js0',
-                    'deadzone': 0.2,
-                    'autorepeat_rate': 10.0
+                    'deadzone': 0.05,
                 }]
             ),
 
@@ -39,4 +42,16 @@ def generate_launch_description():
                 parameters=[joy_params],
             ),
         ]),
+
+        # 2) Start rqt with your saved perspective
+        ExecuteProcess(
+            cmd=[
+                'rqt',
+                '--perspective-file', perspective_file
+            ],
+            output='screen',
+            # ensure rqt runs after /pez namespace is up
+            shell=False
+        ),
     ])
+

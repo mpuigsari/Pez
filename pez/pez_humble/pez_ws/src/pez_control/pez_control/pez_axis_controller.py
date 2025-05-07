@@ -6,9 +6,8 @@ import threading
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-from std_srvs.srv import Trigger, TriggerResponse
-from bluerobotics_navigator import PwmChannel
-import bluerobotics_navigator as navigator
+from std_srvs.srv import Trigger
+import bluerobotics_navigator.bluerobotics_navigator as navigator
 
 
 class PWMValue:
@@ -26,6 +25,10 @@ class PWMValue:
     def clamp_deflect(self, v):
         return min(max(v, -self.deflect), self.deflect)
 
+class PwmChannel:
+    Ch14 = 14-1
+    Ch15 = 15-1
+    Ch16 = 16-1
 
 class PezController(Node):
     def __init__(self):

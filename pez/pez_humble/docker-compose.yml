@@ -7,10 +7,27 @@ services:
     container_name: pez_humble
     network_mode: host
     volumes:
-      # Bind-mount your workspace
-      - ./pez_ws:/pez_ws
+      - ./pez_ws:/pez_ws:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      # mount a tmpfs for your runtime dir
+      - type: tmpfs
+        target: /tmp/runtime-1000
+        tmpfs:
+          mode: 0700
+
     devices:
       - "/dev/input:/dev/input"
+
+    environment:
+      # X11 forwarding
+      - DISPLAY=${DISPLAY}
+      - XAUTHORITY=/home/ros/.Xauthority
+      # point Qt at a valid runtime dir
+      - XDG_RUNTIME_DIR=/tmp/runtime-1000
+      # force Mesa to use software rendering
+      - LIBGL_ALWAYS_SOFTWARE=1
+      # disable shared-memory transport (avoids MIT-SHM errors)
+      - QT_X11_NO_MITSHM=1
     stdin_open: true   # keep STDIN open (so you get a shell)
     tty: true          # allocate a TTY
 

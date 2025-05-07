@@ -64,12 +64,13 @@ class JoystickController(Node):
         self.camera_pub  = self.create_publisher(Float64, self.get_parameter('camera_topic').value,  10)
 
         # 3) Service clients
+        
         self.start_cli  = self.create_client(Trigger, self.get_parameter('start_service').value)
         self.stop_cli   = self.create_client(Trigger, self.get_parameter('stop_service').value)
         self.magnet_cli = self.create_client(Trigger, self.get_parameter('magnet_service').value)
 
         # 4) Internal state
-        self.mode = 0
+        self.mode = -1
         self.magnet_on = False
         self.prev_magnet_btn = False
         self.lock = threading.Lock()
@@ -78,7 +79,7 @@ class JoystickController(Node):
 
         # 5) Subscriber + timer
         self.create_subscription(Joy, self.get_parameter('joy_topic').value, self.joy_callback, 10)
-        self.create_timer(0.1, self.iterate)
+        self.create_timer(0.05, self.iterate)
 
         self.get_logger().info(f"[JoystickController] Initialized in mode {self.mode}")
 
