@@ -3,7 +3,11 @@
 ####################################################
 # 1) Base + Navigator install
 ####################################################
-FROM --platform=linux/arm64/v8 ros:humble-ros-base-jammy
+
+FROM ros:humble-ros-base-jammy
+
+# Switch the shell for all RUN steps to bash with pipefail
+SHELL ["/bin/bash","-o","pipefail","-c"]
 
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
@@ -27,8 +31,8 @@ RUN mkdir -p /pez_ws/src
 # copy your package into the workspace
 COPY pez/pez_humble/pez_ws/src/pez_control /pez_ws/src/pez_control
 
-# build it
-RUN . /opt/ros/humble/setup.bash \
+# build it (now under bash!)
+RUN source /opt/ros/humble/setup.bash \
  && cd /pez_ws \
  && colcon build --symlink-install \
  && rm -rf /pez_ws/build /pez_ws/install/log
