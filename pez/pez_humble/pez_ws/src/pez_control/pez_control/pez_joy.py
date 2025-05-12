@@ -106,16 +106,24 @@ class JoystickController(Node):
         self.prev_magnet_btn = mag_btn
 
     def call_service(self, client, name):
-        if client.wait_for_service(timeout_sec=10.0):
-            req = Trigger.Request()
-            fut = client.call_async(req)
-            rclpy.spin_until_future_complete(self, fut)
-            if fut.result().success:
+        if not client.wait_for_service(timeout_sec=10.0):
+            self.get_logger().error(f"{name} service not available")
+            return
+
+        req = Trigger.Request()
+        fut = client.call_async(req)
+        fut.add_done_callback(lambda future, n=name: self._on_response(future, n))
+
+    def _on_response(self, future, name):
+        try:
+            resp = future.result()
+            if resp.success:
                 self.get_logger().info(f"{name} service succeeded")
             else:
-                self.get_logger().warn(f"{name} service failed")
-        else:
-            self.get_logger().error(f"{name} service not available")
+                self.get_logger().warn(f"{name} service returned failure")
+        except Exception as e:
+            self.get_logger().error(f"{name} service call exception: {e}")
+
 
     def process_axes(self):
         a = self.joy_msg.axes
