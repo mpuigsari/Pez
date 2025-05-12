@@ -6,6 +6,7 @@ import threading
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Float64
 from std_srvs.srv import Trigger
 import bluerobotics_navigator.bluerobotics_navigator as navigator
 
@@ -26,6 +27,8 @@ class PWMValue:
         return min(max(v, -self.deflect), self.deflect)
 
 class PwmChannel:
+    Ch9 = 9-1
+    Ch11 = 11-1
     Ch14 = 14-1
     Ch15 = 15-1
     Ch16 = 16-1
@@ -40,6 +43,15 @@ class PezController(Node):
         navigator.set_pwm_freq_hz(50)
 
         # 2) Declare & read scalar parameters
+
+        #Cam PWM limits
+        self.declare_parameter('cam_pwm_default', 315)
+        self.declare_parameter('cam_pwm_min',     215)
+        self.declare_parameter('cam_pwm_max',     415)
+        cam_def = self.get_parameter('cam_pwm_default').value
+        cam_min = self.get_parameter('cam_pwm_min').value
+        cam_max = self.get_parameter('cam_pwm_max').value
+        self.cam_pwm = PWMValue(default=cam_def, min_=cam_min, max_=cam_max)
 
         # Tail PWM limits
         self.declare_parameter('tail_pwm_default', 303)
@@ -107,8 +119,15 @@ class PezController(Node):
         # Subscribe to /pez/cmd_vel
         self.create_subscription(
             Twist,
-            f'{ns}cmd_vel',
+            f'{ns}/cmd_vel',
             self.controller_callback,
+            10
+        )
+        # Subscribe to /pez/camera_control
+        self.create_subscription(
+            Float64,
+            f'{ns}/camera_control',
+            self.cam_controller_callback,
             10
         )
 
@@ -132,6 +151,7 @@ class PezController(Node):
         self.tail_offset.current    = self.tail_offset.default
         self.fin_dive_ref.current   = 0
         self.fin_turn_off.current   = 0
+        self.cam_pwm.current = self.cam_pwm.default
 
         self.running = True
         self.get_logger().info('[PezController] start_swim → running')
@@ -144,6 +164,7 @@ class PezController(Node):
         self.tail_offset.current    = self.tail_offset.default
         self.fin_dive_ref.current   = 0
         self.fin_turn_off.current   = 0
+        self.cam_pwm.current = self.cam_pwm.default
 
         self.running = False
         self.get_logger().info('[PezController] stop_swim → stopped')
@@ -160,6 +181,8 @@ class PezController(Node):
     def handle_toggle_magnet(self, request, response):
         self.magnet_on = not self.magnet_on
         state = 'ON' if self.magnet_on else 'OFF'
+        value = 1.0 if self.magnet_on else 0.0
+        navigator.set_pwm_channel_duty_cycle(PwmChannel.Ch9, value)
         self.get_logger().info(f'[PezController] Magnet → {state}')
         response.success = True
         response.message = f'magnet {state.lower()}'
@@ -174,10 +197,10 @@ class PezController(Node):
 
             if self.sync_flag:
                 center = self.tail_pwm.default + self.tail_offset.current
-                high   = self.tail_pwm.clamp(center + self.tail_amplitude.current)
-                low    = self.tail_pwm.clamp(center - self.tail_amplitude.current)
-                lf     = self.left_fin_pwm.current
-                rf     = self.right_fin_pwm.current
+                high   = int(self.tail_pwm.clamp(center + self.tail_amplitude.current))
+                low    = int(self.tail_pwm.clamp(center - self.tail_amplitude.current))
+                lf     = int(self.left_fin_pwm.current)
+                rf     = int(self.right_fin_pwm.current)
                 t      = self.timer_movement.current
 
                 navigator.set_pwm_channels_values(
@@ -226,6 +249,16 @@ class PezController(Node):
             pwm.current = pwm.clamp(pwm.current + (tgt - pwm.current) * pwm.blend)
 
         self.sync_flag = True
+
+    def cam_controller_callback(self, msg: Float64):
+        cam_offset = msg.data
+        self.cam_pwm.current = self.cam_pwm.clamp(self.cam_pwm.current + cam_offset)
+        cam = int(self.cam_pwm.current)
+        navigator.set_pwm_channels_value([PwmChannel.Ch11], cam)
+        self.get_logger().info(f'[PezController] Camera → {cam}')
+
+
+
 
     def destroy_node(self):
         self.exit_event.set()

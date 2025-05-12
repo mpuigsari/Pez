@@ -12,6 +12,11 @@ RUN apt-get update \
       ros-humble-rqt \
       ros-humble-rqt-common-plugins \
       qtbase5-dev qtbase5-dev-tools \
+      ros-humble-image-transport-plugins \
+      ros-humble-compressed-image-transport \
+      ros-humble-compressed-depth-image-transport \
+      ros-humble-theora-image-transport
+
     && rm -rf /var/lib/apt/lists/*
 
 # 2) Re‐init rosdep

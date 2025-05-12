@@ -19,6 +19,7 @@ RUN apt-get update \
       python3-pip \
       python3-colcon-common-extensions \
       build-essential \
+      ros-humble-usb-cam \
  && rm -rf /var/lib/apt/lists/* \
  && pip3 install --no-cache-dir bluerobotics-navigator
 
