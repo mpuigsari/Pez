@@ -27,10 +27,12 @@ class JoystickController(Node):
         self.declare_parameter('button_stop',    6)
         self.declare_parameter('button_magnet',  2)
         self.declare_parameter('button_mode_0',  3)
+        self.declare_parameter('button_neutral',  4)
 
         self.declare_parameter('start_service', 'teleoperation/start_swim')
         self.declare_parameter('stop_service', 'teleoperation/stop_swim')
         self.declare_parameter('magnet_service', 'teleoperation/toggle_magnet')
+        self.declare_parameter('neutral_service', 'teleoperation/toggle_neutral')
 
         self.declare_parameter('joy_topic', 'joy')
         self.declare_parameter('cmd_vel_topic', 'cmd_vel')
@@ -56,6 +58,7 @@ class JoystickController(Node):
         'stop':   self.get_parameter('button_stop').value,
         'magnet': self.get_parameter('button_magnet').value,
         'mode_0': self.get_parameter('button_mode_0').value,
+        'neutral': self.get_parameter('button_neutral').value,
         }
 
 
@@ -68,11 +71,14 @@ class JoystickController(Node):
         self.start_cli  = self.create_client(Trigger, self.get_parameter('start_service').value)
         self.stop_cli   = self.create_client(Trigger, self.get_parameter('stop_service').value)
         self.magnet_cli = self.create_client(Trigger, self.get_parameter('magnet_service').value)
+        self.neutral_cli = self.create_client(Trigger, self.get_parameter('neutral_service').value)
 
         # 4) Internal state
         self.mode = -1
         self.magnet_on = False
         self.prev_magnet_btn = False
+        self.neutral_on = False
+        self.prev_neutral_btn = False
         self.lock = threading.Lock()
         self.pez_body_cmd     = Twist()
         self.pez_camera_float = Float64()
@@ -104,6 +110,13 @@ class JoystickController(Node):
             self.magnet_on = not self.magnet_on
             self.call_service(self.magnet_cli, "magnet")
         self.prev_magnet_btn = mag_btn
+
+        # Toggle neutral
+        n_btn = bool(b[self.buttons['neutral']])
+        if n_btn and not self.prev_neutral_btn:
+            self.neutral_on = not self.neutral_on
+            self.call_service(self.neutral_cli, "neutral")
+        self.prev_neutral_btn = n_btn
 
     def call_service(self, client, name):
         if not client.wait_for_service(timeout_sec=10.0):

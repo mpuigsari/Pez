@@ -8,7 +8,7 @@ import launch_ros.actions
 from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('pez_control')
+    pkg_share = get_package_share_directory('pez_core')
 
     # Paths to your YAML & perspective files in <pkg>/config
     joy_params       = os.path.join(pkg_share, 'config', 'joystick_params.yaml')
@@ -35,7 +35,7 @@ def generate_launch_description():
 
             # Joy → cmd_vel publisher
             launch_ros.actions.Node(
-                package='pez_control',
+                package='pez_core',
                 executable='pez_joy',
                 name='joy_controller',
                 output='screen',

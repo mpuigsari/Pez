@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'pez_control'
+package_name = 'pez_core'
 
 setup(
     name=package_name,
@@ -22,6 +22,7 @@ setup(
         ('share/' + package_name + '/launch', [
             'launch/joy_launch.py',
             'launch/controller_launch.py',
+            'launch/controller_cpg_launch.py',
         ]),
     ],
     install_requires=['setuptools', 'bluerobotics-navigator'],
@@ -33,9 +34,10 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'axis_controller = pez_control.pez_axis_controller:main',
-            'pez_joy        = pez_control.pez_joy:main',
-            'pez_test        = pez_control.pez_test:main',
+            'axis_controller = pez_core.pez_axis_controller:main',
+            'pez_joy        = pez_core.pez_joy:main',
+            'pez_test        = pez_core.pez_test:main',
+            'cpg_controller = pez_core.pez_axis_controller_cpg:main'
         ],
     },
 )

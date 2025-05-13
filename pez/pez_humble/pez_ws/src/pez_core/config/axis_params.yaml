@@ -1,0 +1,47 @@
+# config/pez_params.yaml
+pez_controller:
+  ros__parameters:
+    # fake‐nav switch
+    test_nav: false
+
+    # tail PWM limits
+    tail_pwm_default: 303
+    tail_pwm_min: 176
+    tail_pwm_max: 434
+
+    # tail offset limits (relative to default)
+    tail_offset_default: 0
+    tail_offset_min: -127    # = tail_pwm_min - tail_pwm_default
+    tail_offset_max:  131    # = tail_pwm_max - tail_pwm_default
+
+    # tail amplitude window
+    tail_amplitude_default: 0
+    tail_amplitude_min: 0
+    tail_amplitude_max: 127  # = min(abs(offset_min),abs(offset_max))
+
+    # fins PWM limits
+    fins_pwm_default: 231
+    fins_pwm_min: 153.5
+    fins_pwm_max: 307
+
+    # camera PWM limits (if you use it)
+    cam_pwm_default: 315
+    cam_pwm_min: 215
+    cam_pwm_max: 415
+
+    # CPG / cruise‐control parameters
+    cruise_speed_min: 0.0
+    cruise_speed_max: 1.5
+    cruise_freq_min:  0.4
+    cruise_freq_max:  2.5
+    cruise_amp_min:   20.0
+    cruise_amp_max:   60.0
+    cruise_k_freq:    5.0
+    cruise_k_amp:     5.0
+
+    # Hopf‐CPG parameters
+    cpg_alpha: 1.0
+    cpg_dt:    0.05
+
+    # servo‐update rate (only used by fins thread)
+    fins_rate: 50.0

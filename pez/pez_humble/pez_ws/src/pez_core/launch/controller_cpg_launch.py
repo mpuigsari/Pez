@@ -7,7 +7,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    pkg = get_package_share_directory('pez_control')
+    pkg = get_package_share_directory('pez_core')
 
     # 1) Your axis_controller params
     axis_params = os.path.join(pkg, 'config', 'axis_params.yaml')
@@ -19,8 +19,8 @@ def generate_launch_description():
 
     # 3) Build the Node definitions
     axis_node = Node(
-        package='pez_control',
-        executable='axis_controller',
+        package='pez_core',
+        executable='cpg_controller',
         name='pez_controller',
         namespace='pez',
         output='screen',

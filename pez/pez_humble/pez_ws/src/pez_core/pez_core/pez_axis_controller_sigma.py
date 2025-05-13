@@ -2,6 +2,7 @@
 
 import time
 import threading
+import math
 
 import rclpy
 from rclpy.node import Node
@@ -35,7 +36,7 @@ class PwmChannel:
 
 class PezController(Node):
     def __init__(self):
-        super().__init__('move_controller')
+        super().__init__('pez_controller')
 
         # 1) Initialize hardware
         navigator.init()
@@ -112,6 +113,19 @@ class PezController(Node):
                                      deflect_=fin_deflect, blend_=fin_blend)
         self.fin_turn_off = PWMValue(0, -fin_deflect, fin_deflect,
                                      deflect_=fin_deflect, blend_=fin_blend)
+        
+        # 2a) **NEW** tail‐control parameters/state
+        self.speed_min, self.speed_max = 0.0, 1.5
+        self.freq_min,  self.freq_max  = 0.4, 2.5
+        self.amp_min,   self.amp_max   = 20.0, 60.0
+        self.k_freq,    self.k_amp     = 5.0, 5.0
+        self.slew_f,    self.slew_a    = 1.0, 50.0
+        self.alpha_f,   self.alpha_a   = 0.1, 0.1
+        self.safe_f,    self.safe_a    = 0.2, 5.0
+
+        self.desired_speed = 0.0
+        self.current_freq  = self.freq_min
+        self.current_amp   = self.amp_min
 
         # 3) ROS interfaces
         ns = self.get_namespace()  # e.g. '/pez/'
@@ -141,8 +155,12 @@ class PezController(Node):
         self.running    = False
         self.magnet_on  = False
         self.exit_event = threading.Event()
-        self.thread     = threading.Thread(target=self.send_movement)
-        self.thread.start()
+
+        self.thread_tail     = threading.Thread(target=self.send_movement_tail)
+        self.thread_tail.start()
+
+        self.thread_fins     = threading.Thread(target=self.send_movement_fins)
+        self.thread_fins.start()
 
         self.get_logger().info('[PezController] Initialized.')
 
@@ -152,6 +170,7 @@ class PezController(Node):
         self.fin_dive_ref.current   = 0
         self.fin_turn_off.current   = 0
         self.cam_pwm.current = self.cam_pwm.default
+        self.timer_movement.current = self.timer_movement.default
 
         self.running = True
         self.get_logger().info('[PezController] start_swim → running')
@@ -167,6 +186,9 @@ class PezController(Node):
         self.cam_pwm.current = self.cam_pwm.default
 
         self.running = False
+        time.sleep(self.timer_movement.current)
+        self.timer_movement.current = self.timer_movement.default
+
         self.get_logger().info('[PezController] stop_swim → stopped')
         navigator.set_pwm_channels_values(
             [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
@@ -188,7 +210,7 @@ class PezController(Node):
         response.message = f'magnet {state.lower()}'
         return response
 
-    def send_movement(self):
+    def send_movement_fins(self):
         rate = 50.0
         while not self.exit_event.is_set():
             if not self.running:
@@ -196,46 +218,84 @@ class PezController(Node):
                 continue
 
             if self.sync_flag:
-                center = self.tail_pwm.default + self.tail_offset.current
-                high   = int(self.tail_pwm.clamp(center + self.tail_amplitude.current))
-                low    = int(self.tail_pwm.clamp(center - self.tail_amplitude.current))
                 lf     = int(self.left_fin_pwm.current)
                 rf     = int(self.right_fin_pwm.current)
                 t      = self.timer_movement.current
 
                 navigator.set_pwm_channels_values(
                     [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
-                    [high, lf, rf]
+                    [lf, rf]
                 )
                 time.sleep(t)
                 if self.exit_event.is_set():
                     break
                 navigator.set_pwm_channels_values(
-                    [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
-                    [low, lf, rf]
+                    [PwmChannel.Ch14, PwmChannel.Ch15],
+                    [lf, rf]
                 )
-                time.sleep(t)
+                time.sleep(1.0/10)
+
+    def send_movement_tail(self):
+        dt = 0.05
+        while not self.exit_event.is_set():
+            if not self.running:
+                navigator.set_pwm_enable(False)
+                time.sleep(dt)
+                continue
+
+            navigator.set_pwm_enable(True)
+
+            # 1) normalize speed
+            vnorm = (self.desired_speed - self.speed_min) / (self.speed_max - self.speed_min)
+            vnorm = max(0.0, min(1.0, vnorm))
+
+            # 2) target freq & amp
+            f_tgt = self._sigma(vnorm, self.freq_min, self.freq_max, self.k_freq)
+            a_tgt = self._sigma(vnorm, self.amp_min, self.amp_max, self.k_amp)
+
+            # 3) slew + LPF, frequency
+            df = max(-self.slew_f*dt, min(self.slew_f*dt, f_tgt - self.current_freq))
+            f_tmp = self.current_freq + df
+            self.current_freq = f_tmp + self.alpha_f*(f_tgt - f_tmp)
+
+            # 4) slew + LPF, amplitude
+            da = max(-self.slew_a*dt, min(self.slew_a*dt, a_tgt - self.current_amp))
+            a_tmp = self.current_amp + da
+            self.current_amp = a_tmp + self.alpha_a*(a_tgt - a_tmp)
+
+            # 5) safety check
+            if self.current_freq < self.safe_f or self.current_amp < self.safe_a:
+                navigator.set_pwm_enable(False)
+                time.sleep(dt)
+                continue
+
+            # 6) oscillate
+            period = 1.0 / self.current_freq
+            center = self.tail_pwm.default + self.tail_offset.current
+            L = int(center - self.current_amp)
+            R = int(center + self.current_amp)
+
+            navigator.set_pwm_channels_values([PwmChannel.Ch16], [L])
+            time.sleep(period/2)
+            navigator.set_pwm_channels_values([PwmChannel.Ch16], [R])
+            time.sleep(period/2)
+
 
     def controller_callback(self, msg: Twist):
         self.sync_flag = False
         x, y, z = msg.linear.x, msg.linear.y, msg.linear.z
 
-        # Tail motion (x → amplitude & speed)
+        # → Cruise‐control for tail speed
         if x != 0.0:
-            norm  = (x + 1.0) / 2.0
-            amp_t = (1.0 - abs(x)) * self.tail_amplitude.max
-            tim_t = (self.timer_movement.max -
-                     norm * (self.timer_movement.max - self.timer_movement.min))
-            for pwm, tgt in ((self.tail_amplitude, amp_t),
-                             (self.timer_movement,   tim_t)):
-                pwm.current = pwm.clamp(pwm.current + (tgt - pwm.current) * self.vel_blend)
+            v = self.desired_speed + x
+            self.desired_speed = max(self.speed_min,
+                                     min(self.speed_max, v))
 
-        # Tail offset (y)
+        # ← keep your old tail‐offset and fins logic
         target = self.tail_offset.default + y * self.tail_pwm.deflect
         self.tail_offset.current += (target - self.tail_offset.current) * self.tail_pwm.blend
         self.tail_offset.current = self.tail_offset.clamp(self.tail_offset.current)
 
-        # Fins dive & turn
         def blend(comp, val):
             tgt = val * comp.deflect
             comp.current = comp.clamp_deflect(comp.current + (tgt - comp.current) * comp.blend)
@@ -258,11 +318,14 @@ class PezController(Node):
         self.get_logger().info(f'[PezController] Camera → {cam}')
 
 
-
+    def _sigma(self, x, lo, hi, k):
+        e = math.exp(-k * (x - 0.5))
+        return lo + (hi - lo) / (1 + e)
 
     def destroy_node(self):
         self.exit_event.set()
-        self.thread.join(timeout=1.0)
+        self.thread_tail.join(timeout=1.0)
+        self.thread_fins.join(timeout=1.0)
         super().destroy_node()
 
 
