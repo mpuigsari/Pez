@@ -167,6 +167,15 @@ class PezController(Node):
         """Logistic map from [0,1]→[lo,hi]."""
         e = math.exp(-k*(x-0.5))
         return lo + (hi-lo)/(1+e)
+    
+    def _logistic_hump(self, v, lo, peak, k, v0=0.5):
+        """
+        v ∈ [0,1] → amplitude in [lo,peak] that starts at lo, rises to peak at v0, then returns to lo at 1.
+        k controls steepness.
+        """
+        L = 1.0 / (1.0 + math.exp(-k*(v - v0)))
+        bump = 4.0 * L * (1.0 - L)
+        return lo + (peak - lo) * bump
 
     def _tail_loop(self):
         dt = self.cpg.dt
@@ -177,26 +186,18 @@ class PezController(Node):
                 continue
             if self.sync_flag:
                 self.nav.set_pwm_enable(True)
-
-                # 1) normalize cruise speed
+                # normalize speed
                 vnorm = (self.desired_speed - self.speed_min)/(self.speed_max - self.speed_min)
                 vnorm = max(0.0, min(1.0, vnorm))
-
-                # 2) σ-map → amplitude & frequency targets
-                A_tgt = self._sigma(vnorm, self.amp_min,  self.amp_max,  self.k_amp)
+                # amplitude hump & frequency sigma
+                A_tgt = self._logistic_hump(vnorm, self.amp_min, self.amp_max, self.k_amp)
                 f_tgt = self._sigma(vnorm, self.freq_min, self.freq_max, self.k_freq)
-
-                # 3) form Hopf params
-                mu    = A_tgt * A_tgt
+                # Hopf params
+                mu = A_tgt * A_tgt
                 omega = 2.0 * math.pi * f_tgt
-
-                # 4) step CPG
                 x, _ = self.cpg.step(mu, omega)
-
-                # 5) output tail
                 self.tail_act.output(x)
-
-                time.sleep(dt)
+            time.sleep(dt)
 
     def _fins_loop(self):
         rate = 50.0
