@@ -8,9 +8,24 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 from std_srvs.srv import Trigger
-import bluerobotics_navigator.bluerobotics_navigator as navigator
+#import bluerobotics_navigator.bluerobotics_navigator as navigator
+    
 
-
+class FakeNav:
+    def __init__(self):
+        self.enabled = False
+    def init(self):         print("[fake_nav] init()")
+    def set_pwm_enable(self, e): 
+        self.enabled = e
+        print(f"[fake_nav] set_pwm_enable({e})")
+    def set_pwm_freq_hz(self, f): print(f"[fake_nav] set_pwm_freq_hz({f})")
+    def set_pwm_channels_values(self, ch, vals):
+        print(f"[fake_nav] set {list(ch)} → {list(vals)}")
+    def set_pwm_channels_value(self, ch, val):
+        print(f"[fake_nav] set {list(ch)} → {val}")
+    def set_pwm_channel_duty_cycle(self, ch, v):
+        print(f"[fake_nav] duty {ch} → {v}")
+navigator = FakeNav()
 class PWMValue:
     def __init__(self, default, min_, max_, deflect_=0, blend_=0):
         self.default = default
@@ -36,7 +51,8 @@ class PwmChannel:
 class PezController(Node):
     def __init__(self):
         super().__init__('pez_controller')
-
+        
+    
         # 1) Initialize hardware
         navigator.init()
         navigator.set_pwm_enable(True)
@@ -48,7 +64,7 @@ class PezController(Node):
         self.declare_parameter('cam_pwm_default', 315)
         self.declare_parameter('cam_pwm_min',     215)
         self.declare_parameter('cam_pwm_max',     415)
-        cam_def = c
+        cam_def = self.get_parameter('cam_pwm_default').value
         cam_min = self.get_parameter('cam_pwm_min').value
         cam_max = self.get_parameter('cam_pwm_max').value
         self.cam_pwm = PWMValue(default=cam_def, min_=cam_min, max_=cam_max)
@@ -207,6 +223,7 @@ class PezController(Node):
                     [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
                     [high, lf, rf]
                 )
+                
                 time.sleep(t)
                 if self.exit_event.is_set():
                     break
@@ -214,6 +231,7 @@ class PezController(Node):
                     [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
                     [low, lf, rf]
                 )
+                self.get_logger().info(f'[PezController] Movement [tail(high/low), fin(left/right)] → [{high}, {low}, {lf}, {rf}]')
                 time.sleep(t)
 
     def controller_callback(self, msg: Twist):
@@ -252,6 +270,8 @@ class PezController(Node):
 
     def cam_controller_callback(self, msg: Float64):
         cam_offset = msg.data
+        if cam_offset == 0:
+            return
         self.cam_pwm.current = self.cam_pwm.clamp(self.cam_pwm.current + cam_offset)
         cam = int(self.cam_pwm.current)
         navigator.set_pwm_channels_value([PwmChannel.Ch11], cam)

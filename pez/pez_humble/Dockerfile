@@ -10,6 +10,8 @@ RUN apt-get update \
       python3-rosdep \
       ros-humble-joy \
       ros-humble-rqt \
+      ros-humble-plotjuggler \
+      ros-humble-plotjuggler-ros \
       ros-humble-rqt-common-plugins \
       qtbase5-dev qtbase5-dev-tools \
       ros-humble-image-transport-plugins \

@@ -5,6 +5,8 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import SetEnvironmentVariable
+
 
 def generate_launch_description():
     pkg = get_package_share_directory('pez_core')
@@ -27,7 +29,7 @@ def generate_launch_description():
         parameters=[ axis_params ],
     )
 
-    usb_cam_node = Node(
+    """usb_cam_node = Node(
         package='usb_cam',
         executable='usb_cam_node_exe',
         name='usb_cam',
@@ -41,9 +43,10 @@ def generate_launch_description():
             'camera_name'     : 'default_cam',
             'camera_info_url' : camera_info_url,
         }],
-    )
+    )"""
 
     return LaunchDescription([
+        SetEnvironmentVariable('ROS_DOMAIN_ID', '21'),
         axis_node,
-        usb_cam_node,
+        #usb_cam_node,
     ])

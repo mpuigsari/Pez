@@ -1,0 +1,14 @@
+Series,Current,Min,Max,Average
+Start Time,-1.79769e+308
+End Time,1.79769e+308
+Current Time,1.74725e+09
+/pez/cmd_vel/angular/x,0.000000,0.000000,0.000000,0.000000
+/pez/cmd_vel/angular/y,0.000000,0.000000,0.000000,0.000000
+/pez/cmd_vel/angular/z,0.000000,0.000000,0.000000,0.000000
+/pez/cmd_vel/linear/x,-0.000000,-0.000000,-0.000000,-0.000000
+/pez/cmd_vel/linear/y,0.000000,0.000000,0.000000,0.000000
+/pez/cmd_vel/linear/z,-0.000000,-0.000000,-0.000000,-0.000000
+/pez/pwm/fins/data[0],233.000000,233.000000,233.000000,233.000000
+/pez/pwm/fins/data[1],233.000000,233.000000,233.000000,233.000000
+/pez/pwm/fins/layout/data_offset,0.000000,0.000000,0.000000,0.000000
+/pez/pwm/tail/data,280.000000,260.000000,345.000000,302.282258
