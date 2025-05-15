@@ -27,6 +27,12 @@ class FakeNav:
         self.camera_pub = node.create_publisher(Float64,           'pwm/camera', 10)
         self.magnet_pub = node.create_publisher(Float64,           'pwm/magnet', 10)
 
+        msg, msg_a = Float64(), Float64MultiArray()
+        self.tail_pub.publish(msg)
+        self.fins_pub.publish(msg_a)
+        self.camera_pub.publish(msg)
+        self.magnet_pub.publish(msg)
+
         node.get_logger().info('[FakeNav] Ready to publish PWM topics')
 
     def init(self):

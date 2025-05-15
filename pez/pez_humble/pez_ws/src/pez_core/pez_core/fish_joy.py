@@ -131,11 +131,20 @@ class JoystickController(Node):
         try:
             resp = future.result()
             if resp.success:
-                self.get_logger().info(f"{name} service succeeded")
+                # special-case magnet and neutral so we log their new state
+                if name == 'magnet':
+                    state = 'ON' if self.magnet_on else 'OFF'
+                    self.get_logger().info(f"{name} service succeeded → magnet is now {state}")
+                elif name == 'neutral':
+                    state = 'ON' if self.neutral_on else 'OFF'
+                    self.get_logger().info(f"{name} service succeeded → neutral mode is now {state}")
+                else:
+                    self.get_logger().info(f"{name} service succeeded")
             else:
                 self.get_logger().warn(f"{name} service returned failure")
         except Exception as e:
             self.get_logger().error(f"{name} service call exception: {e}")
+
 
 
     def process_axes(self):

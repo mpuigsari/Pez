@@ -5,6 +5,8 @@ import threading
 
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import Parameter
+from rcl_interfaces.msg import ParameterDescriptor, FloatingPointRange, IntegerRange, SetParametersResult
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 from std_srvs.srv import Trigger
@@ -12,19 +14,16 @@ import math
 import time
 
 class PWMValue:
-    def __init__(self, default, min_, max_, deflect_=0, blend_=0):
+    def __init__(self, default, min_, max_):
         self.default = default
         self.current = default
         self.min     = min_
         self.max     = max_
-        self.deflect = deflect_
-        self.blend   = blend_
 
     def clamp(self, value):
         return min(max(value, self.min), self.max)
 
-    def clamp_deflect(self, v):
-        return min(max(v, -self.deflect), self.deflect)
+
 
 class PwmChannel:
     Ch9 = 9-1
@@ -51,95 +50,74 @@ class PezController(Node):
         self.nav.set_pwm_enable(True)
         self.nav.set_pwm_freq_hz(50)
 
-        # 3) Camera PWM limits
-        self.declare_parameter('cam_pwm_default', 315)
-        self.declare_parameter('cam_pwm_min',     215)
-        self.declare_parameter('cam_pwm_max',     415)
-        cam_def = self.get_parameter('cam_pwm_default').value
-        cam_min = self.get_parameter('cam_pwm_min').value
-        cam_max = self.get_parameter('cam_pwm_max').value
-        self.cam_pwm = PWMValue(cam_def, cam_min, cam_max)
+         # --- 1. PARAMETER SPECS: name, default, type, (min,max,step) ---
+        param_specs = [
+            ('k_accel',           0.5,   float, (0.0, 2.0, 0.05)),
+            ('k_drag',            0.3,   float, (0.0, 3.0, 0.05)),
+            ('tail_freq_slow',    1.5,   float, (0.1, 3.0, 0.1)),
+            ('tail_freq_fast',    5.0,   float, (2.0,10.0,0.2)),
+            ('tail_deg_amp_slow', 30.0,  float, (0.0,60.0,1.0)),
+            ('tail_deg_amp_fast', 20.0,  float, (0.0,60.0,1.0)),
+            ('tail_max_deflect',  75,    int,   (0,150,1)),
+            ('rate_hz',           50,    int,   (10,200,5)),
+            ('fin_max_deflect',   75,    int,   (0,150,1)),
+            ('fin_blend',         0.5,   float, (0.0,1.0,0.05)),
+        ]
 
-        # 4) Tail PWM limits & derived values
-        self.declare_parameter('tail_pwm_default', 303)
-        self.declare_parameter('tail_pwm_min',     176)
-        self.declare_parameter('tail_pwm_max',     434)
-        tail_def = self.get_parameter('tail_pwm_default').value
-        tail_min = self.get_parameter('tail_pwm_min').value
-        tail_max = self.get_parameter('tail_pwm_max').value
-        self.tail_pwm = PWMValue(tail_def, tail_min, tail_max)
+        # --- 2. PWM SPECS: attr-name, default, min, max ---
+        pwm_specs = [
+            ('cam_pwm',  315, 215, 415),
+            ('tail_pwm', 303, 176, 434),
+            ('left_fin_pwm',  231, 153.5, 307),
+            ('right_fin_pwm',  231, 153.5, 307)
+        ]
 
-        #   Compute zero‐center offset limits and amplitude ceiling
-        tail_off_min = tail_min - tail_def
-        tail_off_max = tail_max - tail_def
-        Amax        = min(abs(tail_off_min), abs(tail_off_max))
-        self.tail_offset    = PWMValue(0, tail_off_min, tail_off_max)
-        self.tail_amplitude = PWMValue(0, 0, Amax)
+        # loop over param_specs → declare + read into self.<name>
+        for name, default, ptype, (mn, mx, st) in param_specs:
+            desc = ParameterDescriptor()
+            if ptype is float:
+                desc.floating_point_range = [
+                    FloatingPointRange(from_value=mn, to_value=mx, step=st)
+                ]
+            else:
+                desc.integer_range = [
+                    IntegerRange(from_value=int(mn), to_value=int(mx), step=int(st))
+                ]
+            self.declare_parameter(name, default, desc)
+            setattr(self, name, self.get_parameter(name).value)
 
-        # 5) Fins PWM limits
-        self.declare_parameter('fins_pwm_default', 231)
-        self.declare_parameter('fins_pwm_min',     153.5)
-        self.declare_parameter('fins_pwm_max',     307)
-        fins_def = self.get_parameter('fins_pwm_default').value
-        fins_min = self.get_parameter('fins_pwm_min').value
-        fins_max = self.get_parameter('fins_pwm_max').value
-        self.left_fin_pwm  = PWMValue(fins_def, fins_min, fins_max)
-        self.right_fin_pwm = PWMValue(fins_def, fins_min, fins_max)
+        # loop over pwm_specs → declare *_default/min/max + build PWMValue
+        for attr, d, lo, hi in pwm_specs:
+            for suffix in ('default','min','max'):
+                key = f'{attr}_{suffix}'
+                val = {'default':d, 'min':lo, 'max':hi}[suffix]
+                self.declare_parameter(key, val)
+            dd = self.get_parameter(f'{attr}_default').value
+            mn = self.get_parameter(f'{attr}_min').value
+            mx = self.get_parameter(f'{attr}_max').value
+            setattr(self, attr, PWMValue(dd, mn, mx))
 
-        # 6) Fin tuning (deflection + blend)
-        self.declare_parameter('fin_max_deflect', 75)
-        self.declare_parameter('fin_blend',       0.5)
-        fin_deflect = self.get_parameter('fin_max_deflect').value
-        fin_blend   = self.get_parameter('fin_blend').value
+        # catch any slider moves at runtime
+        self.add_on_set_parameters_callback(self._on_parameters_changed)
+        #  ➤ compute amplitude in PWM units from degree sliders
+        deg_to_pwm = (self.tail_pwm.max - self.tail_pwm.min) / 180.0
+        self.tail_pwm_amp_slow = self.tail_deg_amp_slow * deg_to_pwm
+        self.tail_pwm_amp_fast = self.tail_deg_amp_fast * deg_to_pwm
 
-        self.left_fin_pwm.deflect  = fin_deflect
-        self.right_fin_pwm.deflect = fin_deflect
-        self.left_fin_pwm.blend    = fin_blend
-        self.right_fin_pwm.blend   = fin_blend
-        # Helpers for fins control
-        self.fin_dive_ref = PWMValue(0, -fin_deflect, fin_deflect,
-                                     deflect_=fin_deflect, blend_=fin_blend)
-        self.fin_turn_off = PWMValue(0, -fin_deflect, fin_deflect,
-                                     deflect_=fin_deflect, blend_=fin_blend)
+        self.fin_dive_ref   = 0
+        self.fin_turn_off   = 0
 
-        # 7) Steering offset limit (tail deflect used for O_max)
-        self.declare_parameter('tail_max_deflect', tail_off_max)  # you may set a separate O_max if desired
-        tail_deflect = self.get_parameter('tail_max_deflect').value
-        self.O_max = tail_deflect
-
-        # 8) Tail‐dynamics parameters (accel, drag, freq & amp envelopes)
-        self.declare_parameter('k_accel', 0.5)    # speed ↑ when x>0
-        self.declare_parameter('k_brake', -0.7)   # speed ↓ when x<0
-        self.declare_parameter('k_drag',  0.3)    # coast slowdown when x=0
-
-        self.declare_parameter('f_min',  0.5)     # tail‐beat min frequency (Hz)
-        self.declare_parameter('f_max',  2.0)     # tail‐beat max frequency (Hz)
-        self.declare_parameter('A_min', 10.0)     # tail amplitude at top speed
-        self.declare_parameter('A_max', 75.0)     # tail amplitude at low speed
-
-        self.declare_parameter('rate_hz', 50.0)   # update rate for send_movement_tail
-
-        self.k_accel = self.get_parameter('k_accel').value
-        self.k_brake = self.get_parameter('k_brake').value
-        self.k_drag  = self.get_parameter('k_drag').value
-
-        self.f_min = self.get_parameter('f_min').value
-        self.f_max = self.get_parameter('f_max').value
-        self.A_min = self.get_parameter('A_min').value
-        self.A_max = self.get_parameter('A_max').value
-
-        self.rate_hz = self.get_parameter('rate_hz').value
-
-        # 9) Initialize state for send_movement_tail
+        # 4) Initialize state for send_movement_tail
         self.v = 0.0
         self._last_time = time.monotonic()
         self._last_cmd_x = 0.0
         self._last_cmd_y = 0.0
         self.start = time.monotonic()
         self._phase = 0.0
+        
 
 
-        # 3) ROS interfaces
+        # 5) ROS interfaces
         ns = self.get_namespace()  # e.g. '/pez/'
 
         # Subscribe to /pez/cmd_vel
@@ -163,7 +141,7 @@ class PezController(Node):
         self.create_service(Trigger, 'teleoperation/toggle_magnet',   self.handle_toggle_magnet)
         self.create_service(Trigger, 'teleoperation/toggle_neutral',   self.handle_toggle_neutral)
 
-        # 4) Internal state & thread
+        # 6) Internal state & thread
         self.sync_flag  = True
         self.running    = False
         self.magnet_on  = False
@@ -176,12 +154,30 @@ class PezController(Node):
 
         self.get_logger().info('[PezController] Initialized.')
 
+    
+    def _on_parameters_changed(self, params):
+
+        deg_to_pwm = (self.tail_pwm.max - self.tail_pwm.min) / 180.0
+
+        for p in params:
+            if p.type_ not in (Parameter.Type.INTEGER, Parameter.Type.DOUBLE):
+                continue
+            if hasattr(self, p.name):
+                setattr(self, p.name, p.value)
+            # if either amplitude‐in‐degrees slider moved, recompute the PWM half‐stroke
+            if p.name in ('tail_deg_amp_slow', 'tail_deg_amp_fast'):
+                self.tail_pwm_amp_slow = self.tail_deg_amp_slow * deg_to_pwm
+                self.tail_pwm_amp_fast = self.tail_deg_amp_fast * deg_to_pwm
+
+        return SetParametersResult(successful=True)
+
+
     def default_values(self):
-        self.tail_amplitude.current = self.tail_amplitude.default
-        self.tail_offset.current    = self.tail_offset.default
-        self.fin_dive_ref.current   = 0
-        self.fin_turn_off.current   = 0
+        self.fin_dive_ref   = 0
+        self.fin_turn_off   = 0
         self.cam_pwm.current = self.cam_pwm.default
+        self.left_fin_pwm.current = self.left_fin_pwm.default
+        self.right_fin_pwm.current = self.right_fin_pwm.default
 
 
     def handle_start(self, request, response):
@@ -198,7 +194,7 @@ class PezController(Node):
 
         self.running = False
         self.get_logger().info('[PezController] stop_swim → stopped')
-        time.sleep(0.4) # Rate 5Hz * 2
+        time.sleep(2.0 / self.rate_hz) # Rate * 2
         self.nav.set_pwm_channels_values(
             [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
             [self.tail_pwm.default,
@@ -246,9 +242,8 @@ class PezController(Node):
     
     def _tail_freq(self):
         # v=0 → slow gait; v=1 → fast gait
-        tail_freq_slow = 1.5
-        tail_freq_fast = 5
-        return (tail_freq_slow + (tail_freq_fast - tail_freq_slow) * self.v)
+
+        return (self.tail_freq_slow + (self.tail_freq_fast - self.tail_freq_slow) * self.v)
 
     def _tail_ampl(self):
         """
@@ -256,15 +251,14 @@ class PezController(Node):
         between slow and fast settings based on v∈[0,1].
         """
 
-        tail_pwm_amp_slow, tail_pwm_amp_fast = 43.0, 28.7
-        return (tail_pwm_amp_slow + (tail_pwm_amp_fast - tail_pwm_amp_slow) * self.v
+        return (self.tail_pwm_amp_slow + (self.tail_pwm_amp_fast - self.tail_pwm_amp_slow) * self.v
         )
     def _tail_pwm(self, y):
         """
         y: lateral input ∈[-1,1] used for DC steering offset
         """
         center = self.tail_pwm.default
-        offset = self.O_max * y
+        offset = self.tail_max_deflect * y
         A      = self._tail_ampl()
         pwm    = center + offset + A * math.sin(self._phase)
         return int(self.tail_pwm.clamp(pwm))
@@ -322,17 +316,20 @@ class PezController(Node):
         self._last_cmd_y = y
 
         # Fins dive & turn
-        def blend(comp, val):
-            tgt = val * comp.deflect
-            comp.current = comp.clamp_deflect(comp.current + (tgt - comp.current) * comp.blend)
+        def blend_ref(ref, input_val):
+            return ref + (input_val * self.fin_max_deflect - ref) * self.fin_blend
 
-        if z != 0.0:
-            blend(self.fin_dive_ref, z)
-        blend(self.fin_turn_off, y)
+        # update refs
+        self.fin_dive_ref   = blend_ref(self.fin_dive_ref,   z)
+        self.fin_turn_off   = blend_ref(self.fin_turn_off,   y)
 
-        for pwm, sign in ((self.left_fin_pwm, +1), (self.right_fin_pwm, -1)):
-            tgt = pwm.default + self.fin_dive_ref.current + sign * self.fin_turn_off.current
-            pwm.current = pwm.clamp(pwm.current + (tgt - pwm.current) * pwm.blend)
+        # compute & blend each fin’s PWM
+        for pwm_obj, sign in ((self.left_fin_pwm, +1),(self.right_fin_pwm, -1)):
+            # target = default + dive + (± turn)
+            target = pwm_obj.default + self.fin_dive_ref + sign*self.fin_turn_off
+            # clamp then blend into current
+            clamped = pwm_obj.clamp(target)
+            pwm_obj.current += (clamped - pwm_obj.current) * self.fin_blend
 
         self.sync_flag = True
 
