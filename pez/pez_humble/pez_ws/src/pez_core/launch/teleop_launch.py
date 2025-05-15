@@ -39,8 +39,8 @@ def generate_launch_description():
     # 4) PezController node (always)
     axis_node = Node(
         package='pez_core',
-        executable='cpg_controller',
-        name='pez_controller',
+        executable='fish_teleop',
+        name='fish_teleop_node',
         namespace='pez',
         output='screen',
         parameters=[

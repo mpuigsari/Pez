@@ -30,13 +30,12 @@ RUN apt-get update \
 RUN mkdir -p /pez_ws/src
 
 # copy your package into the workspace
-COPY pez/pez_humble/pez_ws/src/pez_control /pez_ws/src/pez_control
+COPY pez/pez_humble/pez_ws/src/pez_core /pez_ws/src/pez_core
 
 # build it (now under bash!)
 RUN source /opt/ros/humble/setup.bash \
  && cd /pez_ws \
- && colcon build --symlink-install \
- && rm -rf /pez_ws/build /pez_ws/install/log
+ && colcon build --symlink-install
 
 ####################################################
 # 3) Entrypoint

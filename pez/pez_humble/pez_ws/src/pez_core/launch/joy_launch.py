@@ -36,8 +36,8 @@ def generate_launch_description():
             # Joy → cmd_vel publisher
             launch_ros.actions.Node(
                 package='pez_core',
-                executable='pez_joy',
-                name='joy_controller',
+                executable='fish_joy',
+                name='fish_joy_node',
                 output='screen',
                 parameters=[joy_params],
             ),
