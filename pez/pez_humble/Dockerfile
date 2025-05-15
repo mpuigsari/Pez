@@ -17,7 +17,7 @@ RUN apt-get update \
       ros-humble-image-transport-plugins \
       ros-humble-compressed-image-transport \
       ros-humble-compressed-depth-image-transport \
-      ros-humble-theora-image-transport
+      ros-humble-theora-image-transport \
 
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,7 +30,7 @@ RUN rm -f /etc/ros/rosdep/sources.list.d/20-default.list \
 WORKDIR /pez_ws
 COPY pez_ws/src src
 RUN rosdep install --from-paths src --ignore-src -r -y \
- && . /opt/ros/humble/setup.bash
+      && . /opt/ros/humble/setup.bash
 
 # 4) Entrypoint: source ROS & your workspace
 COPY entrypoint.sh /entrypoint.sh
