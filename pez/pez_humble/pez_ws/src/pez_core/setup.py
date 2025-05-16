@@ -22,7 +22,6 @@ setup(
         ('share/' + package_name + '/launch', [
             'launch/joy_launch.py',
             'launch/teleop_launch.py',
-            'launch/joy_launch.py',
         ]),
     ],
     install_requires=['setuptools', 'bluerobotics-navigator'],

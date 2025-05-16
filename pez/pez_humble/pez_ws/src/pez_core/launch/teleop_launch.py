@@ -7,7 +7,6 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     SetEnvironmentVariable,
-    ExecuteProcess,
     RegisterEventHandler,
     EmitEvent,
 )
@@ -83,14 +82,6 @@ def generate_launch_description():
         condition=UnlessCondition(test_flag),
     )
 
-    # 6) PlotJuggler if testing
-    plotjuggler = ExecuteProcess(
-        cmd=[
-            'ros2', 'run', 'plotjuggler', 'plotjuggler',
-        ],
-        output='screen',
-        condition=IfCondition(test_flag),
-    )
 
     # 7) Shutdown handlers: if either exits, tear down the whole launch
     on_teleop_exit = RegisterEventHandler(
@@ -105,12 +96,6 @@ def generate_launch_description():
             on_exit=[EmitEvent(event=Shutdown())],
         )
     )
-    on_pj_exit = RegisterEventHandler(
-        OnProcessExit(
-            target_action=plotjuggler,
-            on_exit=[EmitEvent(event=Shutdown())],
-        )
-    )
 
     return LaunchDescription([
         SetEnvironmentVariable('ROS_DOMAIN_ID', '21'),
@@ -118,8 +103,6 @@ def generate_launch_description():
         fish_teleop_node,
         fish_teleop_node_test,
         usb_cam_node,
-        plotjuggler,
         on_teleop_exit,
         on_teleop_test_exit,
-        on_pj_exit,
     ])
