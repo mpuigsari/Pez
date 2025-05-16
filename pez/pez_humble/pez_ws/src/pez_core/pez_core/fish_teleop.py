@@ -8,7 +8,7 @@ from rclpy.node import Node
 from rclpy.parameter import Parameter
 from rcl_interfaces.msg import ParameterDescriptor, FloatingPointRange, IntegerRange, SetParametersResult
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from std_srvs.srv import Trigger
 import math
 import time
@@ -135,11 +135,22 @@ class PezController(Node):
             10
         )
 
+        # Publishers for PlotJuggler
+        self.pwm_pub   = self.create_publisher(Float32MultiArray, f'{ns}/pwm',   10)
+        self._last_pwm = {
+            'tail':   float(self.tail_pwm.default),
+            'fin_l':  float(self.left_fin_pwm.default),
+            'fin_r':  float(self.right_fin_pwm.default),
+            'camera': float(self.cam_pwm.default),
+            'magnet': 0.0
+        }
+
+
         # Teleoperation services
-        self.create_service(Trigger, 'teleoperation/start_swim',      self.handle_start)
-        self.create_service(Trigger, 'teleoperation/stop_swim',       self.handle_stop)
-        self.create_service(Trigger, 'teleoperation/toggle_magnet',   self.handle_toggle_magnet)
-        self.create_service(Trigger, 'teleoperation/toggle_neutral',   self.handle_toggle_neutral)
+        self.create_service(Trigger, f'{ns}teleoperation/start_swim',      self.handle_start)
+        self.create_service(Trigger, f'{ns}teleoperation/stop_swim',       self.handle_stop)
+        self.create_service(Trigger, f'{ns}teleoperation/toggle_magnet',   self.handle_toggle_magnet)
+        self.create_service(Trigger, f'{ns}teleoperation/toggle_neutral',   self.handle_toggle_neutral)
 
         # 6) Internal state & thread
         self.sync_flag  = True
@@ -211,6 +222,8 @@ class PezController(Node):
         value = 1.0 if self.magnet_on else 0.0
         self.nav.set_pwm_channel_duty_cycle(PwmChannel.Ch9, value)
         self.get_logger().info(f'[PezController] Magnet → {state}')
+        self._last_pwm['magnet'] = value
+        self._publish_all_pwm()
         response.success = True
         response.message = f'magnet {state.lower()}'
         return response
@@ -242,7 +255,6 @@ class PezController(Node):
     
     def _tail_freq(self):
         # v=0 → slow gait; v=1 → fast gait
-
         return (self.tail_freq_slow + (self.tail_freq_fast - self.tail_freq_slow) * self.v)
 
     def _tail_ampl(self):
@@ -250,7 +262,6 @@ class PezController(Node):
         Linearly interpolate half‐stroke amplitude in PWM units
         between slow and fast settings based on v∈[0,1].
         """
-
         return (self.tail_pwm_amp_slow + (self.tail_pwm_amp_fast - self.tail_pwm_amp_slow) * self.v
         )
     def _tail_pwm(self, y):
@@ -288,6 +299,8 @@ class PezController(Node):
             # 3) compute & send new tail PWM
             pwm = self._tail_pwm(y)
             self.nav.set_pwm_channels_values([PwmChannel.Ch16], [pwm])
+            self._last_pwm['tail'] = float(pwm)
+            self._publish_all_pwm()
 
             time.sleep(period)
         self.get_logger().info(f'[PezController] Tail → Ended')
@@ -305,6 +318,9 @@ class PezController(Node):
                         [PwmChannel.Ch14, PwmChannel.Ch15],
                         [lf, rf]
                     )
+                self._last_pwm['fin_l'] = float(lf)
+                self._last_pwm['fin_r'] = float(rf)
+                self._publish_all_pwm()
                 time.sleep(1.0 / self.rate_hz)
         self.get_logger().info(f'[PezController] Fins → Ended')
 
@@ -340,7 +356,31 @@ class PezController(Node):
         self.cam_pwm.current = self.cam_pwm.clamp(self.cam_pwm.current + cam_offset)
         cam = int(self.cam_pwm.current)
         self.nav.set_pwm_channels_values([PwmChannel.Ch11], [cam])
+        self._last_pwm['camera'] = self.cam_pwm.current
+        self._publish_all_pwm()
         self.get_logger().info(f'[PezController] Camera → {cam}')
+
+    def _publish_all_pwm(self):
+        msg = Float32MultiArray()
+        # One dimension of length 5
+        msg.layout = MultiArrayLayout(
+            dim=[
+                MultiArrayDimension(label='tail',      size=5, stride=5),
+                MultiArrayDimension(label='fin_left',  size=5, stride=5),
+                MultiArrayDimension(label='fin_right', size=5, stride=5),
+                MultiArrayDimension(label='camera',    size=5, stride=5),
+                MultiArrayDimension(label='magnet',    size=5, stride=5),
+            ],
+            data_offset=0
+        )
+        msg.data = [
+            self._last_pwm['tail'],
+            self._last_pwm['fin_l'],
+            self._last_pwm['fin_r'],
+            self._last_pwm['camera'],
+            self._last_pwm['magnet'],
+        ]
+        self.pwm_pub.publish(msg)
 
 
 

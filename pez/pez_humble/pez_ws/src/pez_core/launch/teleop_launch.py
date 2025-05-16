@@ -36,8 +36,9 @@ def generate_launch_description():
         description='If true, launch PlotJuggler instead of the camera node'
     )
 
-    # 4) PezController node (always)
-    axis_node = Node(
+
+    # 4a) fish_teleop in normal mode
+    fish_teleop_node = Node(
         package='pez_core',
         executable='fish_teleop',
         name='fish_teleop_node',
@@ -45,8 +46,23 @@ def generate_launch_description():
         output='screen',
         parameters=[
             axis_params,
-            { 'test_flag': test_flag }  # pass through to your node
+            { 'test_flag': test_flag }
         ],
+        condition=UnlessCondition(test_flag),
+    )
+
+    # 4b) fish_teleop in test mode with a different node name
+    fish_teleop_node_test = Node(
+        package='pez_core',
+        executable='fish_teleop',
+        name='fish_teleop_node_test',
+        namespace='pez',
+        output='screen',
+        parameters=[
+            axis_params,
+            { 'test_flag': test_flag }
+        ],
+        condition=IfCondition(test_flag),
     )
 
     # 5) USB camera node (only if test_flag is false)
@@ -77,9 +93,15 @@ def generate_launch_description():
     )
 
     # 7) Shutdown handlers: if either exits, tear down the whole launch
-    on_axis_exit = RegisterEventHandler(
+    on_teleop_exit = RegisterEventHandler(
         OnProcessExit(
-            target_action=axis_node,
+            target_action=fish_teleop_node,
+            on_exit=[EmitEvent(event=Shutdown())],
+        )
+    )
+    on_teleop_test_exit = RegisterEventHandler(
+        OnProcessExit(
+            target_action=fish_teleop_node_test,
             on_exit=[EmitEvent(event=Shutdown())],
         )
     )
@@ -93,9 +115,11 @@ def generate_launch_description():
     return LaunchDescription([
         SetEnvironmentVariable('ROS_DOMAIN_ID', '21'),
         declare_test_flag,
-        axis_node,
+        fish_teleop_node,
+        fish_teleop_node_test,
         usb_cam_node,
         plotjuggler,
-        on_axis_exit,
+        on_teleop_exit,
+        on_teleop_test_exit,
         on_pj_exit,
     ])

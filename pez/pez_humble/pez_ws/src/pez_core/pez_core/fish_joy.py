@@ -67,11 +67,11 @@ class JoystickController(Node):
         self.camera_pub  = self.create_publisher(Float64, self.get_parameter('camera_topic').value,  10)
 
         # 3) Service clients
-        
-        self.start_cli  = self.create_client(Trigger, self.get_parameter('start_service').value)
-        self.stop_cli   = self.create_client(Trigger, self.get_parameter('stop_service').value)
-        self.magnet_cli = self.create_client(Trigger, self.get_parameter('magnet_service').value)
-        self.neutral_cli = self.create_client(Trigger, self.get_parameter('neutral_service').value)
+        ns = self.get_namespace()
+        self.start_cli  = self.create_client(Trigger, f"{ns}/{self.get_parameter('start_service').value}")
+        self.stop_cli   = self.create_client(Trigger, f"{ns}/{self.get_parameter('stop_service').value}")
+        self.magnet_cli = self.create_client(Trigger, f"{ns}/{self.get_parameter('magnet_service').value}")
+        self.neutral_cli = self.create_client(Trigger, f"{ns}/{self.get_parameter('neutral_service').value}")
 
         # 4) Internal state
         self.mode = -1
@@ -165,8 +165,14 @@ def main(args=None):
     rclpy.init(args=args)
     node = JoystickController()
     rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info('KeyboardInterrupt—shutting down...')
+    finally:
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

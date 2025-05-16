@@ -1,16 +1,14 @@
 # aux.py (modified)
 
-import time
+"""import time
 import queue
-
-from std_msgs.msg import Float64, Float64MultiArray
 
 class PwmChannel:
     Ch9  = 9-1    # magnet
     Ch11 = 11-1   # camera
     Ch14 = 14-1   # left fin
     Ch15 = 15-1   # right fin
-    Ch16 = 16-1   # tail
+    Ch16 = 16-1   # tail"""
 
 class FakeNav:
     def __init__(self, node):
@@ -18,11 +16,11 @@ class FakeNav:
         node: rclpy.node.Node in which to create publishers
         """
         self.node = node
-        self.start = time.time()
-        self._q = queue.Queue()
+        """self.start = time.time()
+        self._q = queue.Queue()"""
 
         # Publishers for PlotJuggler
-        self.tail_pub   = node.create_publisher(Float64,           'pwm/tail',   10)
+        """self.tail_pub   = node.create_publisher(Float64,           'pwm/tail',   10)
         self.fins_pub   = node.create_publisher(Float64MultiArray, 'pwm/fins',   10)
         self.camera_pub = node.create_publisher(Float64,           'pwm/camera', 10)
         self.magnet_pub = node.create_publisher(Float64,           'pwm/magnet', 10)
@@ -31,7 +29,7 @@ class FakeNav:
         self.tail_pub.publish(msg)
         self.fins_pub.publish(msg_a)
         self.camera_pub.publish(msg)
-        self.magnet_pub.publish(msg)
+        self.magnet_pub.publish(msg)"""
 
         node.get_logger().info('[FakeNav] Ready to publish PWM topics')
 
@@ -53,7 +51,7 @@ class FakeNav:
         Publishes each group of values to the right topic.
         """
         # Enqueue if you still need the raw data
-        t = time.time() - self.start
+        """ t = time.time() - self.start
         self._q.put((t, list(zip(channels, values))))
 
         # Handle tail
@@ -81,17 +79,19 @@ class FakeNav:
                        values[channels.index(PwmChannel.Ch15)]]
             msg = Float64MultiArray()
             msg.data = [float(v) for v in ordered]
-            self.fins_pub.publish(msg)
+            self.fins_pub.publish(msg)"""
+        pass
 
     def set_pwm_channel_duty_cycle(self, channel, value):
         """
         If elsewhere you call this (e.g. for your magnet toggle),
         publish it here too.
         """
-        if channel == PwmChannel.Ch9:
+        """if channel == PwmChannel.Ch9:
             msg = Float64()
             msg.data = float(value)
             self.magnet_pub.publish(msg)
         else:
             # fallback: route single-channel calls
-            self.set_pwm_channels_values([channel], [value])
+            self.set_pwm_channels_values([channel], [value])"""
+        pass
