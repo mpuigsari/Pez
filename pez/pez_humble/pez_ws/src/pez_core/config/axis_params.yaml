@@ -25,9 +25,9 @@ pez_controller:
     fins_pwm_max: 307
 
     # camera PWM limits (if you use it)
-    cam_pwm_default: 315
-    cam_pwm_min: 215
-    cam_pwm_max: 415
+    cam_pwm_default: 290
+    cam_pwm_min: 190
+    cam_pwm_max: 390
 
     # CPG / cruise‐control parameters
     cruise_speed_min: 0.0

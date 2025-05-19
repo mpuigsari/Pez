@@ -12,7 +12,7 @@ joy_controller:
     scale_forward:  1.0
     scale_turn:    -1.0
     scale_dive:     1.0
-    scale_camera:  -1.0
+    scale_camera:  1.0
 
     button_start:   7
     button_stop:    6

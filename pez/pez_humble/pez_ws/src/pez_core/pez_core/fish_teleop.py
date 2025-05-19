@@ -66,7 +66,7 @@ class PezController(Node):
 
         # --- 2. PWM SPECS: attr-name, default, min, max ---
         pwm_specs = [
-            ('cam_pwm',  315, 215, 415),
+            ('cam_pwm',  290, 190, 390),
             ('tail_pwm', 303, 176, 434),
             ('left_fin_pwm',  231, 153.5, 307),
             ('right_fin_pwm',  231, 153.5, 307)
@@ -342,7 +342,7 @@ class PezController(Node):
         # compute & blend each fin’s PWM
         for pwm_obj, sign in ((self.left_fin_pwm, +1),(self.right_fin_pwm, -1)):
             # target = default + dive + (± turn)
-            target = pwm_obj.default + self.fin_dive_ref + sign*self.fin_turn_off
+            target = pwm_obj.default + sign*self.fin_dive_ref + self.fin_turn_off  # Sign applied for inverse position between fins
             # clamp then blend into current
             clamped = pwm_obj.clamp(target)
             pwm_obj.current += (clamped - pwm_obj.current) * self.fin_blend
@@ -353,10 +353,11 @@ class PezController(Node):
         cam_offset = msg.data
         if cam_offset == 0:
             return
+        
         self.cam_pwm.current = self.cam_pwm.clamp(self.cam_pwm.current + cam_offset)
         cam = int(self.cam_pwm.current)
         self.nav.set_pwm_channels_values([PwmChannel.Ch11], [cam])
-        self._last_pwm['camera'] = self.cam_pwm.current
+        self._last_pwm['camera'] = float(self.cam_pwm.current)
         self._publish_all_pwm()
         self.get_logger().info(f'[PezController] Camera → {cam}')
 

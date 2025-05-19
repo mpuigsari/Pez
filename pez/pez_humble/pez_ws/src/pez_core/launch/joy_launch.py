@@ -17,6 +17,7 @@ def generate_launch_description():
     # Paths to your YAML & perspective files in <pkg>/config
     joy_params       = os.path.join(pkg_share, 'config', 'joystick_params.yaml')
     perspective_file = os.path.join(pkg_share, 'config', 'pez.perspective')
+    layout_file = os.path.join(pkg_share, 'config', 'test.xml')
     # 3) Declare display_flag argument
     display_flag = LaunchConfiguration('display_flag')
     fish_robot = LaunchConfiguration('fish_robot')
@@ -82,7 +83,7 @@ def generate_launch_description():
         ),
         ExecuteProcess(
         cmd=[
-            'ros2', 'run', 'plotjuggler', 'plotjuggler',
+            'ros2', 'run', 'plotjuggler', 'plotjuggler','--layout', layout_file
         ],
         output='screen',
         condition=IfCondition(display_flag),

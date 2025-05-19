@@ -21,7 +21,7 @@ class JoystickController(Node):
         self.declare_parameter('scale_forward',  1.0)
         self.declare_parameter('scale_turn',    -1.0)
         self.declare_parameter('scale_dive',     1.0)
-        self.declare_parameter('scale_camera',  -1.0)
+        self.declare_parameter('scale_camera',  1.0)
 
         self.declare_parameter('button_start',   7)
         self.declare_parameter('button_stop',    6)
@@ -119,7 +119,7 @@ class JoystickController(Node):
         self.prev_neutral_btn = n_btn
 
     def call_service(self, client, name):
-        if not client.wait_for_service(timeout_sec=10.0):
+        if not client.wait_for_service(timeout_sec=5.0):
             self.get_logger().error(f"{name} service not available")
             return
 

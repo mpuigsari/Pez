@@ -17,6 +17,7 @@ setup(
             'config/joystick_params.yaml',
             'config/axis_params.yaml',
             'config/pez.perspective',
+            'config/test.xml'
         ]),
         # launch files
         ('share/' + package_name + '/launch', [
