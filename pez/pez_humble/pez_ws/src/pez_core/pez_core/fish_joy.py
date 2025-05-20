@@ -19,8 +19,8 @@ class JoystickController(Node):
         self.declare_parameter('axes_camera',  6)
 
         self.declare_parameter('scale_forward',  1.0)
-        self.declare_parameter('scale_turn',    -1.0)
-        self.declare_parameter('scale_dive',     1.0)
+        self.declare_parameter('scale_turn',    1.0)
+        self.declare_parameter('scale_dive',     -1.0)
         self.declare_parameter('scale_camera',  1.0)
 
         self.declare_parameter('button_start',   7)

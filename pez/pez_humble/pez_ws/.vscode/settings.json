@@ -1,3 +1,11 @@
 {
-    "ros.distro": "jazzy"
+    "ros.distro": "jazzy",
+    "python.autoComplete.extraPaths": [
+        "/home/max/Documents/Practicas/Internship/pez/pez_humble/pez_ws/install/pez_core/lib/python3.10/site-packages",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/max/Documents/Practicas/Internship/pez/pez_humble/pez_ws/install/pez_core/lib/python3.10/site-packages",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ]
 }

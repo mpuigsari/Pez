@@ -61,6 +61,7 @@ class PezController(Node):
             ('tail_max_deflect',  75,    int,   (0,150,1)),
             ('rate_hz',           50,    int,   (10,200,5)),
             ('fin_max_deflect',   75,    int,   (0,150,1)),
+            ('fin_turn_max_deflect', 20, int,   (0,50,1))
             ('fin_blend',         0.5,   float, (0.0,1.0,0.05)),
         ]
 
@@ -207,10 +208,11 @@ class PezController(Node):
         self.get_logger().info('[PezController] stop_swim → stopped')
         time.sleep(2.0 / self.rate_hz) # Rate * 2
         self.nav.set_pwm_channels_values(
-            [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15],
+            [PwmChannel.Ch16, PwmChannel.Ch14, PwmChannel.Ch15, PwmChannel.Ch11],
             [self.tail_pwm.default,
              self.left_fin_pwm.default,
-             self.right_fin_pwm.default]
+             self.right_fin_pwm.default,
+             self.cam_pwm.default]
         )
         response.success = True
         response.message = 'stopped'
@@ -333,11 +335,11 @@ class PezController(Node):
 
         # Fins dive & turn
         def blend_ref(ref, input_val):
-            return ref + (input_val * self.fin_max_deflect - ref) * self.fin_blend
+            return ref + (input_val - ref) * self.fin_blend
 
         # update refs
-        self.fin_dive_ref   = blend_ref(self.fin_dive_ref,   z)
-        self.fin_turn_off   = blend_ref(self.fin_turn_off,   y)
+        self.fin_dive_ref   = blend_ref(self.fin_dive_ref,   z* self.fin_max_deflect)
+        self.fin_turn_off   = blend_ref(self.fin_turn_off,   y * self.fin_turn_max_deflect)
 
         # compute & blend each fin’s PWM
         for pwm_obj, sign in ((self.left_fin_pwm, +1),(self.right_fin_pwm, -1)):
