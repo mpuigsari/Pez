@@ -30,7 +30,7 @@ RUN apt-get update \
 RUN mkdir -p /pez_ws/src
 
 # copy your package into the workspace
-COPY pez/pez_humble/pez_ws/src/pez_core /pez_ws/src/pez_core
+COPY pez_ros/pez_humble/pez_ws/src/pez_core /pez_ws/src/pez_core
 
 # build it (now under bash!)
 RUN source /opt/ros/humble/setup.bash \
@@ -40,7 +40,7 @@ RUN source /opt/ros/humble/setup.bash \
 ####################################################
 # 3) Entrypoint
 ####################################################
-COPY docker_blueos/ros_entrypoint.sh /ros_entrypoint.sh
+COPY pez_ros/pez_docker/ros_entrypoint.sh /ros_entrypoint.sh
 RUN chmod +x /ros_entrypoint.sh
 
 ENTRYPOINT ["/ros_entrypoint.sh"]
