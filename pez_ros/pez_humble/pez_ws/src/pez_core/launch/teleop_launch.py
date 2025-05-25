@@ -1,4 +1,4 @@
-# File: launch/pez_with_camera.launch.py
+# File: launch/teleop_launch.py
 
 import os
 

@@ -1,4 +1,4 @@
-# File: launch/pez_full.launch.py
+# File: launch/joy_launch.py
 
 import os
 
