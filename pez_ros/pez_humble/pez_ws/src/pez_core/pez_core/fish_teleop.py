@@ -61,7 +61,7 @@ class PezController(Node):
             ('tail_max_deflect',  75,    int,   (0,150,1)),
             ('rate_hz',           50,    int,   (10,200,5)),
             ('fin_max_deflect',   75,    int,   (0,150,1)),
-            ('fin_turn_max_deflect', 20, int,   (0,50,1))
+            ('fin_turn_max_deflect', 20, int,   (0,50,1)),
             ('fin_blend',         0.5,   float, (0.0,1.0,0.05)),
         ]
 
