@@ -10,14 +10,15 @@ from threading import Thread, Event
 #   poly: CRC polynomial, including top bit (e.g. for CRC-3 poly=0b1011)
 def _crc_generic(data: int, width: int, poly: int) -> int:
     mask = (1 << width) - 1
-    # append 'width' zero bits for CRC computation
     data = data << width
-    # perform long division
-    for _ in range(data.bit_length() - width):
-        shift = data.bit_length() - width - 1
+    # total bit‐length including appended zeros
+    total = data.bit_length()
+    # process from highest down to the CRC width
+    for shift in range(total - width - 1, -1, -1):
         if data & (1 << (shift + width)):
             data ^= (poly << shift)
     return data & mask
+
 
 # CRC polynomials
 _CRC2_POLY = 0b111    # CRC-2: x^2 + x + 1

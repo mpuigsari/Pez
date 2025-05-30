@@ -74,7 +74,10 @@ class PezComms(Node):
         super().__init__('pez_comms_master')
         # serial modem
         global modem
-        modem = ModemCommunicator(port='/dev/ttyModem0', baud=9600, timeout=0.5)
+
+        self.declare_parameter('port', '/dev/ttyModem0')
+        port = self.get_parameter('port').get_parameter_value().string_value
+        self.modem = ModemCommunicator(port=port, baud=9600)
         # ROS subscriptions
         ns = self.get_namespace()
         self.create_subscription(Twist, f'{ns}/cmd_vel', self.vel_callback, 10)
