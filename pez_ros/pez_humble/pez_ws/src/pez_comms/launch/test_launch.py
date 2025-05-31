@@ -1,50 +1,40 @@
-# pez_comms/launch/test_socat.launch.py
+# pez_comms/launch/test_socat_dynamic.launch.py
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, LogInfo
-from launch.substitutions import LaunchConfiguration
+from launch.actions import ExecuteProcess, LogInfo
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    # launch arguments
-    host_port = LaunchConfiguration('host_port')
-    fish_port = LaunchConfiguration('fish_port')
-
     return LaunchDescription([
-        # Arguments for the two ends of the virtual serial link
-        DeclareLaunchArgument('host_port', default_value='/dev/pts/5',
-                              description='PTY for host_side to open'),
-        DeclareLaunchArgument('fish_port', default_value='/dev/pts/6',
-                              description='PTY for fish_side to open'),
-
-        # Launch socat to tie them together
+        # 1) Run socat without a fixed “link=…”—let it choose two free PTYs
         ExecuteProcess(
-            cmd=[
-                'socat', '-d', '-d',
-                'pty,raw,echo=0,link=' + host_port,
-                'pty,raw,echo=0,link=' + fish_port
-            ],
+            cmd=['socat', '-d', '-d', 'pty,raw,echo=0', 'pty,raw,echo=0'],
             output='screen',
             shell=False
         ),
 
-        # Give socat a moment to create the PTYs
-        LogInfo(msg=["Waiting for PTYs: ", host_port, " <--> ", fish_port]),
+        # 2) Log a message so you remember to copy-and-paste the PTYs from socat's stdout
+        LogInfo(msg=[
+            '→ socat has started.  Check its console output for two PTY names (e.g. /dev/pts/7 and /dev/pts/8).'
+        ]),
 
-        # Host-side node
+        # 3) (These Node entries won’t actually start until you manually re-run this launch
+        #     with the PTY names you saw. We leave them here as a reminder.)
         Node(
             package='pez_comms',
             executable='host_side',
             name='host_comms',
+            namespace='host',
             output='screen',
-            parameters=[{'port': host_port}],
+            parameters=[{'port': '/dev/pts/4'}],
+            # <-- replace <copy_host_here> with the first PTY you saw
         ),
-
-        # Fish-side node
         Node(
             package='pez_comms',
             executable='fish_side',
-            name='fish_comms_fish',
+            name='fish_comms',
+            namespace='pez',
             output='screen',
-            parameters=[{'port': fish_port}],
+            parameters=[{'port': '/dev/pts/5'}],
+            # <-- replace <copy_fish_here> with the second PTY you saw
         ),
     ])

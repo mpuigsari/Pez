@@ -68,10 +68,10 @@ class PacketBuilder:
         Packet A Normal (8 bits):
           bit7        = Type A (0)
           bits6-4     = x (3 bits)
-          bits3-1     = y (3 bits)
-          bit0        = z (1 bit)
+          bits3-2     = y (2 bits)
+          bit1-0        = z (2 bits)
         """
-        pkt = ((x & 0x7) << 4) | ((y & 0x7) << 1) | (z & 0x1)
+        pkt = ((x & 0x7) << 4) | ((y & 0x3) << 2) | (z & 0x3)
         return struct.pack('B', pkt)
 
     @staticmethod
@@ -88,6 +88,44 @@ class PacketBuilder:
         crc6 = _crc_generic(header >> 6, width=6, poly=_CRC6_POLY)
         pkt = (header | (crc6 & 0x3F)) & 0xFFFF
         return struct.pack('>H', pkt)
+
+    # ───────────────────────────────────────────────────────────────────────────
+    # NEW: parse_packet_a_normal
+    # ───────────────────────────────────────────────────────────────────────────
+    @staticmethod
+    def parse_packet_a_normal(byte_val: int):
+        """
+        Reverse of build_packet_a_normal (8 bits):
+          bit7  = 0 (Type A)
+          bits6-4 = x (3 bits)
+          bits3-2 = y (2 bits)
+          bit1-0    = z (2 bits)
+        Returns (x_q, y_q, z_q) as integers.
+        """
+        x_q = (byte_val >> 4) & 0x7
+        y_q = (byte_val >> 2) & 0x3
+        z_q = byte_val & 0x3
+        return x_q, y_q, z_q
+
+    # ───────────────────────────────────────────────────────────────────────────
+    # NEW: parse_packet_b
+    # ───────────────────────────────────────────────────────────────────────────
+    @staticmethod
+    def parse_packet_b(byte_val: int):
+        """
+        Reverse of build_packet_b (8 bits):
+          bit7     = Type B (1)
+          bits6-5  = service_id (2 bits)
+          bit4     = value (1 bit)
+          bits3-1  = CRC-3 (ignored here)
+          bit0     = seq (1 bit)
+        Returns (service_id, value, seq) as integers.
+        """
+        service_id = (byte_val >> 5) & 0x3
+        value      = (byte_val >> 4) & 0x1
+        seq        = byte_val & 0x1
+        return service_id, value, seq
+
 
 class ModemCommunicator:
     """Handles serial communication to the acoustic modem."""
@@ -114,40 +152,39 @@ class ModemCommunicator:
         self._ser.close()
 
 
-
 class TransmissionStep:
     """Defines a single step in a transmission sequence."""
     def __init__(self, name, action, duration=None, wait_for=None):
-        self.name = name
-        self.action = action       # function to call when step begins
-        self.duration = duration   # seconds to wait after action
-        self.wait_for = wait_for   # function returning True when ready to proceed
+        self.name     = name
+        self.action   = action       # function to call when step begins
+        self.duration = duration     # seconds to wait after action
+        self.wait_for = wait_for     # function returning True when ready to proceed
+
 
 class TransmissionScheduler(Thread):
     """Runs a configurable sequence of TransmissionSteps."""
     def __init__(self, steps, loop=False):
         super().__init__(daemon=True)
-        self.steps = steps
-        self.loop = loop
-        self.stop_event = Event()
+        self.steps       = steps
+        self.loop        = loop
+        self.stop_event  = Event()
 
     def run(self):
         while not self.stop_event.is_set():
             for step in self.steps:
                 if self.stop_event.is_set():
                     return
-                # execute action
+                # execute action, if any
                 if step.action:
                     step.action()
-                # wait either fixed duration or until condition
+                # wait fixed duration or until condition holds
                 if step.duration is not None:
-                    end = time.monotonic() + step.duration
-                    while time.monotonic() < end:
+                    end_time = time.monotonic() + step.duration
+                    while time.monotonic() < end_time:
                         if self.stop_event.is_set():
                             return
                         time.sleep(0.01)
                 elif step.wait_for is not None:
-                    # wait until wait_for() returns True
                     while not step.wait_for():
                         if self.stop_event.is_set():
                             return
@@ -158,14 +195,3 @@ class TransmissionScheduler(Thread):
 
     def stop(self):
         self.stop_event.set()
-
-# Example usage:
-# steps = [
-#     TransmissionStep('send_A', lambda: modem.send_packet(packet_a), duration=0.25),
-#     TransmissionStep('send_B', lambda: modem.send_packet(packet_b), duration=0.25),
-#     TransmissionStep('wait_resp', None, wait_for=lambda: serial_reply_received()),
-# ]
-# scheduler = TransmissionScheduler(steps, loop=True)
-# scheduler.start()
-# # ... later
-# scheduler.stop()

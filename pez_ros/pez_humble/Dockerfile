@@ -7,6 +7,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       python3-colcon-common-extensions \
       python3-pip \
+      python3-serial \
       python3-rosdep \
       ros-humble-joy \
       ros-humble-rqt \
@@ -18,6 +19,7 @@ RUN apt-get update \
       ros-humble-compressed-image-transport \
       ros-humble-compressed-depth-image-transport \
       ros-humble-theora-image-transport \
+      socat \
 
     && rm -rf /var/lib/apt/lists/*
 
