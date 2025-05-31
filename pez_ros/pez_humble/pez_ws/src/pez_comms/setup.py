@@ -9,8 +9,8 @@ package_name = 'pez_comms'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[package_name],
-    install_requires=['setuptools'],
+    packages=[package_name, 'pez_comms.core'],
+    install_requires=['setuptools', 'pyserial'],
     zip_safe=True,
     maintainer='Your Name',
     maintainer_email='your.email@example.com',
