@@ -18,7 +18,8 @@ RUN apt-get update \
       ros-humble-usb-cam \   
       i2c-tools \            
       libgpiod2 \  
-      python3-rpi.gpio \          
+      python3-rpi.gpio \
+      nano \          
  && rm -rf /var/lib/apt/lists/*
 
 # Now install Python packages via pip
