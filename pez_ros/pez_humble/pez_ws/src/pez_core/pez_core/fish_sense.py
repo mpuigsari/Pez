@@ -15,22 +15,14 @@ from pez_core.sensors import SensorManager
 
 class SensorsNode(Node):
     """
-    ROS 2 node that publishes sensor topics for TSYS01 and MS5837, with full parameter-based toggling and 
-    dynamic reconfiguration.
-
-    Declared parameters (defaults):
-      • publish_frequency           (float, Hz; default=1.0)
-      • publish_tsys01_temperature  (bool; default=True)
-      • publish_ms5837_temperature  (bool; default=False)
-      • publish_ms5837_pressure     (bool; default=True)
-      • publish_ms5837_depth        (bool; default=False)
-      • fluid_density               (float; default=997.0)
+    ROS2 node that publishes TSYS01 and MS5837 topics, with highly optimized
+    dynamic reconfiguration via a dispatch table.
     """
 
     def __init__(self):
         super().__init__('sensors_node')
 
-        # --- 1) Declare parameters ---
+        # 1) Declare all parameters with defaults
         self.declare_parameter('publish_frequency', 1.0)
         self.declare_parameter('publish_tsys01_temperature', True)
         self.declare_parameter('publish_ms5837_temperature', False)
@@ -38,24 +30,30 @@ class SensorsNode(Node):
         self.declare_parameter('publish_ms5837_depth', False)
         self.declare_parameter('fluid_density', 997.0)
 
-        # --- 2) Read parameter values into attributes ---
-        self.pub_freq = self.get_parameter('publish_frequency').value
+        # 2) Read initial parameter values into attributes
+        self.pub_freq      = self.get_parameter('publish_frequency').value
         self.fluid_density = self.get_parameter('fluid_density').value
 
-        # boolean flags: will update on param changes
+        # boolean flags for sensor toggles
         self.flags = {
-            'tsys01_temp': self.get_parameter('publish_tsys01_temperature').value,
-            'ms5837_temp': self.get_parameter('publish_ms5837_temperature').value,
-            'ms5837_pressure': self.get_parameter('publish_ms5837_pressure').value,
-            'ms5837_depth': self.get_parameter('publish_ms5837_depth').value,
+            'tsys01_temp':       self.get_parameter('publish_tsys01_temperature').value,
+            'ms5837_temp':       self.get_parameter('publish_ms5837_temperature').value,
+            'ms5837_pressure':   self.get_parameter('publish_ms5837_pressure').value,
+            'ms5837_depth':      self.get_parameter('publish_ms5837_depth').value,
         }
 
-        # --- 3) Build sensor‐to‐publisher/read mapping ---
-        # Each entry defines:
-        #   • param key (in self.flags)
-        #   • topic suffix  (appended to namespace)
-        #   • ROS message class
-        #   • SensorManager method name to call
+        # 3) Build a dispatch table: param_name -> action function
+        #    Each action updates either self.pub_freq, self.fluid_density, or self.flags[...].
+        self._param_dispatch: Dict[str, Callable[[Any], None]] = {
+            'publish_frequency':           lambda v: setattr(self, 'pub_freq', float(v)),
+            'fluid_density':               lambda v: setattr(self, 'fluid_density', float(v)),
+            'publish_tsys01_temperature':  lambda v: self._set_flag('tsys01_temp', bool(v)),
+            'publish_ms5837_temperature':  lambda v: self._set_flag('ms5837_temp', bool(v)),
+            'publish_ms5837_pressure':     lambda v: self._set_flag('ms5837_pressure', bool(v)),
+            'publish_ms5837_depth':        lambda v: self._set_flag('ms5837_depth', bool(v)),
+        }
+
+        # 4) Define sensor_map exactly as before
         self.sensor_map = {
             'tsys01_temp': {
                 'topic': 'tsys01/temperature',
@@ -71,7 +69,6 @@ class SensorsNode(Node):
                 'topic': 'ms5837/pressure',
                 'msg_type': FluidPressure,
                 'read_method': 'read_ms5837_pressure',
-                # note: FluidPressure.fluid_pressure expects Pascals; conversion applied below
             },
             'ms5837_depth': {
                 'topic': 'ms5837/depth',
@@ -80,73 +77,100 @@ class SensorsNode(Node):
             },
         }
 
-        # --- 4) Instantiate SensorManager with initial flags ---
+        # 5) Instantiate SensorManager for the first time
         self._init_sensor_manager()
 
-        # --- 5) Create publishers based on flags ---
-        self.publishers: Dict[str, Any] = {}
+        # 6) Create a dictionary for our own publishers (rename to avoid conflict)
+        self.sensor_publishers: Dict[str, Any] = {}
         self._create_publishers()
 
-        # --- 6) Create timer using publish_frequency ---
+        # 7) Create the timer based on publish_frequency
         self._create_timer()
 
-        # --- 7) Log startup summary ---
+        # 8) Log startup summary
         self.get_logger().info(self._summary_text())
 
-        # --- 8) Register parameter change callback ---
+        # 9) Register a single on-set callback
         self.add_on_set_parameters_callback(self._on_parameter_event)
 
+    def _set_flag(self, key: str, new_val: bool):
+        """
+        Helper for toggling sensor flags. If the flag actually changes,
+        mark that we need to rebuild the SensorManager and recreate publishers.
+        """
+        if new_val != self.flags[key]:
+            self.flags[key] = new_val
+            # We’ll handle the rebuild logic in _on_parameter_event
+            self._need_rebuild_sm = True
+            self._need_recreate_pubs = True
+
     def _init_sensor_manager(self):
-        """Instantiate (or re-instantiate) SensorManager if at least one flag is True."""
+        """
+        Instantiate or re‐instantiate SensorManager if at least one flag is True.
+        Called during init and whenever flags change.
+        """
         use_tsys01 = self.flags['tsys01_temp']
-        use_ms5837 = any(self.flags[k] for k in ('ms5837_temp', 'ms5837_pressure', 'ms5837_depth'))
+        use_ms5837 = any(
+            self.flags[k]
+            for k in ('ms5837_temp', 'ms5837_pressure', 'ms5837_depth')
+        )
 
         if not (use_tsys01 or use_ms5837):
             self.get_logger().error("No sensor magnitudes enabled; shutting down.")
             raise RuntimeError("At least one 'publish_*' parameter must be True.")
 
-        # If a previous sensor_manager exists, close it first
+        # Close existing manager if it exists
         if hasattr(self, 'sensor_manager'):
             try:
                 self.sensor_manager.close()
             except Exception as e:
-                self.get_logger().warn(f"Error closing existing SensorManager: {e}")
+                self.get_logger().warn(f"Error closing old SensorManager: {e}")
 
-        # Instantiate new manager
+        # Create a new SensorManager
         try:
-            self.sensor_manager = SensorManager(use_tsys01=use_tsys01, use_ms5837=use_ms5837)
+            self.sensor_manager = SensorManager(
+                use_tsys01=use_tsys01,
+                use_ms5837=use_ms5837
+            )
         except Exception as e:
             self.get_logger().error(f"Failed to initialize SensorManager: {e}")
             raise
 
     def _create_publishers(self):
-        """(Re)create ROS publishers based on current flags."""
-        ns = self.get_namespace().strip('/')  # e.g. 'pez' or '' if root
-        base = f"{ns}/" if ns else ""
+        """
+        (Re)create publishers for each sensor whose flag is True.
+        Stores them in self.sensor_publishers[key] = Publisher or None.
+        """
+        ns = self.get_namespace().strip('/')  # e.g. 'pez'
+        prefix = f"{ns}/" if ns else ""
 
-        # Cancel any existing publishers
-        self.publishers.clear()
+        # Clear old publishers
+        self.sensor_publishers.clear()
 
-        # Create a publisher for each enabled sensor in sensor_map
         for key, conf in self.sensor_map.items():
             if self.flags[key]:
-                topic = base + conf['topic']
-                self.publishers[key] = self.create_publisher(conf['msg_type'], topic, 10)
+                topic = prefix + conf['topic']
+                # This create_publisher will now append into Node._publishers internally
+                self.sensor_publishers[key] = self.create_publisher(conf['msg_type'], topic, 10)
             else:
-                self.publishers[key] = None
+                self.sensor_publishers[key] = None
 
     def _create_timer(self):
-        """(Re)create the ROS timer based on current publish_frequency."""
-        # If there is a timer, cancel it
+        """
+        (Re)create the ROS timer based on publish_frequency.
+        Always cancel any existing timer first.
+        """
         if hasattr(self, 'timer') and self.timer is not None:
             self.timer.cancel()
 
-        # Compute period (avoid division by zero)
+        # Avoid division by zero; ensure period > 0
         period = 1.0 / max(float(self.pub_freq), 1e-6)
         self.timer = self.create_timer(period, self._timer_callback)
 
     def _summary_text(self) -> str:
-        """Return a multiline string summarizing current configuration."""
+        """
+        Return a short summary of current configuration for logging.
+        """
         lines = [f"SensorsNode starting with:\n  • publish_frequency: {self.pub_freq:.2f} Hz"]
         for key, conf in self.sensor_map.items():
             status = 'ON' if self.flags[key] else 'OFF'
@@ -156,81 +180,64 @@ class SensorsNode(Node):
 
     def _on_parameter_event(self, params):
         """
-        Dynamic reconfiguration callback: reacts to any declared parameter change.
-        Returns SetParametersResult(successful=True) if all OK, otherwise False.
+        Called whenever any declared parameter is set. We use the dispatch table
+        self._param_dispatch to update internal fields. Then, if any sensor flags
+        changed, we rebuild both SensorManager and publishers. If frequency changed,
+        we recreate the timer at the end.
         """
-        # Track which high-level flags changed
-        rebuild_sm = False
-        recreate_pubs = False
-        update_timer = False
+        # Reset the per-callback markers
+        self._need_rebuild_sm = False
+        self._need_recreate_pubs = False
+        self._need_update_timer = False
 
+        # 1) Loop over changed parameters, call the corresponding action
         for p in params:
-            name = p.name
-            # Update publish_frequency
-            if name == 'publish_frequency':
-                new_val = float(p.value)
-                if new_val > 0 and new_val != self.pub_freq:
-                    self.pub_freq = new_val
-                    update_timer = True
+            name, value = p.name, p.value
+            if name in self._param_dispatch:
+                # Before calling action, detect if this was publish_frequency
+                if name == 'publish_frequency':
+                    new_freq = float(value)
+                    if new_freq > 0 and new_freq != self.pub_freq:
+                        self._param_dispatch[name](value)
+                        self._need_update_timer = True
+                else:
+                    self._param_dispatch[name](value)
 
-            # Update fluid_density
-            elif name == 'fluid_density':
-                self.fluid_density = float(p.value)
-
-            # Update any of the sensor toggles
-            elif name in (
-                'publish_tsys01_temperature',
-                'publish_ms5837_temperature',
-                'publish_ms5837_pressure',
-                'publish_ms5837_depth'
-            ):
-                # Map param name → internal key
-                key_map = {
-                    'publish_tsys01_temperature': 'tsys01_temp',
-                    'publish_ms5837_temperature': 'ms5837_temp',
-                    'publish_ms5837_pressure': 'ms5837_pressure',
-                    'publish_ms5837_depth': 'ms5837_depth',
-                }
-                key = key_map[name]
-                new_flag = bool(p.value)
-                if new_flag != self.flags[key]:
-                    self.flags[key] = new_flag
-                    rebuild_sm = True
-                    recreate_pubs = True
-
-        # Rebuild SensorManager if needed
-        if rebuild_sm:
+        # 2) If any sensor flags changed, rebuild SensorManager once
+        if self._need_rebuild_sm:
             try:
                 self._init_sensor_manager()
             except RuntimeError as e:
+                # No sensor enabled → shut down
                 self.get_logger().error(f"Cannot reinitialize SensorManager: {e}")
-                # If no sensors enabled, shut down
                 self.destroy_node()
                 return SetParametersResult(successful=False)
 
-        # Recreate publishers if toggles changed
-        if recreate_pubs:
+        # 3) If flags changed, recreate publishers once
+        if self._need_recreate_pubs:
             self._create_publishers()
 
-        # Update timer if frequency changed
-        if update_timer:
+        # 4) If frequency changed, recreate timer once
+        if self._need_update_timer:
             self._create_timer()
 
-        # Log new config
+        # 5) Log updated configuration
         self.get_logger().info("Updated SensorsNode configuration:\n" + self._summary_text())
 
         return SetParametersResult(successful=True)
 
     def _timer_callback(self):
-        """Called each tick: read each enabled sensor and publish its message."""
+        """
+        On each timer tick, read and publish for every sensor key whose flag is True.
+        """
         now = self.get_clock().now().to_msg()
 
-        # Iterate over each sensor key in sensor_map
         for key, conf in self.sensor_map.items():
-            pub = self.publishers.get(key)
+            pub = self.sensor_publishers.get(key)
             if not (self.flags[key] and pub):
                 continue
 
+            # Dynamically call the read_... method on sensor_manager
             read_fn: Callable[..., Any] = getattr(self.sensor_manager, conf['read_method'])
             try:
                 val = read_fn() if key != 'ms5837_depth' else read_fn(self.fluid_density)
@@ -238,7 +245,7 @@ class SensorsNode(Node):
                 self.get_logger().error(f"{conf['read_method']} error: {e}")
                 continue
 
-            # Construct message
+            # Construct and publish the ROS message
             if conf['msg_type'] is Temperature:
                 msg = Temperature()
                 msg.header.stamp = now
@@ -247,9 +254,9 @@ class SensorsNode(Node):
                 pub.publish(msg)
 
             elif conf['msg_type'] is FluidPressure:
-                # read_fn returned mbar; convert to Pa
                 msg = FluidPressure()
                 msg.header.stamp = now
+                # read_fn returned mbar; convert to Pa
                 msg.fluid_pressure = float(val) * 100.0
                 msg.variance = 0.0
                 pub.publish(msg)
@@ -260,7 +267,9 @@ class SensorsNode(Node):
                 pub.publish(msg)
 
     def destroy_node(self):
-        """Clean up sensor_manager on shutdown."""
+        """
+        Clean up sensor_manager on shutdown.
+        """
         try:
             self.sensor_manager.close()
         except Exception as e:
