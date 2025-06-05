@@ -11,14 +11,16 @@ jobs:
     strategy:
       matrix:
         include:
-          # AMD64 job: use pez_humble/Dockerfile, tag as :amd64
+          # AMD64 job: build from pez_humble/Dockerfile, context=pez_ros/pez_humble, tag=:amd64
           - arch: linux/amd64
-            dockerfile: pez_ros/pez_humble/Dockerfile
-            image_tag: amd64
             context: pez_ros/pez_humble
-          # ARM64 job: use pez_docker/Dockerfile, tag as :arm64v8
+            dockerfile: Dockerfile
+            image_tag: amd64
+
+          # ARM64v8 job: build from pez_docker/Dockerfile, context=pez_ros/pez_docker, tag=:arm64v8
           - arch: linux/arm64/v8
-            dockerfile: pez_ros/pez_docker/Dockerfile
+            context: .
+            dockerfile: Dockerfile
             image_tag: arm64v8
 
     steps:
@@ -42,8 +44,8 @@ jobs:
       - name: Build & push ${{ matrix.arch }} image
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ${{ matrix.dockerfile }}
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/${{ matrix.dockerfile }}
           platforms: ${{ matrix.arch }}
           push: true
           tags: mapuigsari/blueos-ros2-navigator:${{ matrix.image_tag }}
