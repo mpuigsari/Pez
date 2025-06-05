@@ -15,6 +15,7 @@ jobs:
           - arch: linux/amd64
             dockerfile: pez_ros/pez_humble/Dockerfile
             image_tag: amd64
+            context: pez_ros/pez_humble
           # ARM64 job: use pez_docker/Dockerfile, tag as :arm64v8
           - arch: linux/arm64/v8
             dockerfile: pez_ros/pez_docker/Dockerfile
