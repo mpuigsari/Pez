@@ -1,4 +1,4 @@
-name: Build & Publish ARM64v8 Image
+name: Build & Publish Multi-Arch Images
 
 on:
   push:
@@ -8,14 +8,26 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # AMD64 job: use pez_humble/Dockerfile, tag as :amd64
+          - arch: linux/amd64
+            dockerfile: pez_ros/pez_humble/Dockerfile
+            image_tag: amd64
+          # ARM64 job: use pez_docker/Dockerfile, tag as :arm64v8
+          - arch: linux/arm64/v8
+            dockerfile: pez_ros/pez_docker/Dockerfile
+            image_tag: arm64v8
+
     steps:
-      - name: Checkout code
+      - name: Check out repository
         uses: actions/checkout@v3
 
       - name: Set up QEMU for cross-building
         uses: docker/setup-qemu-action@v2
         with:
-          platforms: linux/arm64/v8
+          platforms: linux/amd64,linux/arm64/v8
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -26,11 +38,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build & push ARM64v8 image
+      - name: Build & push ${{ matrix.arch }} image
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: pez_ros/pez_docker/Dockerfile
-          platforms: linux/arm64/v8
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ matrix.arch }}
           push: true
-          tags: mapuigsari/blueos-ros2-navigator:arm64v8
+          tags: mapuigsari/blueos-ros2-navigator:${{ matrix.image_tag }}
