@@ -14,7 +14,7 @@ class SensorManager:
     """
     def __init__(self, use_tsys01: bool = True, use_ms5837: bool = True):
         # Create and lock the I²C bus once
-        self._i2c = busio.I2C(board.SCL, board.SDA)
+        self._i2c = busio.I2C(board.SCL, board.SDA, bus=6)
         while not self._i2c.try_lock():
             time.sleep(0.01)
 

@@ -1,4 +1,4 @@
-# pez_core/nodes/sensors_node.py
+# pez_core/fish_sense.py
 
 import rclpy
 from rclpy.node import Node
