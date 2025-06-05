@@ -20,7 +20,7 @@ jobs:
           # ARM64v8 job: build from pez_docker/Dockerfile, context=pez_ros/pez_docker, tag=:arm64v8
           - arch: linux/arm64/v8
             context: .
-            dockerfile: Dockerfile
+            dockerfile: pez_docker/Dockerfile
             image_tag: arm64v8
 
     steps:
