@@ -27,14 +27,56 @@ def generate_launch_description():
     calib_yaml = os.path.join(pkg, 'config', 'default_cam.yaml')
     camera_info_url = f'file://{calib_yaml}'
 
-    # 3) Declare test_flag argument
+    # 3) Declare launch arguments
     test_flag = LaunchConfiguration('test_flag')
     declare_test_flag = DeclareLaunchArgument(
         'test_flag',
         default_value='false',
-        description='If true, launch PlotJuggler instead of the camera node'
+        description='If true, launch test mode instead of sensors & camera'
     )
 
+    # 3a) Sensor‐node-specific launch arguments:
+    pub_frequency = LaunchConfiguration('publish_frequency')
+    declare_pub_frequency = DeclareLaunchArgument(
+        'publish_frequency',
+        default_value='1.0',
+        description='Publish frequency (Hz) for sensors_node'
+    )
+
+    pub_tsys01 = LaunchConfiguration('publish_tsys01_temperature')
+    declare_pub_tsys01 = DeclareLaunchArgument(
+        'publish_tsys01_temperature',
+        default_value='true',
+        description='Publish TSYS01 temperature? (true/false)'
+    )
+
+    pub_ms_temp = LaunchConfiguration('publish_ms5837_temperature')
+    declare_pub_ms_temp = DeclareLaunchArgument(
+        'publish_ms5837_temperature',
+        default_value='true',
+        description='Publish MS5837 temperature? (true/false)'
+    )
+
+    pub_ms_pres = LaunchConfiguration('publish_ms5837_pressure')
+    declare_pub_ms_pres = DeclareLaunchArgument(
+        'publish_ms5837_pressure',
+        default_value='true',
+        description='Publish MS5837 pressure? (true/false)'
+    )
+
+    pub_ms_depth = LaunchConfiguration('publish_ms5837_depth')
+    declare_pub_ms_depth = DeclareLaunchArgument(
+        'publish_ms5837_depth',
+        default_value='true',
+        description='Publish MS5837 depth? (true/false)'
+    )
+
+    fluid_density = LaunchConfiguration('fluid_density')
+    declare_fluid_density = DeclareLaunchArgument(
+        'fluid_density',
+        default_value='997.0',
+        description='Fluid density (kg/m³) for MS5837 depth calculation'
+    )
 
     # 4a) fish_teleop in normal mode
     fish_teleop_node = Node(
@@ -45,12 +87,12 @@ def generate_launch_description():
         output='screen',
         parameters=[
             axis_params,
-            { 'test_flag': test_flag }
+            {'test_flag': test_flag}
         ],
         condition=UnlessCondition(test_flag),
     )
 
-    # 4b) fish_teleop in test mode with a different node name
+    # 4b) fish_teleop in test mode (different node name)
     fish_teleop_node_test = Node(
         package='pez_core',
         executable='fish_teleop',
@@ -59,7 +101,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             axis_params,
-            { 'test_flag': test_flag }
+            {'test_flag': test_flag}
         ],
         condition=IfCondition(test_flag),
     )
@@ -82,8 +124,26 @@ def generate_launch_description():
         condition=UnlessCondition(test_flag),
     )
 
+    # 6) sensors_node (only if test_flag is false)
+    sensors_node = Node(
+        package='pez_core',
+        executable='fish_sense',
+        name='fish_sense_node',
+        namespace='pez',
+        output='screen',
+        parameters=[
+            # Pass down the sensor‐node parameters:
+            {'publish_frequency': pub_frequency},
+            {'publish_tsys01_temperature': pub_tsys01},
+            {'publish_ms5837_temperature': pub_ms_temp},
+            {'publish_ms5837_pressure': pub_ms_pres},
+            {'publish_ms5837_depth': pub_ms_depth},
+            {'fluid_density': fluid_density},
+        ],
+        condition=UnlessCondition(test_flag),
+    )
 
-    # 7) Shutdown handlers: if either exits, tear down the whole launch
+    # 7) Shutdown handlers: if either teleop variant exits, shutdown all
     on_teleop_exit = RegisterEventHandler(
         OnProcessExit(
             target_action=fish_teleop_node,
@@ -98,11 +158,25 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        # Environment
         SetEnvironmentVariable('ROS_DOMAIN_ID', '21'),
+
+        # Launch arguments
         declare_test_flag,
+        declare_pub_frequency,
+        declare_pub_tsys01,
+        declare_pub_ms_temp,
+        declare_pub_ms_pres,
+        declare_pub_ms_depth,
+        declare_fluid_density,
+
+        # Nodes
         fish_teleop_node,
         fish_teleop_node_test,
         usb_cam_node,
+        sensors_node,
+
+        # Shutdown on teleop exit
         on_teleop_exit,
         on_teleop_test_exit,
     ])

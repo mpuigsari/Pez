@@ -1,12 +1,8 @@
-# syntax=docker/dockerfile:1
-
 ####################################################
 # 1) Base + Navigator install
 ####################################################
-
 FROM ros:humble-ros-base-jammy
 
-# Switch the shell for all RUN steps to bash with pipefail
 SHELL ["/bin/bash","-o","pipefail","-c"]
 
 ENV LANG=C.UTF-8 \
@@ -20,19 +16,24 @@ RUN apt-get update \
       python3-colcon-common-extensions \
       build-essential \
       ros-humble-usb-cam \
- && rm -rf /var/lib/apt/lists/* \
- && pip3 install --no-cache-dir bluerobotics-navigator
+      python3-smbus \       
+      i2c-tools \            
+      libgpiod2 \            
+ && rm -rf /var/lib/apt/lists/*
+
+# Now install Python packages via pip
+RUN pip3 install --no-cache-dir \
+      bluerobotics-navigator \  
+      adafruit-blinka \          
+      tsys01 \                   
+      ms5837                     
 
 ####################################################
 # 2) Copy & Build your local ROS 2 package
 ####################################################
-# make the workspace
 RUN mkdir -p /pez_ws/src
-
-# copy your package into the workspace
 COPY pez_ros/pez_humble/pez_ws/src/pez_core /pez_ws/src/pez_core
 
-# build it (now under bash!)
 RUN source /opt/ros/humble/setup.bash \
  && cd /pez_ws \
  && colcon build --symlink-install

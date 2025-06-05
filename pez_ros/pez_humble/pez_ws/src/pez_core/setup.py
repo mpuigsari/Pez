@@ -36,6 +36,7 @@ setup(
         'console_scripts': [
             'fish_teleop = pez_core.fish_teleop:main',
             'fish_joy        = pez_core.fish_joy:main',
+            'fish_sense = pez_core.fish_sense:main',
         ],
     },
 )

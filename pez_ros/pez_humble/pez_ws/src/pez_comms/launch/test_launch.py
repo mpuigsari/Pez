@@ -1,32 +1,34 @@
-# pez_comms/launch/test_socat_dynamic.launch.py
+# pez_comms/launch/test_socat_fixed.launch.py
 from launch import LaunchDescription
 from launch.actions import ExecuteProcess, LogInfo
 from launch_ros.actions import Node
 
 def generate_launch_description():
     return LaunchDescription([
-        # 1) Run socat without a fixed “link=…”—let it choose two free PTYs
+        # 1) Run socat but force it to create two symlinks under /tmp
         ExecuteProcess(
-            cmd=['socat', '-d', '-d', 'pty,raw,echo=0', 'pty,raw,echo=0'],
+            cmd=[
+              'socat', '-d', '-d',
+              'pty,raw,echo=0,link=/tmp/pez_host',
+              'pty,raw,echo=0,link=/tmp/pez_fish'
+            ],
             output='screen',
             shell=False
         ),
 
-        # 2) Log a message so you remember to copy-and-paste the PTYs from socat's stdout
+        # 2) Log so you can see that /tmp/pez_host & /tmp/pez_fish are now ready
         LogInfo(msg=[
-            '→ socat has started.  Check its console output for two PTY names (e.g. /dev/pts/7 and /dev/pts/8).'
+            '→ socat has started.  /tmp/pez_host ↔ /tmp/pez_fish are now available.'
         ]),
 
-        # 3) (These Node entries won’t actually start until you manually re-run this launch
-        #     with the PTY names you saw. We leave them here as a reminder.)
+        # 3) Launch host_side & fish_side pointing at the fixed symlinks
         Node(
             package='pez_comms',
             executable='host_side',
             name='host_comms',
             namespace='host',
             output='screen',
-            parameters=[{'port': '/dev/pts/4'}],
-            # <-- replace <copy_host_here> with the first PTY you saw
+            parameters=[{'port': '/tmp/pez_host'}]
         ),
         Node(
             package='pez_comms',
@@ -34,7 +36,6 @@ def generate_launch_description():
             name='fish_comms',
             namespace='pez',
             output='screen',
-            parameters=[{'port': '/dev/pts/5'}],
-            # <-- replace <copy_fish_here> with the second PTY you saw
+            parameters=[{'port': '/tmp/pez_fish'}]
         ),
     ])

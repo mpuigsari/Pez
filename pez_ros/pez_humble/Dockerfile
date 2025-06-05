@@ -12,7 +12,7 @@ RUN apt-get update \
       ros-humble-joy \
       ros-humble-rqt \
       ros-humble-plotjuggler \
-      ros-humble-plotjuggler-ros \
+      #ros-humble-plotjuggler-ros  No disponible nadie se digna a arreglar un error de compilación en https://github.com/PlotJuggler/plotjuggler-ros-plugins
       ros-humble-rqt-common-plugins \
       qtbase5-dev qtbase5-dev-tools \
       ros-humble-image-transport-plugins \
@@ -20,7 +20,6 @@ RUN apt-get update \
       ros-humble-compressed-depth-image-transport \
       ros-humble-theora-image-transport \
       socat \
-
     && rm -rf /var/lib/apt/lists/*
 
 # 2) Re‐init rosdep
