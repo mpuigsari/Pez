@@ -16,7 +16,8 @@ RUN apt-get update \
       python3-colcon-common-extensions \
       build-essential \
       ros-humble-usb-cam \
-      python3-smbus \       
+      python3-smbus \
+      python3-smbus2 \    
       i2c-tools \            
       libgpiod2 \            
  && rm -rf /var/lib/apt/lists/*
@@ -24,9 +25,7 @@ RUN apt-get update \
 # Now install Python packages via pip
 RUN pip3 install --no-cache-dir \
       bluerobotics-navigator \  
-      adafruit-blinka \          
-      tsys01 \                   
-      ms5837                     
+      adafruit-blinka                    
 
 ####################################################
 # 2) Copy & Build your local ROS 2 package
