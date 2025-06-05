@@ -2,7 +2,7 @@
 
 ## 1. Package Overview
 
-The `pez_core` package provides ROS2 nodes for teleoperating and controlling the **Pez robot fish** using the Bluerobotics Navigator board. It enables direct interaction with the robot's actuators, including tail, fins, camera pan control, and electromagnet, and allows real-time adjustments through dynamic parameters.
+The `pez_core` package provides ROS2 nodes for teleoperating, controlling, and sensing capabilities for the **Pez robot fish** using the Bluerobotics Navigator board. It enables direct interaction with the robot's actuators, including tail, fins, camera pan control, and electromagnet, alongside integrated sensor support for real-time monitoring of environmental parameters.
 
 ### Key Functionalities
 
@@ -10,6 +10,10 @@ The `pez_core` package provides ROS2 nodes for teleoperating and controlling the
 * Camera pan adjustments
 * Electromagnet toggle functionality
 * Dynamic parameter adjustments via `rqt_reconfigure`
+* Real-time sensor data integration:
+
+  * TSYS01 Temperature Sensor
+  * MS5837 Pressure and Depth Sensor
 
 ---
 
@@ -19,6 +23,11 @@ The `pez_core` package provides ROS2 nodes for teleoperating and controlling the
 * Python 3.9+ (for Bluerobotics Navigator compatibility)
 * `bluerobotics_navigator` Python library
 * ROS standard message packages: `geometry_msgs`, `std_msgs`, `std_srvs`
+* Python Sensor Modules:
+
+  * [`tsys01-python`](https://github.com/bluerobotics/tsys01-python)
+  * [`ms5837-python`](https://github.com/bluerobotics/ms5837-python)
+  * [`smbus2`](https://pypi.org/project/smbus2/)
 
 ---
 
@@ -36,7 +45,14 @@ Use this method if you prefer a native ROS2 workspace build and have the requisi
    cd ~/pez_ws/src
    git clone <repo-url> pez_core
    ```
-2. Build and source:
+
+2. Install Python sensor dependencies:
+
+   ```bash
+   pip3 install tsys01 ms5837 smbus2
+   ```
+
+3. Build and source:
 
    ```bash
    cd ~/pez_ws
@@ -44,17 +60,15 @@ Use this method if you prefer a native ROS2 workspace build and have the requisi
    source install/setup.bash
    ```
 
-This approach is ideal for development and rapid iteration when working directly on a supported Ubuntu Jammy system.
-
 ### 3.2. Docker Container Deployment
 
 We provide two Docker-based options for simplified, reproducible environments. See the corresponding container READMEs for full details:
 
 * **Fish-side Container**:
-  Use the [`pez_docker`](/pez_ros/pez_docker/README.md) image on the Raspberry Pi 4 (64-bit) for onboard control of servos, camera, and electromagnet. It’s published to Docker Hub as `yourorg/pez_docker:arm64-latest`.
+  Use the [`pez_docker`](/pez_ros/pez_docker/README.md) image on the Raspberry Pi 4 (64-bit) for onboard control of servos, camera, electromagnet, and sensor publishing.
 
 * **Host-side Container**:
-  Use the [`pez_humble`](/pez_ros/pez_humble/README.md) environment on your development machine (any Jammy-compatible architecture). It provides ROS2 Humble with joystick support, RQT, and PlotJuggler for control and visualization.
+  Use the [`pez_humble`](/pez_ros/pez_humble/README.md) environment on your development machine (Jammy-compatible architecture). It provides ROS2 Humble with joystick support, RQT, PlotJuggler, and sensor monitoring.
 
 ---
 
@@ -89,9 +103,13 @@ Parameters can be dynamically adjusted at runtime via `rqt_reconfigure`:
 
 ### 5.2 Published Topics
 
-| Topic      | Type                         | Description                                               |
-| ---------- | ---------------------------- | --------------------------------------------------------- |
-| `/pez/pwm` | `std_msgs/Float32MultiArray` | PWM outputs (tail, left\_fin, right\_fin, camera, magnet) |
+| Topic                 | Type                         | Description                                               |
+| --------------------- | ---------------------------- | --------------------------------------------------------- |
+| `/pez/pwm`            | `std_msgs/Float32MultiArray` | PWM outputs (tail, left\_fin, right\_fin, camera, magnet) |
+| `/tsys01/temperature` | `sensor_msgs/Temperature`    | TSYS01 Temperature readings                               |
+| `/ms5837/temperature` | `sensor_msgs/Temperature`    | MS5837 Temperature readings                               |
+| `/ms5837/pressure`    | `sensor_msgs/FluidPressure`  | MS5837 Pressure readings (converted to Pa)                |
+| `/ms5837/depth`       | `std_msgs/Float32`           | MS5837 Depth readings (m)                                 |
 
 ### 5.3 Services
 
@@ -106,39 +124,24 @@ Parameters can be dynamically adjusted at runtime via `rqt_reconfigure`:
 
 ## 6. Launch Files & Runtime Flags
 
-### 6.1 `joy_launch.py`
+### `joy_launch.py`
 
-Used for joystick teleoperation, optional GUI visualization with RQT and PlotJuggler.
+Joystick teleoperation, GUI visualization, and sensor node launching:
 
-**Launch Arguments:**
+```bash
+ros2 launch pez_core joy_launch.py display_flag:=true fish_robot:=true
+ros2 run pez_core fish_sense
+```
 
-* `display_flag` (default: `true`):
+### `teleop_launch.py`
 
-  * `true`: Launches RQT and PlotJuggler
-  * `false`: Skips launching RQT and PlotJuggler
+Main teleoperation and camera nodes, used for robot or host simulation:
 
-* `fish_robot` (default: `true`):
-
-  * `true`: Uses robot-side teleoperation via `teleop_launch.py`
-  * `false`: Launches host-side teleoperation (`test_flag=true`)
-
-**Recommendation:** Wait until `/pez/pwm` is actively publishing before connecting PlotJuggler subscribers.
-
-### 6.2 `teleop_launch.py`
-
-Launches main teleoperation and camera nodes, used by both robot (container entrypoint) and host (simulation).
-
-**Launch Argument:**
-
-* `test_flag` (default: `false`):
-
-  * `false`: Runs hardware controller (`fish_teleop_node`) and USB camera
-  * `true`: Runs simulation controller (`fish_teleop_node_test`) and skips camera node
-
-**Note:** When running on the fish-side container, default (`test_flag=false`) is set automatically. For host-side simulations, explicitly set `fish_robot=false` in `joy_launch.py`, which forwards `test_flag=true` to enable simulation mode.
+```bash
+ros2 launch pez_core teleop_launch.py test_flag:=false
+ros2 run pez_core fish_sense
+```
 
 ---
 
-## Visual Demonstrations
-
-Launch file behaviors and node functionalities are illustrated through visual GIFs included separately.
+Visual demonstrations of launch behaviors, teleoperation, and sensor integration will be provided separately.

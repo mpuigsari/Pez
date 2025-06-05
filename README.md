@@ -1,6 +1,6 @@
-# Pez – ROS2 Teleoperation & Acoustic Control of a Robotic Fish
+# Pez – ROS2 Teleoperation, Sensor Integration & Acoustic Control of a Robotic Fish
 
-> A comprehensive solution for underwater robotic teleoperation and wireless communication using ROS2, Docker, and acoustic modems.
+> A comprehensive solution for underwater robotic teleoperation, sensor integration, and wireless communication using ROS2, Docker, Python sensor drivers, and acoustic modems.
 
 ---
 
@@ -14,6 +14,7 @@ The **Pez** project enables seamless remote operation and control of an underwat
 * **Docker** for simplified deployment and reproducibility
 * **Bluerobotics Navigator** for actuator control (servos, camera, electromagnet)
 * Real-time visualization with **RQT** and **PlotJuggler**
+* Integrated environmental sensing (temperature, pressure, depth)
 * Custom acoustic communication protocols for remote command transmission
 
 This project facilitates both simulation-based testing and real-world robotic fish teleoperation, designed for use in educational, research, or practical underwater inspection and monitoring scenarios.
@@ -27,6 +28,9 @@ This project facilitates both simulation-based testing and real-world robotic fi
 * [Bluerobotics Navigator](https://bluerobotics.com/store/comm-control-power/control/navigator/)
 * [RQT](https://wiki.ros.org/rqt)
 * [PlotJuggler](https://github.com/facontidavide/PlotJuggler)
+* [tsys01-python](https://github.com/bluerobotics/tsys01-python)
+* [ms5837-python](https://github.com/bluerobotics/ms5837-python)
+* [smbus2](https://pypi.org/project/smbus2/)
 
 ---
 
@@ -39,6 +43,8 @@ This project facilitates both simulation-based testing and real-world robotic fi
 | - ROS2 Humble (Docker)    |       | - Custom Packet Protocol  |       | - ROS2 Humble (Docker)    |
 | - Actuator Control        |       | (Packet A, B, future C)   |       | - Joystick Teleoperation  |
 | - Sensor Data Publishing  |       |                           |       | - Real-time Visualization |
+|   • TSYS01 Temperature    |       |                           |       | • Sensor Data Reception   |
+|   • MS5837 Pressure/Depth |       |                           |       |                           |
 +---------------------------+       +---------------------------+       +---------------------------+
 ```
 
@@ -93,7 +99,7 @@ Pez
 
 ## 🐟 Fish-side Container
 
-Runs ROS2 Humble and Navigator-lib onboard the Raspberry Pi, providing direct control of actuators:
+Runs ROS2 Humble, Navigator-lib onboard Raspberry Pi, providing direct control of actuators and sensors:
 
 * [pez\_docker](pez_ros/pez_docker/README.md)
 
@@ -101,7 +107,7 @@ Runs ROS2 Humble and Navigator-lib onboard the Raspberry Pi, providing direct co
 
 ## 🖥️ Host-side Container & Workspace
 
-Provides ROS2 Humble, joystick support, acoustic communication, and visualization tools:
+Provides ROS2 Humble, joystick support, acoustic communication, sensor integration, and visualization tools:
 
 * [pez\_humble](pez_ros/pez_humble/README.md)
 
@@ -109,7 +115,7 @@ Provides ROS2 Humble, joystick support, acoustic communication, and visualizatio
 
 ## 🔧 Core ROS Packages
 
-* **[`pez_core`](pez_ros/pez_humble/pez_ws/src/pez_core/README.md)**: Teleoperation and actuator control nodes.
+* **[`pez_core`](pez_ros/pez_humble/pez_ws/src/pez_core/README.md)**: Teleoperation, actuator control, and sensor nodes.
 * **[`pez_comms`](pez_ros/pez_humble/pez_ws/src/pez_comms/README.md)**: Acoustic communication (actively developing).
 
 ---
@@ -146,4 +152,4 @@ Detailed documentation will follow upon completion of development.
 **Max Puig**
 Bachelor in Robotics Intelligence – Universitat Jaume I (2021–2025)
 
-> This project forms part of my academic portfolio, demonstrating integration of ROS2, Docker, and real-time communication for robotic teleoperation.
+> This project forms part of my academic portfolio, demonstrating integration of ROS2, Docker, sensor fusion, and real-time communication for robotic teleoperation.

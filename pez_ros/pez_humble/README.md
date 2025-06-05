@@ -1,21 +1,21 @@
 # Pez Humble (Host-side)
 
-The `pez_humble` directory provides a comprehensive ROS 2 Humble environment tailored for developing, controlling, and interacting with the **Pez robot fish**. It integrates ROS packages (`pez_core` and `pez_comms`) and includes Docker configurations (`Dockerfile`, `entrypoint.sh`, and `docker-compose.yml`) for seamless deployment.
+The `pez_humble` directory provides a comprehensive ROS 2 Humble environment tailored for developing, controlling, interacting, and sensor integration for the **Pez robot fish**. It integrates ROS packages (`pez_core` and `pez_comms`) and includes Docker configurations (`Dockerfile`, `entrypoint.sh`, and `docker-compose.yml`) for seamless deployment.
 
 ---
 
 ## Overview
 
-`pez_humble` provides a **host-side Docker container** for ROS 2 Humble, tailored to drive and interact with the Pez robot fish, but **the ROS2 packages themselves (`pez_core`, `pez_comms`) can be built and used in any ROS2 environment**, including the fish-side container in `pez_docker` or a native install.
+`pez_humble` provides a **host-side Docker container** for ROS 2 Humble, tailored to control and interact with the Pez robot fish. The ROS2 packages (`pez_core`, `pez_comms`) can be built and used in any ROS2 environment, including the fish-side container in `pez_docker` or a native installation.
 
 Core components include:
 
 * ROS 2 Humble environment within Docker (host-side)
 * Shared ROS2 packages:
 
-  * `pez_core`: Teleoperation and actuator control
-  * `pez_comms`: Acoustic communication handling
-* Joystick integration and visualization tools (RQT and PlotJuggler)
+  * `pez_core`: Teleoperation, actuator control, and sensor integration (`fish_sense`).
+  * `pez_comms`: Acoustic communication handling.
+* Joystick integration, visualization tools (RQT and PlotJuggler), and real-time sensor monitoring.
 
 ---
 
@@ -23,12 +23,16 @@ Core components include:
 
 ### [`pez_core`](./pez_ws/src/pez_core/README.md)
 
-Responsible for real-time teleoperation and control of:
+Responsible for real-time teleoperation, control, and sensor data publishing:
 
 * Tail and fins (PWM signals via Bluerobotics Navigator).
 * Camera control (pan).
 * Electromagnet toggling.
-* Dynamic parameter reconfiguration via `rqt_reconfigure`.
+* Sensor Integration (`fish_sense` node):
+
+  * TSYS01 temperature sensor.
+  * MS5837 pressure and depth sensor.
+  * Parameters dynamically reconfigurable via `rqt_reconfigure`.
 
 ### [`pez_comms`](./pez_ws/src/pez_comms/README.md)
 
@@ -52,6 +56,7 @@ Builds a ROS 2 Humble container with necessary dependencies:
 
 * ROS 2 Humble (Jammy-based)
 * Essential development tools (`colcon`, joystick libraries, Navigator libs)
+* Python sensor libraries (`tsys01-python`, `ms5837-python`, `smbus2`)
 * ROS workspace setup
 
 ### Entrypoint (`entrypoint.sh`)
@@ -83,18 +88,20 @@ Ensure your joystick is connected before starting the container. Adjust the `DIS
 
 ## Launch Configurations
 
-Launch the Pez robot control nodes and visualization tools:
+Launch the Pez robot control nodes, sensor integration, and visualization tools:
 
-* **Real Fish Control:**
+* **Real Fish Control and Sensors:**
 
   ```bash
   ros2 launch pez_core teleop_launch.py
+  ros2 run pez_core fish_sense --ros-args -p publish_tsys01_temperature:=True -p publish_ms5837_pressure:=True
   ```
 
-* **Joystick Control and Visualization:**
+* **Joystick Control, Sensors, and Visualization:**
 
   ```bash
   ros2 launch pez_core joy_launch.py display_flag:=true fish_robot:=false
+  ros2 run pez_core fish_sense --ros-args -p publish_tsys01_temperature:=True -p publish_ms5837_pressure:=True
   ```
 
 * **Simulation (No Robot Hardware):**
@@ -107,15 +114,16 @@ Launch the Pez robot control nodes and visualization tools:
 
 ## Recommended Usage
 
-* **Host-side Development:** Use the Docker Compose setup for consistency across development environments.
-* **Visualization:** Utilize RQT and PlotJuggler for debugging and parameter tuning.
-* **Deployment:** Deploy the `pez_core` directly onto the Raspberry Pi using the [`pez_docker`](/pez_ros/pez_docker/README.md) container for onboard control.
+* **Host-side Development:** Use Docker Compose setup for consistency across development environments.
+* **Sensor Testing:** Verify sensor readings via ROS topics (`/tsys01/temperature`, `/ms5837/pressure`).
+* **Visualization:** Utilize RQT and PlotJuggler for debugging, parameter tuning, and sensor data visualization.
+* **Deployment:** Deploy `pez_core` directly onto Raspberry Pi using [`pez_docker`](/pez_ros/pez_docker/README.md) container for onboard control and sensing.
 
 ---
 
 ## Further Information
 
-For more detailed instructions and explanations about individual components:
+For detailed instructions and explanations about individual components:
 
 * [pez\_core README](./pez_ws/src/pez_core/README.md)
 * [pez\_comms README](./pez_ws/src/pez_comms/README.md) *(Coming Soon)*
