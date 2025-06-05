@@ -68,10 +68,12 @@ class SensorsNode(Node):
             raise
 
         # 4) Create one publisher per enabled magnitude
+        ns = self.get_namespace()  # e.g. '/pez/'
+
         if self.pub_tsys01_temp:
             self.tsys_pub = self.create_publisher(
                 Temperature,
-                'tsys01/temperature',
+                f'{ns}/tsys01/temperature',
                 10
             )
         else:
@@ -80,7 +82,7 @@ class SensorsNode(Node):
         if self.pub_ms5837_temp:
             self.ms_temp_pub = self.create_publisher(
                 Temperature,
-                'ms5837/temperature',
+                f'{ns}/ms5837/temperature',
                 10
             )
         else:
@@ -89,7 +91,7 @@ class SensorsNode(Node):
         if self.pub_ms5837_pressure:
             self.ms_pres_pub = self.create_publisher(
                 FluidPressure,
-                'ms5837/pressure',
+                f'{ns}/ms5837/pressure',
                 10
             )
         else:
@@ -98,7 +100,7 @@ class SensorsNode(Node):
         if self.pub_ms5837_depth:
             self.ms_depth_pub = self.create_publisher(
                 Float32,
-                'ms5837/depth',
+                f'{ns}/ms5837/depth',
                 10
             )
         else:
