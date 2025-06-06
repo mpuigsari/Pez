@@ -24,6 +24,10 @@ setup(
             'launch/joy_launch.py',
             'launch/teleop_launch.py',
         ]),
+        # ─── NEW: install our .srv files ───
+        ('share/' + package_name + '/srv', [
+            'srv/GetSensors.srv',
+        ]),
     ],
     install_requires=['setuptools', 'bluerobotics-navigator'],
     zip_safe=True,

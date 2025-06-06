@@ -1,0 +1,11 @@
+# GetSensors.srv
+
+# (no request fields)
+---
+std_msgs/Header header
+float64 tsys01_temp
+float64 ms5837_temp
+float64 ms5837_pressure
+float64 ms5837_depth
+bool    success
+string  message

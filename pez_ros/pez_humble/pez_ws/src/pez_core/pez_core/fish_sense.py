@@ -1,6 +1,6 @@
 # pez_core/fish_sense.py
 
-import time
+import math
 from typing import Any, Callable, Dict
 
 import rclpy
@@ -8,7 +8,9 @@ from rclpy.node import Node
 from rcl_interfaces.msg import SetParametersResult
 from sensor_msgs.msg import Temperature, FluidPressure
 from std_msgs.msg import Float32
-from rclpy.parameter import Parameter
+
+# Import the updated service type (with a Header in the response)
+from pez_core.srv import GetSensors
 
 from pez_core.sensors import SensorManager
 
@@ -16,7 +18,8 @@ from pez_core.sensors import SensorManager
 class SensorsNode(Node):
     """
     ROS2 node that publishes TSYS01 and MS5837 topics, with highly optimized
-    dynamic reconfiguration via a dispatch table.
+    dynamic reconfiguration via a dispatch table—and a new GetSensors service
+    that returns the current active measurements with a stamped header.
     """
 
     def __init__(self):
@@ -36,14 +39,13 @@ class SensorsNode(Node):
 
         # boolean flags for sensor toggles
         self.flags = {
-            'tsys01_temp':       self.get_parameter('publish_tsys01_temperature').value,
-            'ms5837_temp':       self.get_parameter('publish_ms5837_temperature').value,
-            'ms5837_pressure':   self.get_parameter('publish_ms5837_pressure').value,
-            'ms5837_depth':      self.get_parameter('publish_ms5837_depth').value,
+            'tsys01_temp':     self.get_parameter('publish_tsys01_temperature').value,
+            'ms5837_temp':     self.get_parameter('publish_ms5837_temperature').value,
+            'ms5837_pressure': self.get_parameter('publish_ms5837_pressure').value,
+            'ms5837_depth':    self.get_parameter('publish_ms5837_depth').value,
         }
 
         # 3) Build a dispatch table: param_name -> action function
-        #    Each action updates either self.pub_freq, self.fluid_density, or self.flags[...].
         self._param_dispatch: Dict[str, Callable[[Any], None]] = {
             'publish_frequency':           lambda v: setattr(self, 'pub_freq', float(v)),
             'fluid_density':               lambda v: setattr(self, 'fluid_density', float(v)),
@@ -93,6 +95,13 @@ class SensorsNode(Node):
         # 9) Register a single on-set callback
         self.add_on_set_parameters_callback(self._on_parameter_event)
 
+        # ─── SNAPSHOT SERVICE SETUP ───
+        self._snapshot_srv = self.create_service(
+            GetSensors,
+            'get_sensor_snapshot',
+            self._handle_snapshot
+        )
+
     def _set_flag(self, key: str, new_val: bool):
         """
         Helper for toggling sensor flags. If the flag actually changes,
@@ -141,7 +150,7 @@ class SensorsNode(Node):
         (Re)create publishers for each sensor whose flag is True.
         Stores them in self.sensor_publishers[key] = Publisher or None.
         """
-        ns = self.get_namespace().strip('/')  # e.g. 'pez'
+        ns = self.get_namespace().strip('/')
         prefix = f"{ns}/" if ns else ""
 
         # Clear old publishers
@@ -150,7 +159,7 @@ class SensorsNode(Node):
         for key, conf in self.sensor_map.items():
             if self.flags[key]:
                 topic = prefix + conf['topic']
-                # This create_publisher will now append into Node._publishers internally
+                # This create_publisher will append into Node._publishers internally
                 self.sensor_publishers[key] = self.create_publisher(conf['msg_type'], topic, 10)
             else:
                 self.sensor_publishers[key] = None
@@ -182,7 +191,7 @@ class SensorsNode(Node):
         """
         Called whenever any declared parameter is set. We use the dispatch table
         self._param_dispatch to update internal fields. Then, if any sensor flags
-        changed, we rebuild both SensorManager and publishers. If frequency changed,
+        changed, we rebuild SensorManager and publishers. If frequency changed,
         we recreate the timer at the end.
         """
         # Reset the per-callback markers
@@ -265,6 +274,46 @@ class SensorsNode(Node):
                 msg = Float32()
                 msg.data = float(val)
                 pub.publish(msg)
+
+    def _handle_snapshot(self, request, response):
+        """
+        Service callback for GetSensors. First stamps response.header,
+        then loops over self.sensor_map keys:
+        - If enabled, read via SensorManager (or NaN on error).
+        - Assign each value to response.<key>.
+        """
+        # 1) Stamp the header with current ROS time
+        now = self.get_clock().now().to_msg()
+        response.header.stamp = now
+
+        # 2) Initialize all response fields to NaN
+        for key in self.sensor_map.keys():
+            setattr(response, key, math.nan)
+
+        # 3) Iterate through each sensor entry
+        for key, conf in self.sensor_map.items():
+            # If that sensor is disabled, skip it
+            if not self.flags.get(key, False):
+                continue
+
+            # Otherwise, attempt to read via SensorManager
+            try:
+                if key == 'ms5837_depth':
+                    # read_ms5837_depth needs fluid_density
+                    val = getattr(self.sensor_manager, conf['read_method'])(self.fluid_density)
+                else:
+                    val = getattr(self.sensor_manager, conf['read_method'])()
+            except Exception as e:
+                self.get_logger().error(f"{conf['read_method']} failed: {e}")
+                val = math.nan
+
+            # Assign into the response field (named exactly as `key`)
+            setattr(response, key, float(val))
+
+        # 4) Indicate success
+        response.success = True
+        response.message = 'Snapshot OK'
+        return response
 
     def destroy_node(self):
         """
