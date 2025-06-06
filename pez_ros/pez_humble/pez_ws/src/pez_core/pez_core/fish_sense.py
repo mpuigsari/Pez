@@ -10,7 +10,7 @@ from sensor_msgs.msg import Temperature, FluidPressure
 from std_msgs.msg import Float32
 
 # Import the updated service type (with a Header in the response)
-from pez_core.srv import GetSensors
+from pez_interfaces.srv import SnapSensors
 
 from pez_core.sensors import SensorManager
 
@@ -18,7 +18,7 @@ from pez_core.sensors import SensorManager
 class SensorsNode(Node):
     """
     ROS2 node that publishes TSYS01 and MS5837 topics, with highly optimized
-    dynamic reconfiguration via a dispatch table—and a new GetSensors service
+    dynamic reconfiguration via a dispatch table—and a new SnapSensors service
     that returns the current active measurements with a stamped header.
     """
 
@@ -97,7 +97,7 @@ class SensorsNode(Node):
 
         # ─── SNAPSHOT SERVICE SETUP ───
         self._snapshot_srv = self.create_service(
-            GetSensors,
+            SnapSensors,
             'get_sensor_snapshot',
             self._handle_snapshot
         )
@@ -277,7 +277,7 @@ class SensorsNode(Node):
 
     def _handle_snapshot(self, request, response):
         """
-        Service callback for GetSensors. First stamps response.header,
+        Service callback for SnapSensors. First stamps response.header,
         then loops over self.sensor_map keys:
         - If enabled, read via SensorManager (or NaN on error).
         - Assign each value to response.<key>.

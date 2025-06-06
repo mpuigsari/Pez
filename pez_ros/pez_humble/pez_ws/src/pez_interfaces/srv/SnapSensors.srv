@@ -1,6 +1,4 @@
-# GetSensors.srv
-
-# (no request fields)
+# SnapSensors.srv
 ---
 std_msgs/Header header
 float64 tsys01_temp

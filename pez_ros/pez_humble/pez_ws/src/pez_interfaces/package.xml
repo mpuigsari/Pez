@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>pez_interfaces</name>
+  <version>0.1.0</version>
+  <description>Custom service definitions for Pez (GetSensors)</description>
+  <maintainer email="you@example.com">Your Name</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- ament_cmake and rosidl generator so we can build the .srv -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+
+  <build_depend>rosidl_default_generators</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <!-- std_msgs is needed because GetSensors.srv references std_msgs/Header -->
+  <depend>std_msgs</depend>
+
+  <!-- tell ament that this package provides .srv files -->
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -11,7 +11,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 from std_srvs.srv import Trigger
 
-from pez_core.srv import GetSensors
+from pez_interfaces.srv import SnapSensors
 
 
 class JoystickController(Node):
@@ -90,7 +90,7 @@ class JoystickController(Node):
         self.neutral_cli = self.create_client(Trigger, f"{ns}/{self.get_parameter('neutral_service').value}")
 
         # 3a) Snapshot service client
-        self.snapshot_cli = self.create_client(GetSensors, 'get_sensor_snapshot')
+        self.snapshot_cli = self.create_client(SnapSensors, 'get_sensor_snapshot')
 
         # 4) Internal state
         self.mode                = -1
@@ -206,7 +206,7 @@ class JoystickController(Node):
             self.get_logger().error("Snapshot service not available")
             return
 
-        req = GetSensors.Request()
+        req = SnapSensors.Request()
         fut = self.snapshot_cli.call_async(req)
         fut.add_done_callback(self._on_snapshot_response)
 
