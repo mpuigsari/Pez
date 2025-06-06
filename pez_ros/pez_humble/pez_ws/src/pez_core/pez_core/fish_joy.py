@@ -187,7 +187,7 @@ class JoystickController(Node):
                 state = 'ON' if self.magnet_on else 'OFF'
                 self.get_logger().info(f"{name} service succeeded → magnet is now {state}")
 
-                if self.magnet_on:
+                if not self.magnet_on:
                     self._pending_magnet_success = True
                     # If snapshot already succeeded, write CSV now
                     if self._pending_snapshot_success and self._last_snapshot_response is not None:
