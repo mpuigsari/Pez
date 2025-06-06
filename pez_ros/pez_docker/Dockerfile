@@ -14,7 +14,8 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       python3-dev \                    
       python3.10-dev \                 
-      libpython3.10-dev \              
+      libpython3.10-dev \
+      python3-all-dev \              
       python3-pip \
       python3-colcon-common-extensions \
       build-essential \
