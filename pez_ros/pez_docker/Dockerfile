@@ -33,6 +33,8 @@ RUN pip3 install --no-cache-dir \
 ####################################################
 RUN mkdir -p /pez_ws/src
 COPY pez_ros/pez_humble/pez_ws/src/pez_core /pez_ws/src/pez_core
+COPY pez_ros/pez_humble/pez_ws/src/pez_interfaces /pez_ws/src/pez_interfaces
+
 
 RUN source /opt/ros/humble/setup.bash \
  && cd /pez_ws \
