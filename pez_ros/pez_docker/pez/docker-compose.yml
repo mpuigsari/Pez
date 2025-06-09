@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  pez_ros2_navigator:
+    image: mapuigsari/pez:core-arm64v8
+    container_name: pez_ros2_navigator
+    network_mode: host
+    stdin_open: true
+    tty: true
+
+    # restart automatically unless explicitly stopped
+    restart: unless-stopped
+
+    # match what BlueOS labels did: full device access
+    privileged: true
+    volumes:
+      - /dev:/dev                                       # pass through hardware
+
+    # environment
+    environment:
+      - ROS_DOMAIN_ID=21
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+
+    # drop you into bash by default
+    command: bash

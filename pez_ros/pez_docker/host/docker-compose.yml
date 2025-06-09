@@ -1,13 +1,13 @@
 services:
   pez:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../../../
+      dockerfile: pez_ros/pez_docker/host/Dockerfile
     image: pez_humble:latest
     container_name: pez_humble
     network_mode: host
     volumes:
-      - ./pez_ws:/pez_ws:rw
+      - ../../pez_humble/pez_ws:/pez_ws:rw
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
       # mount a tmpfs for your runtime dir
       - type: tmpfs
@@ -17,6 +17,7 @@ services:
 
     devices:
       - "/dev/input:/dev/input"
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
 
     environment:
       # X11 forwarding

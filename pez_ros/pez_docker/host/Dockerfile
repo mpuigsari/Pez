@@ -12,7 +12,7 @@ RUN apt-get update \
       ros-humble-joy \
       ros-humble-rqt \
       ros-humble-plotjuggler \
-      #ros-humble-plotjuggler-ros  No disponible nadie se digna a arreglar un error de compilación en https://github.com/PlotJuggler/plotjuggler-ros-plugins
+      #ros-humble-plotjuggler-ros  \
       ros-humble-rqt-common-plugins \
       qtbase5-dev qtbase5-dev-tools \
       ros-humble-image-transport-plugins \
@@ -28,13 +28,17 @@ RUN rm -f /etc/ros/rosdep/sources.list.d/20-default.list \
  && rosdep update
 
 # 3) Copy & build your workspace
-WORKDIR /pez_ws
-COPY pez_ws/src src
-RUN rosdep install --from-paths src --ignore-src -r -y \
+RUN mkdir -p /pez_ws/src
+COPY pez_ros/pez_humble/pez_ws/src /pez_ws/src
+RUN rosdep install --from-paths /pez_ws/src --ignore-src -r -y \
       && . /opt/ros/humble/setup.bash
 
+RUN source /opt/ros/humble/setup.bash \
+ && cd /pez_ws \
+ && colcon build --symlink-install
+
 # 4) Entrypoint: source ROS & your workspace
-COPY entrypoint.sh /entrypoint.sh
+COPY pez_ros/pez_docker/host/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bash"]

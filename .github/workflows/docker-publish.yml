@@ -13,15 +13,20 @@ jobs:
         include:
           # AMD64 job: build from pez_humble/Dockerfile, context=pez_ros/pez_humble, tag=:amd64
           - arch: linux/amd64
-            context: pez_ros/pez_humble
-            dockerfile: Dockerfile
-            image_tag: amd64
+            context: .
+            dockerfile: pez_ros/pez_docker/host/Dockerfile
+            image_tag: core-amd64
 
           # ARM64v8 job: build from pez_docker/Dockerfile, context=pez_ros/pez_docker, tag=:arm64v8
           - arch: linux/arm64/v8
             context: .
-            dockerfile: pez_ros/pez_docker/Dockerfile
-            image_tag: arm64v8
+            dockerfile: pez_ros/pez_docker/pez/Dockerfile
+            image_tag: core-arm64v8
+
+          - arch: linux/arm64/v8
+            context: .
+            dockerfile: pez_ros/pez_docker/comms/Dockerfile
+            image_tag: comms-arm64v8
 
     steps:
       - name: Check out repository
@@ -48,4 +53,4 @@ jobs:
           file: ${{ matrix.context }}/${{ matrix.dockerfile }}
           platforms: ${{ matrix.arch }}
           push: true
-          tags: mapuigsari/blueos-ros2-navigator:${{ matrix.image_tag }}
+          tags: mapuigsari/pez:${{ matrix.image_tag }}

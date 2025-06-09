@@ -47,7 +47,7 @@ RUN source /opt/ros/humble/setup.bash \
 ####################################################
 # 3) Entrypoint
 ####################################################
-COPY pez_ros/pez_docker/ros_entrypoint.sh /ros_entrypoint.sh
+COPY pez_ros/pez_docker/pez/ros_entrypoint.sh /ros_entrypoint.sh
 RUN chmod +x /ros_entrypoint.sh
 
 ENTRYPOINT ["/ros_entrypoint.sh"]
