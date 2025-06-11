@@ -1,0 +1,47 @@
+# Host‐side communications: stream Packet A, handle Packet B echoes
+
+modem_io:
+  port: '/dev/ttyModem0'
+  baud: 9600
+  timeout: 0.1
+
+# Expose user axes and port as ROS params
+parameters:
+  port:           '/dev/ttyModem0'
+  x:              0.0
+  y:              0.0
+  z:              0.0
+
+# Continuously stream Packet A with (x,y,z) @ 4 Hz
+schedules:
+  - name: drive_loop
+    loop: true
+    steps:
+      - name: send_A
+        duration: 0.25         # 4 Hz
+        encode:
+          type: A_NORMAL
+          x:   param:x
+          y:   param:y
+          z:   param:z
+
+# No topic‐triggers or publishers here—host_side plugin drives its own state machine
+triggers: []
+publishers: []
+services: []
+
+plugins:
+  - module: pez_comms.plugins.host_side
+    config:
+      packet_a:        A_NORMAL
+      packet_b:        B_COMMAND
+      topic_cmd_vel:   /pez/cmd_vel
+      topic_camera:    /pez/camera_control
+      services:
+        "0": /teleoperation       # plugin will create /teleoperation_start & /teleoperation_stop
+        "1": /teleoperation/toggle_magnet
+        "2": /teleoperation/toggle_neutral
+      camera_svc_id:   3
+      broadcast_rate:  4.0
+      ack_timeout:     2.0        # secs to wait for the service call itself
+      svc_wait:        5.0        # secs to wait for fish echo

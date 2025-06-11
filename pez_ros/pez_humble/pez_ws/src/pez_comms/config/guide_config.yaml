@@ -1,0 +1,155 @@
+#####################################################################
+# guide_config.yaml
+#
+# Example “master” configuration for pez_comms’s generic ‘comms’ node.
+# Copy this file, remove or uncomment sections you need, and fill
+# in the values appropriate for your hardware & workflow.
+#####################################################################
+
+# ────────────────────────────────────────────────────────────────────
+# 1) MODEM I/O SETTINGS
+# ────────────────────────────────────────────────────────────────────
+modem_io:
+  # Serial device or pseudo-TTY for your modem
+  port: "/dev/ttyModem0"       # e.g. /dev/ttyUSB0 or /tmp/pez_fish
+  baud: 9600                   # UART speed
+  timeout: 0.1                 # seconds to wait for each read
+
+# ────────────────────────────────────────────────────────────────────
+# 2) ROS PARAMETERS
+# ────────────────────────────────────────────────────────────────────
+# Any scalar you want exposed as ros2 params (useful for param: references)
+parameters:
+  # Override the serial port at runtime if you like:
+  port: "/dev/ttyModem0"
+
+  # Example control axes for Packet A:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+
+# ────────────────────────────────────────────────────────────────────
+# 3) SCHEDULED PACKETS
+# ────────────────────────────────────────────────────────────────────
+# Send Packet A or others at a regular interval, until some condition.
+schedules:
+  - name: drive_loop
+    loop: true                # repeat forever
+    steps:
+      - name: send_A
+        duration: 0.25        # wait 0.25s between steps (→ 4 Hz)
+        encode:
+          type: A_NORMAL      # packet ID as registered in packet_def.py
+          x:   param:x        # field mappings: can be param: or const
+          y:   param:y
+          z:   param:z
+
+      # Example of waiting for a parameter before continuing:
+      # - name: wait_for_start
+      #   wait_for_param: start_flag
+
+# ────────────────────────────────────────────────────────────────────
+# 4) TOPIC-TRIGGERED PACKETS
+# ────────────────────────────────────────────────────────────────────
+triggers:
+  - subscribe:
+      topic: "/user_cmd"
+      type: "std_msgs/String"
+      qos: 10
+    encode:
+      type: B_COMMAND
+      value: msg.data      # use msg.<field> to grab message contents
+
+# ────────────────────────────────────────────────────────────────────
+# 5) PARAMETER-DRIVEN PUBLISHERS
+# ────────────────────────────────────────────────────────────────────
+publishers:
+  - name: heartbeat
+    topic: "/heartbeat"
+    type: "std_msgs/Empty"
+    rate: 1.0            # Hz
+
+# ────────────────────────────────────────────────────────────────────
+# 6) SERVICE-BASED PACKET SENDERS
+# ────────────────────────────────────────────────────────────────────
+services:
+  - name: "/do_magic"
+    srv_type: "std_srvs/Trigger"
+    on_request:
+      encode:
+        type: MAGIC_PACKET
+        level: param:magic_level
+    on_response:
+      publish:
+        topic: "/magic_done"
+        type: "std_msgs/Bool"
+        value: resp.success
+
+# ────────────────────────────────────────────────────────────────────
+# 7) INBOUND PACKET HANDLERS
+# ────────────────────────────────────────────────────────────────────
+# Decode incoming packets from the modem, then publish ROS topics.
+serial_handlers:
+  - packet: A_NORMAL
+    decode:
+      x_q: x_q
+      y_q: y_q
+      z_q: z_q
+    publish:
+      topic: "/pez/cmd_vel"
+      type: "geometry_msgs/Twist"
+      mapping:
+        linear.x: "dequant(x_q,3)"
+        linear.y: "dequant(y_q,2)"
+        linear.z: "dequant(z_q,2)"
+
+  - packet: B_COMMAND
+    decode:
+      service_id: service_id
+      value:      value
+      seq:        seq
+    service_map:
+      "0": "/teleoperation/start_swim"
+      "1": "/teleoperation/toggle_magnet"
+      "2": "/teleoperation/toggle_neutral"
+    special:
+      "3":
+        publish:
+          topic: "/pez/camera_control"
+          type: "std_msgs/Float32"
+          expr: "1.0 if value == 1 else -1.0"
+
+# ────────────────────────────────────────────────────────────────────
+# 8) PLUGIN MODULES
+# ────────────────────────────────────────────────────────────────────
+# Load custom Python plugins for anything not covered above.
+plugins:
+  - module: pez_comms.plugins.fish_side
+    config:
+      port_param:      port
+      baud:            9600
+      timeout:         0.1
+      packet_a:        A_NORMAL
+      packet_b:        B_COMMAND
+      topic_cmd_vel:   "/pez/cmd_vel"
+      topic_camera:    "/pez/camera_control"
+      service_map:
+        "0": "/teleoperation/start_swim"
+        "1": "/teleoperation/toggle_magnet"
+        "2": "/teleoperation/toggle_neutral"
+      camera_svc_id:   3
+
+  - module: pez_comms.plugins.host_side
+    config:
+      packet_a:        A_NORMAL
+      packet_b:        B_COMMAND
+      topic_cmd_vel:   "/pez/cmd_vel"
+      topic_camera:    "/pez/camera_control"
+      services:
+        "0": "/teleoperation"         # will create start/stop under this base
+        "1": "/teleoperation/toggle_magnet"
+        "2": "/teleoperation/toggle_neutral"
+      camera_svc_id:   3
+      broadcast_rate:  4.0
+      ack_timeout:     2.0
+      svc_wait:        5.0
