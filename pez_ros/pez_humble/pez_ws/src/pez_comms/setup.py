@@ -26,7 +26,7 @@ setup(
             'launch/comms_launch.py',
             'launch/fish_launch.py',
             'launch/host_launch.py',
-            'launch/test_comms_launch.py',
+            'launch/test_launch.py',
         ]),
     ],
     zip_safe=True,
