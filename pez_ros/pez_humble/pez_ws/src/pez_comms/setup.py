@@ -23,10 +23,10 @@ setup(
         ]),
         # launch files
         ('share/' + package_name + '/launch', [
-            'launch/comms.launch.py',
-            'launch/fish.launch.py',
-            'launch/host.launch.py',
-            'launch/test_comms.launch.py',
+            'launch/comms_launch.py',
+            'launch/fish_launch.py',
+            'launch/host_launch.py',
+            'launch/test_comms_launch.py',
         ]),
     ],
     zip_safe=True,

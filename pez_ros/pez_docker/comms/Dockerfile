@@ -9,6 +9,7 @@ RUN apt-get update \
       python3-colcon-common-extensions \
       python3-rosdep \
       python3-serial \
+      python3-yaml \
       socat \
       nano \
     && rm -rf /var/lib/apt/lists/*
