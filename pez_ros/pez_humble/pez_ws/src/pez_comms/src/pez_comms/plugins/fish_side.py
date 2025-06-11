@@ -30,13 +30,8 @@ def register(node: Node, cfg: dict):
     """
 
     # 1) Get serial settings from parameters / cfg
-    port = node.get_parameter(cfg['port_param']).get_parameter_value().string_value
-    baud = cfg.get('baud', 9600)
     timeout = cfg.get('timeout', 0.1)
 
-    # Reconfigure the existing modem (assumes comms_full already opened node.modem)
-    node.modem.reopen(port=port, baud=baud, timeout=timeout)
-    node.get_logger().info(f"[fish_side] modem reconfigured: {port}@{baud}")
 
     # 2) Packet definitions
     packetA = get_packet(cfg['packet_a'])

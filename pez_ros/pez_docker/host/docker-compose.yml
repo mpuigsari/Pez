@@ -17,7 +17,7 @@ services:
 
     devices:
       - "/dev/input:/dev/input"
-      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      #- "/dev/ttyUSB0:/dev/ttyUSB0"
 
     environment:
       # X11 forwarding

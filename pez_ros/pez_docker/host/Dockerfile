@@ -8,6 +8,7 @@ RUN apt-get update \
       python3-colcon-common-extensions \
       python3-pip \
       python3-serial \
+      python3-yaml \
       python3-rosdep \
       ros-humble-joy \
       ros-humble-rqt \

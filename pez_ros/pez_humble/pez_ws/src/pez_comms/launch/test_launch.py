@@ -1,92 +1,60 @@
-# launch/test_comms.launch.py
+# launch/test_launch.py
 
 from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    LogInfo,
-    ExecuteProcess,
-    GroupAction
-)
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.actions import LogInfo, ExecuteProcess, TimerAction, GroupAction
 from launch_ros.actions import Node, PushRosNamespace
 from launch_ros.substitutions import FindPackageShare
-
+from launch.substitutions import PathJoinSubstitution
 
 def generate_launch_description():
-    # 1) Launch‐time arguments
-    fish_port = LaunchConfiguration('fish_port', default='/tmp/pez_fish')
-    host_port = LaunchConfiguration('host_port', default='/tmp/pez_host')
-    fish_ns   = LaunchConfiguration('fish_ns',   default='fish')
-    host_ns   = LaunchConfiguration('host_ns',   default='host')
+    fish_port = '/tmp/pez_fish'
+    host_port = '/tmp/pez_host'
+    fish_ns   = 'fish'
+    host_ns   = 'host'
 
-    fish_cfg = PathJoinSubstitution([
-        FindPackageShare('pez_comms'),
-        'config', 'fish_comms.yaml'
-    ])
-    host_cfg = PathJoinSubstitution([
-        FindPackageShare('pez_comms'),
-        'config', 'host_comms.yaml'
-    ])
+    share = FindPackageShare('pez_comms')
+    fish_cfg = PathJoinSubstitution([share, 'config', 'fish_comms.yaml'])
+    host_cfg = PathJoinSubstitution([share, 'config', 'host_comms.yaml'])
 
     return LaunchDescription([
 
-        # ─── Declare Arguments ──────────────────────────────────────────
-        DeclareLaunchArgument('fish_port',
-            default_value=fish_port,
-            description='PTT link for fish side'),
-        DeclareLaunchArgument('host_port',
-            default_value=host_port,
-            description='PTT link for host side'),
-        DeclareLaunchArgument('fish_ns',
-            default_value=fish_ns,
-            description='Namespace for fish comms'),
-        DeclareLaunchArgument('host_ns',
-            default_value=host_ns,
-            description='Namespace for host comms'),
-
-        # ─── Start socat to link the two PTYs ──────────────────────────
+        # 1) create virtual ports
         ExecuteProcess(
             cmd=[
-                'socat', '-d', '-d',
-                f'pty,raw,echo=0,link={host_port.perform(None)}',
-                f'pty,raw,echo=0,link={fish_port.perform(None)}'
+                'socat','-d','-d',
+                f'pty,raw,echo=0,link={host_port}',
+                f'pty,raw,echo=0,link={fish_port}',
             ],
             output='screen'
         ),
+        LogInfo(msg=[f'Linked {host_port} ↔ {fish_port}']),
 
-        # ─── Inform the user ────────────────────────────────────────────
-        LogInfo(msg=[
-            'test_comms: linked ',
-            host_port, ' ↔ ', fish_port
-        ]),
+        # 2) wait for PTYs, then launch both
+        TimerAction(
+            period=1.0,
+            actions=[
 
-        # ─── Fish‐side group ────────────────────────────────────────────
-        GroupAction([
-            PushRosNamespace(fish_ns),
-            Node(
-                package='pez_comms',
-                executable='comms',
-                name='comms_fish',
-                output='screen',
-                parameters=[
-                    {'config': fish_cfg},
-                    {'port': fish_port},
-                ],
-            ),
-        ]),
+                GroupAction([
+                    PushRosNamespace(fish_ns),
+                    Node(
+                        package='pez_comms',
+                        executable='comms',
+                        name='comms_fish',
+                        output='screen',
+                        arguments=[ '--config-file', fish_cfg ],
+                    ),
+                ]),
 
-        # ─── Host‐side group ────────────────────────────────────────────
-        GroupAction([
-            PushRosNamespace(host_ns),
-            Node(
-                package='pez_comms',
-                executable='comms',
-                name='comms_host',
-                output='screen',
-                parameters=[
-                    {'config': host_cfg},
-                    {'port': host_port},
-                ],
-            ),
-        ]),
+                GroupAction([
+                    PushRosNamespace(host_ns),
+                    Node(
+                        package='pez_comms',
+                        executable='comms',
+                        name='comms_host',
+                        output='screen',
+                        arguments=[ '--config-file', host_cfg ],
+                    ),
+                ]),
+            ]
+        ),
     ])

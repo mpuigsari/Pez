@@ -1,47 +1,57 @@
-# Host‐side communications: stream Packet A, handle Packet B echoes
+ros__parameters:
+  # ──────────────────────────────────────────────────
+  # 1) Modem I/O settings
+  # ──────────────────────────────────────────────────
+  modem_io:
+    port: '/tmp/pez_host'
+    baud: 9600
+    timeout: 0.1
 
-modem_io:
-  port: '/dev/ttyModem0'
-  baud: 9600
-  timeout: 0.1
+  # ──────────────────────────────────────────────────
+  # 2) User control axes (for Packet A)
+  # ──────────────────────────────────────────────────
+  x: 0.0
+  y: 0.0
+  z: 0.0
 
-# Expose user axes and port as ROS params
-parameters:
-  port:           '/dev/ttyModem0'
-  x:              0.0
-  y:              0.0
-  z:              0.0
+  # ──────────────────────────────────────────────────
+  # 3) Scheduled Packet A stream @ 4 Hz
+  # ──────────────────────────────────────────────────
+  schedules:
+    - name: drive_loop
+      loop: true
+      steps:
+        - name: send_A
+          duration: 0.25          # seconds → 4 Hz
+          encode:
+            type: A_NORMAL
+            x:   param:x
+            y:   param:y
+            z:   param:z
 
-# Continuously stream Packet A with (x,y,z) @ 4 Hz
-schedules:
-  - name: drive_loop
-    loop: true
-    steps:
-      - name: send_A
-        duration: 0.25         # 4 Hz
-        encode:
-          type: A_NORMAL
-          x:   param:x
-          y:   param:y
-          z:   param:z
+  # ──────────────────────────────────────────────────
+  # 4) No direct triggers/publishers/services here
+  #    (handled by the host_side plugin’s state machine)
+  # ──────────────────────────────────────────────────
+  triggers:    []
+  publishers:  []
+  services:    []
 
-# No topic‐triggers or publishers here—host_side plugin drives its own state machine
-triggers: []
-publishers: []
-services: []
-
-plugins:
-  - module: pez_comms.plugins.host_side
-    config:
-      packet_a:        A_NORMAL
-      packet_b:        B_COMMAND
-      topic_cmd_vel:   /pez/cmd_vel
-      topic_camera:    /pez/camera_control
-      services:
-        "0": /teleoperation       # plugin will create /teleoperation_start & /teleoperation_stop
-        "1": /teleoperation/toggle_magnet
-        "2": /teleoperation/toggle_neutral
-      camera_svc_id:   3
-      broadcast_rate:  4.0
-      ack_timeout:     2.0        # secs to wait for the service call itself
-      svc_wait:        5.0        # secs to wait for fish echo
+  # ──────────────────────────────────────────────────
+  # 5) Host‐side plugin configuration
+  # ──────────────────────────────────────────────────
+  plugins:
+    - module: pez_comms.plugins.host_side
+      config:
+        packet_a:        A_NORMAL
+        packet_b:        B_COMMAND
+        topic_cmd_vel:   /pez/cmd_vel
+        topic_camera:    /pez/camera_control
+        services:
+          "0": /teleoperation             # start/stop
+          "1": /teleoperation/toggle_magnet
+          "2": /teleoperation/toggle_neutral
+        camera_svc_id:   3
+        broadcast_rate:  4.0              # Packet A frequency (Hz)
+        ack_timeout:     2.0              # sec wait for service action
+        svc_wait:        5.0              # sec wait for fish ACK

@@ -16,6 +16,6 @@ def generate_launch_description():
             executable='comms',
             name='comms',
             output='screen',
-            parameters=[cfg]
+            arguments=[ '--config-file', cfg ],
         )
     ])

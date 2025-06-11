@@ -1,36 +1,32 @@
-# Fish‐side communications: decode incoming Packet A/B and drive teleop + camera
+ros__parameters:
+  modem_io:
+    port: '/tmp/pez_fish'      # default serial port
+    baud: 9600                  # default baud
+    timeout: 0.1                # default read timeout
 
-modem_io:
-  port: '/dev/ttyModem0'
-  baud: 9600
-  timeout: 0.1
+  # We aren’t using schedules/triggers/publishers/services for fish side:
+  schedules:       []
+  triggers:        []
+  publishers:      []
+  services:        []
 
-# Expose the port as a ROS param so we can remap at runtime if needed
-parameters:
-  port: '/dev/ttyModem0'
+  # The fish_side plugin does all inbound work itself
+  serial_handlers: []
 
-# No outbound schedules/triggers/publishers/services here—
-# everything is handled in the fish_side plugin via inbound decoding.
-
-serial_handlers: []     # not used (plugin does its own loop)
-
-schedules: []
-triggers: []
-publishers: []
-services: []
-
-plugins:
-  - module: pez_comms.plugins.fish_side
-    config:
-      port_param:      port
-      baud:            9600
-      timeout:         0.1
-      packet_a:        A_NORMAL
-      packet_b:        B_COMMAND
-      topic_cmd_vel:   /pez/cmd_vel
-      topic_camera:    /pez/camera_control
-      service_map:
-        "0": /teleoperation/start_swim
-        "1": /teleoperation/toggle_magnet
-        "2": /teleoperation/toggle_neutral
-      camera_svc_id:   3
+  plugins:
+    - module: pez_comms.plugins.fish_side
+      config:
+        # This plugin reads the param 'modem_io.port' at runtime,
+        # so port_param should match exactly:
+        port_param:      modem_io.port
+        baud:            9600
+        timeout:         0.1
+        packet_a:        A_NORMAL
+        packet_b:        B_COMMAND
+        topic_cmd_vel:   /pez/cmd_vel
+        topic_camera:    /pez/camera_control
+        service_map:
+          "0": /teleoperation/start_swim
+          "1": /teleoperation/toggle_magnet
+          "2": /teleoperation/toggle_neutral
+        camera_svc_id:   3

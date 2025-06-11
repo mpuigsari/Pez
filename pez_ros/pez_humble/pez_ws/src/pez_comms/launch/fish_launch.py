@@ -1,39 +1,42 @@
+# launch/fish_launch.py
+
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import PushRosNamespace
+from launch_ros.actions import Node, PushRosNamespace
 from launch_ros.substitutions import FindPackageShare
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
-    # choose your namespace and config file at launch time
-    ns     = LaunchConfiguration('namespace',   default='fish')
-    config = LaunchConfiguration('config_file', default=PathJoinSubstitution([
-                FindPackageShare('pez_comms'), 'config', 'fish_comms.yaml'
-            ]))
+    # 1) Fixed namespace and port for fish side
+    ns    = LaunchConfiguration('namespace',  default='fish')
+    port  = LaunchConfiguration('port',       default='/tmp/pez_fish')
+    config= PathJoinSubstitution([
+                FindPackageShare('pez_comms'),
+                'config', 'fish_comms.yaml'
+            ])
 
     return LaunchDescription([
-        DeclareLaunchArgument(
-            'namespace',
-            default_value='fish',
-            description='Namespace under which to run the comms node'
-        ),
-        DeclareLaunchArgument(
-            'config_file',
+        # 2) Declare them so users can override if they really want
+        DeclareLaunchArgument('namespace',
+            default_value=ns,
+            description='Namespace for fish-side comms'),
+        DeclareLaunchArgument('config_file',
             default_value=config,
-            description='Path to YAML config for fish side'
-        ),
+            description='Path to fish_comms.yaml'),
+        DeclareLaunchArgument('port',
+            default_value=port,
+            description='Serial port for fish-side (e.g. /tmp/pez_fish)'),
 
-        # push the namespace for everything below
+        # 3) Push the fish namespace
         PushRosNamespace(ns),
 
-        # include the generic comms_launch.py, passing in the config_file arg
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                PathJoinSubstitution([
-                    FindPackageShare('pez_comms'), 'launch', 'comms_launch.py'
-                ])
-            ),
-            launch_arguments={'config_file': config}.items()
+        # 4) Launch the generic comms node, passing the YAML + override
+        Node(
+            package='pez_comms',
+            executable='comms',
+            name='comms_fish',
+            output='screen',
+            arguments=[ '--config-file', config ],
+
         ),
     ])
