@@ -1,0 +1,48 @@
+# File: config/host_comms.yaml
+ros__parameters:
+  # 1) Serial port for host side
+  modem_io:
+    port: '/tmp/pez_host'
+    baud: 9600
+    timeout: 0.1
+
+  # 2) Teleop axes (used by legacy A_NORMAL)
+  x: 0.0
+  y: 0.0
+  z: 0.0
+
+  # 3) Legacy A_NORMAL schedule @ 4 Hz (only used in AB mode)
+  schedules:
+    - name: drive_loop
+      loop: true
+      steps:
+        - name: send_A
+          duration: 0.25
+          encode:
+            type: A_NORMAL
+            x:   param:x
+            y:   param:y
+            z:   param:z
+
+  triggers:   []   # all other logic in plugin
+  publishers: []
+  services:   []
+
+  # 4) Plugin: handles both AB and 40-bit modes
+  plugins:
+    - module: pez_comms.plugins.host_side
+      config:
+        mode:            '40'           # 'AB' or '40'
+        packet_a:        A_NORMAL
+        packet_b:        B_COMMAND
+        packet_40:       PACKET_40
+        topic_cmd_vel:   cmd_vel
+        topic_camera:    camera_control
+        services:
+          "0": teleoperation
+          "1": teleoperation/toggle_magnet
+          "2": teleoperation/toggle_neutral
+        camera_svc_id:   3
+        broadcast_rate:  4.0            # Hz for legacy A_NORMAL
+        ack_timeout:     2.0            # secs to wait for Packet B
+        svc_wait:        5.0            # secs to wait for fish ACK
