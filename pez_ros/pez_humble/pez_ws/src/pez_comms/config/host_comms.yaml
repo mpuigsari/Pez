@@ -45,12 +45,12 @@ ros__parameters:
       config:
         packet_a:        A_NORMAL
         packet_b:        B_COMMAND
-        topic_cmd_vel:   /pez/cmd_vel
-        topic_camera:    /pez/camera_control
+        topic_cmd_vel:   cmd_vel
+        topic_camera:    camera_control
         services:
-          "0": /teleoperation             # start/stop
-          "1": /teleoperation/toggle_magnet
-          "2": /teleoperation/toggle_neutral
+          "0": teleoperation             # start/stop
+          "1": teleoperation/toggle_magnet
+          "2": teleoperation/toggle_neutral
         camera_svc_id:   3
         broadcast_rate:  4.0              # Packet A frequency (Hz)
         ack_timeout:     2.0              # sec wait for service action

@@ -12,7 +12,7 @@ RUN apt-get update \
       python3-rosdep \
       ros-humble-joy \
       ros-humble-rqt \
-      ros-humble-plotjuggler \
+      #ros-humble-plotjuggler \
       #ros-humble-plotjuggler-ros  \
       ros-humble-rqt-common-plugins \
       qtbase5-dev qtbase5-dev-tools \
@@ -37,6 +37,19 @@ RUN rosdep install --from-paths /pez_ws/src --ignore-src -r -y \
 RUN source /opt/ros/humble/setup.bash \
  && cd /pez_ws \
  && colcon build --symlink-install
+
+RUN mkdir -p /ws_plotjuggler/src
+RUN cd /ws_plotjuggler/src \
+ && git clone https://github.com/PlotJuggler/plotjuggler_msgs.git \
+ && git clone https://github.com/facontidavide/PlotJuggler.git \
+ && git clone https://github.com/PlotJuggler/plotjuggler-ros-plugins.git \
+ && cd /ws_plotjuggler
+RUN rosdep install --from-paths src --ignore-src -r -y \
+      && . /opt/ros/humble/setup.bash
+
+RUN source /opt/ros/humble/setup.bash \
+ && colcon build --symlink-install
+
 
 # 4) Entrypoint: source ROS & your workspace
 COPY pez_ros/pez_docker/host/entrypoint.sh /entrypoint.sh

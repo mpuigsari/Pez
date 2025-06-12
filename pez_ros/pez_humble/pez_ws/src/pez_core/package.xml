@@ -22,6 +22,7 @@
   <depend>std_msgs</depend>          <!-- for Header, Float32 -->
   <depend>std_srvs</depend>          <!-- for Trigger -->
   <depend>joy</depend>
+  <depend>pez_comms</depend>
 
   <!-- 4) tell ament that this package provides a .srv interface -->
   <member_of_group>rosidl_interface_packages</member_of_group>

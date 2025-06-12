@@ -23,10 +23,10 @@ ros__parameters:
         timeout:         0.1
         packet_a:        A_NORMAL
         packet_b:        B_COMMAND
-        topic_cmd_vel:   /pez/cmd_vel
-        topic_camera:    /pez/camera_control
+        topic_cmd_vel:   cmd_vel
+        topic_camera:    camera_control
         service_map:
-          "0": /teleoperation/start_swim
-          "1": /teleoperation/toggle_magnet
-          "2": /teleoperation/toggle_neutral
+          "0": teleoperation/start_swim
+          "1": teleoperation/toggle_magnet
+          "2": teleoperation/toggle_neutral
         camera_svc_id:   3

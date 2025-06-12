@@ -9,7 +9,6 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     # 1) Fixed namespace and port for host side
     ns    = LaunchConfiguration('namespace',  default='host')
-    port  = LaunchConfiguration('port',       default='/tmp/pez_host')
     config= PathJoinSubstitution([
                 FindPackageShare('pez_comms'),
                 'config', 'host_comms.yaml'
@@ -20,9 +19,6 @@ def generate_launch_description():
         DeclareLaunchArgument('namespace',
             default_value=ns,
             description='Namespace for host-side comms'),
-        DeclareLaunchArgument('port',
-            default_value=port,
-            description='Serial port for host-side (e.g. /tmp/pez_host)'),
         DeclareLaunchArgument('config_file',
             default_value=config,
             description='Path to host_comms.yaml'),

@@ -1,5 +1,3 @@
-# pez_comms/plugins/fish_side.py
-
 import threading
 import time
 
@@ -31,28 +29,33 @@ def register(node: Node, cfg: dict):
 
     # 1) Get serial settings from parameters / cfg
     timeout = cfg.get('timeout', 0.1)
-
+    node.get_logger().info(f"fish_side: using timeout={timeout}")
 
     # 2) Packet definitions
     packetA = get_packet(cfg['packet_a'])
     packetB = get_packet(cfg['packet_b'])
+    node.get_logger().info(f"fish_side: loaded packets {cfg['packet_a']} and {cfg['packet_b']}")
 
     # 3) Publishers
     cmd_vel_pub = node.create_publisher(Twist, cfg['topic_cmd_vel'], 10)
-    camera_pub  = node.create_publisher(Float32, cfg['topic_camera'], 10)
+    camera_pub = node.create_publisher(Float32, cfg['topic_camera'], 10)
+    node.get_logger().info(f"fish_side: created publishers on {cfg['topic_cmd_vel']} and {cfg['topic_camera']}")
 
     # 4) Service clients mapping
     service_map = {int(k): v for k, v in cfg['service_map'].items()}
-    camera_id   = cfg.get('camera_svc_id', 3)
+    camera_id = cfg.get('camera_svc_id', 3)
+    node.get_logger().info(f"fish_side: service_map={service_map}, camera_id={camera_id}")
 
     # 5) Serial‐read loop
     stop_event = threading.Event()
 
     def serial_loop():
+        node.get_logger().info("fish_side: serial loop started")
         while rclpy.ok() and not stop_event.is_set():
-            raw = node.modem.get_byte(timeout)  # returns bytes or None
+            raw = node.modem.get_byte(timeout)
             if raw is None:
                 continue
+            node.get_logger().debug(f"fish_side: raw bytes={raw}")
 
             byte = raw[0]
             # Packet A (bit7=0)
@@ -61,6 +64,7 @@ def register(node: Node, cfg: dict):
                 x = node._dequant(fields['x_q'], bits=3)
                 y = node._dequant(fields['y_q'], bits=2)
                 z = node._dequant(fields['z_q'], bits=2)
+                node.get_logger().info(f"fish_side: Packet A decoded x={x:.3f}, y={y:.3f}, z={z:.3f}")
                 twist = Twist()
                 twist.linear.x = x
                 twist.linear.y = y
@@ -71,23 +75,32 @@ def register(node: Node, cfg: dict):
             else:
                 fields = packetB.decode(raw)
                 svc_id = fields['service_id']
-                val    = fields['value']
-                seq    = fields['seq']
+                val = fields['value']
+                seq = fields['seq']
+                node.get_logger().info(f"fish_side: Packet B decoded svc_id={svc_id}, val={val}, seq={seq}")
 
                 ack = False
 
                 # 5a) Fish‐teleop services (0,1,2)
                 if svc_id in service_map:
-                    cli = node.create_client(Trigger, service_map[svc_id])
+                    svc_name = service_map[svc_id]
+                    node.get_logger().info(f"fish_side: calling service {svc_name}")
+                    cli = node.create_client(Trigger, svc_name)
                     if cli.wait_for_service(timeout_sec=5.0):
                         fut = cli.call_async(Trigger.Request())
                         rclpy.spin_until_future_complete(node, fut, timeout_sec=2.0)
                         if fut.done() and fut.result().success:
                             ack = True
+                            node.get_logger().info(f"fish_side: service {svc_name} succeeded")
+                        else:
+                            node.get_logger().warn(f"fish_side: service {svc_name} failed or timed out")
+                    else:
+                        node.get_logger().warn(f"fish_side: service {svc_name} unavailable")
 
                 # 5b) Camera control (svc_id == camera_id)
                 elif svc_id == camera_id:
                     d = 1.0 if val == 1 else -1.0
+                    node.get_logger().info(f"fish_side: camera control d={d}")
                     msg = Float32(data=d)
                     camera_pub.publish(msg)
                     ack = True
@@ -98,13 +111,18 @@ def register(node: Node, cfg: dict):
                     service_id=svc_id, value=val, seq=resp_seq
                 )
                 node.modem.send_packet(ack_pkt)
+                node.get_logger().info(f"fish_side: sent {'ACK' if ack else 'NACK'} for svc_id={svc_id}, seq={resp_seq}")
 
     thread = threading.Thread(target=serial_loop, daemon=True)
     thread.start()
 
+    node.get_logger().info("fish_side: serial thread started")
+
     # 6) Clean up on shutdown
     def cleanup():
+        node.get_logger().info("fish_side: cleanup starting")
         stop_event.set()
         thread.join(timeout=1.0)
+        node.get_logger().info("fish_side: cleanup complete")
 
     node.add_on_shutdown(cleanup)

@@ -9,7 +9,7 @@ from launch.substitutions import PathJoinSubstitution
 def generate_launch_description():
     fish_port = '/tmp/pez_fish'
     host_port = '/tmp/pez_host'
-    fish_ns   = 'fish'
+    fish_ns   = 'pez'
     host_ns   = 'host'
 
     share = FindPackageShare('pez_comms')
