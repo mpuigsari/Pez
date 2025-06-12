@@ -1,17 +1,8 @@
 # pez\_comms
 
-> **Config-Driven Communication Engine for the Pez Robotic Fish**
+> Config-Driven Communication Engine for the Pez Robotic Fish
 
-`pez_comms` is a unified, YAML‑driven ROS 2 package that handles both **fish‑side** and **host‑side** acoustic modem communication.  A single node (`comms`) reads declarative configuration files to:
-
-* **Decode inbound packets** → publish ROS topics or call services
-* **Schedule outbound packets** at arbitrary intervals
-* **Trigger packets** from incoming ROS topics
-* **Publish ROS messages** on a timer (parameter‑driven)
-* **Bridge ROS services** to packet senders and optional follow‑ups
-* **Load custom Python plugins** for any specialized logic
-
-No code changes are required to add or modify communication flows—just edit the YAML and relaunch.
+`pez_comms` is a YAML-driven, plugin-extensible ROS 2 package providing a single, generic node (`comms`) that can drive **both** fish-side and host-side acoustic-modem links. Define your entire comms flow—packet decode rules, timed sends, topic- and service-triggered packets and more—by editing a simple YAML file. No code changes needed to modify or extend a flow!
 
 ---
 
@@ -32,14 +23,14 @@ No code changes are required to add or modify communication flows—just edit th
 
 ## Features
 
-* **Single Generic Node** (`comms`): all communication flows via one executable.
-* **YAML‑Driven**: define everything in `config/*.yaml`—no recompilation needed.
-* **Inbound Handling**: decode arbitrary packet types to ROS topics or services.
-* **Outbound Scheduling**: send any packet ID on a custom schedule.
-* **Topic Triggers**: map incoming ROS topics to packet transmissions.
-* **Service Bridges**: expose ROS services that encode and send packets, then optionally publish responses.
-* **Parameter‑Driven**: dynamic parameters (`ros2 param set`) control packet fields, rates, etc.
-* **Plugin Architecture**: drop in Python modules under `plugins/` for bespoke logic.
+* **Single Generic Node** (`comms`): All comms flows handled by one executable.
+* **YAML-Driven**: Everything from packet IDs to ROS-topic mappings lives in `config/*.yaml`.
+* **Inbound Handling**: Decode any packet into ROS topics or service calls.
+* **Timed Schedules**: Fire off packets at arbitrary intervals.
+* **Topic Triggers**: Publish or send packets in response to ROS topics.
+* **Service Bridges**: Expose ROS services that encode packets, wait for ACK/NACK, then return or publish follow-ups.
+* **Dynamic Parameters**: Tweak rates, payload fields, timeouts at runtime with `ros2 param set`.
+* **Plugin Architecture**: Drop in a Python module under `plugins/` to hook any custom logic.
 
 ---
 
@@ -48,26 +39,26 @@ No code changes are required to add or modify communication flows—just edit th
 ```
 pez_comms/
 ├── config/                # YAML profiles
-│   ├── fish_comms.yaml    # fish-side only
-│   ├── host_comms.yaml    # host-side only
-│   └── guide_config.yaml  # annotated example
+│   ├── fish_comms.yaml    # fish-side default flow
+│   ├── host_comms.yaml    # host-side default flow
+│   └── guide_config.yaml  # annotated example for all sections
 ├── launch/                # launch scripts
-│   ├── comms_launch.py    # generic comms launcher
-│   ├── fish_launch.py     # fish namespace wrapper
-│   ├── host_launch.py     # host namespace wrapper
-│   └── test_launch.py     # socat + dual-comms test
+│   ├── comms_launch.py    # generic `comms` node launcher
+│   ├── fish_launch.py     # wraps `comms_launch.py` under /fish
+│   ├── host_launch.py     # wraps `comms_launch.py` under /host
+│   └── test_launch.py     # socat + dual-namespace end-to-end test
 ├── nodes/                 # generic comms node
-│   └── comms_node.py
+│   └── comms_node.py      # entry point for `comms` executable
 ├── plugins/               # optional custom logic
-│   ├── fish_side.py       # fish-side packet loop plugin
-│   └── host_side.py       # host-side scheduler plugin
+│   ├── fish_side.py       # example fish-side packet loop
+│   └── host_side.py       # example host-side scheduler loop
 ├── core/                  # shared libraries
-│   ├── modem_io.py        # serial I/O manager
-│   ├── packet_def.py      # packet encode/decode registry
-│   ├── scheduler.py       # TransmissionScheduler
-│   └── serial_test.py     # serial debugging tool
+│   ├── modem_io.py        # serial I/O manager  
+│   ├── packet_def.py      # registry and codecs for packets  
+│   ├── scheduler.py       # TransmissionScheduler & steps  
+│   └── serial_test.py     # helper CLI for debugging ports  
 ├── package.xml            # ROS2 package manifest
-├── setup.py               # setuptools entry point for `comms`
+├── setup.py               # setuptools entry point
 └── resource/pez_comms     # ament index entry
 ```
 
@@ -76,18 +67,17 @@ pez_comms/
 ## Installation
 
 ```bash
-# 1. Install system dependencies on Ubuntu Jammy (ROS2 Humble)
+# 1) Install system dependencies (Ubuntu Jammy / ROS 2 Humble)
 sudo apt update && sudo apt install -y \
   python3-pip python3-colcon-common-extensions \
-  python3-all-dev build-essential cmake \
-  ros-humble-usb-cam i2c-tools libgpiod2 python3-rpi.gpio
+  build-essential cmake ros-humble-serial ros-humble-usb-cam
 
-# 2. Install Python libraries
-pip3 install --user pyserial pyyaml bluerobotics-navigator adafruit-blinka smbus2
+# 2) Install Python libraries
+pip3 install --user pyserial pyyaml
 
-# 3. Build your workspace
+# 3) Build your workspace
 cd ~/pez_ws
-colcon build --packages-select pez_interfaces pez_comms
+colcon build --packages-select pez_comms
 source install/setup.bash
 ```
 
@@ -95,83 +85,90 @@ source install/setup.bash
 
 ## Configuration
 
-All communication logic is declared in **YAML** under `config/`.  Key sections:
+All communication logic is declared in YAML under `config/*.yaml`. Key sections:
 
-* `modem_io`: `{port, baud, timeout}`
-* `parameters`: expose named ROS params for `param:...` references
-* `schedules`: timed sequences of packet sends
-* `triggers`: topic → packet mappings
-* `publishers`: periodic ROS message publishers
-* `services`: service servers that send packets and optionally publish responses
-* `serial_handlers`: inbound packet types → decode + publish/service
-* `plugins`: load custom Python modules
+* **`modem_io`**: serial port, baud rate, timeouts
+* **`parameters`**: expose ROS params for dynamic control
+* **`schedules`**: timed packet sends
+* **`triggers`**: ROS-topic → packet (on publish)
+* **`publishers`**: ROS-topic → periodic packet sends
+* **`services`**: ROS services → send packet + return/publish result
+* **`serial_handlers`**: incoming packet IDs → decode & publish/service
+* **`plugins`**: load extra Python hooks
 
-See [`guide_config.yaml`](config/guide_config.yaml) for a fully annotated example.
+See [`guide_config.yaml`](config/guide_config.yaml) for a fully annotated reference.
 
 ---
 
 ## Launch Files
 
-* **`comms_launch.py`**: generic node launcher
+All `ros2 launch` commands assume you’ve sourced your workspace:
 
-  ```bash
-  ros2 launch pez_comms comms_launch.py \
-    config_file:=config/fish_comms.yaml port:=/dev/ttyUSB0
-  ```
-* **`fish_launch.py`**: wraps `comms_launch.py` under the `/fish` namespace
-* **`host_launch.py`**: wraps `comms_launch.py` under the `/host` namespace
-* **`test_launch.py`**: runs `socat` to link two PTYs and launches both fish+host
+```bash
+# Generic (use any config):
+ros2 launch pez_comms comms_launch.py \
+  config_file:=config/fish_comms.yaml \
+  port:=/dev/ttyUSB0
+
+# Fish-side (namespaced /fish):
+ros2 launch pez_comms fish_launch.py \
+  config_file:=config/fish_comms.yaml
+
+# Host-side (namespaced /host):
+ros2 launch pez_comms host_launch.py \
+  config_file:=config/host_comms.yaml
+
+# End-to-end test (socat + both namespaces):
+ros2 launch pez_comms test_launch.py
+```
 
 ---
 
 ## Plugins
 
-Drop any custom logic into `plugins/`. Each plugin must define:
+Drop your own modules under `plugins/`. Each must implement:
 
 ```python
 def register(node: rclpy.node.Node, cfg: dict):
-    """
-    Called by comms_node; `cfg` is the plugin-specific YAML block.
-    """
+    """Called by comms_node after startup."""
     # e.g. node.create_subscription(...)
 ```
 
-Example plugins:
+Built-in examples:
 
 * `fish_side.py`: inbound decode loop for Packet A/B with ACK/NACK
-* `host_side.py`: outbound scheduler for Packet A and Packet B state machine
+* `host_side.py`: outbound scheduler state machine
 
 ---
 
 ## Core Modules
 
-* **`modem_io.py`**: manages a background serial thread and queue
-* **`packet_def.py`**: register & lookup packet classes by ID
-* **`scheduler.py`**: `TransmissionStep` + `TransmissionScheduler` for timed flows
-* **`serial_test.py`**: quick serial port utility script
+* **`modem_io.py`**: abstracts serial reads/writes into thread-safe queues
+* **`packet_def.py`**: register, encode/decode packet classes by ID
+* **`scheduler.py`**: define sequences of timed sends (TransmissionScheduler)
+* **`serial_test.py`**: CLI for quick port sanity checks
 
 ---
 
 ## Examples
 
-### Fish‐side
+### Fish-side only
 
 ```bash
 ros2 launch pez_comms fish_launch.py \
-  port:=/tmp/pez_fish
+  config_file:=config/fish_comms.yaml
 ```
 
-### Host‐side
+### Host-side only
 
 ```bash
 ros2 launch pez_comms host_launch.py \
-  port:=/tmp/pez_host
+  config_file:=config/host_comms.yaml
 ```
 
-### End-to-end Test
+### Loopback Test
 
 ```bash
-socat -d -d pty,raw,echo=0,link=/tmp/pez_host pty,raw,echo=0,link=/tmp/pez_fish &
 ros2 launch pez_comms test_launch.py
 ```
 
@@ -179,7 +176,7 @@ ros2 launch pez_comms test_launch.py
 
 ## Contributing
 
-Please open issues or pull requests for bugs and feature requests.  New flows should be added via YAML configurations or plugins—core changes only if strictly necessary.
+Bug reports, feature requests, and pull requests welcome! New comms flows should go in YAML or plugin modules—core changes only when strictly necessary.
 
 ---
 
