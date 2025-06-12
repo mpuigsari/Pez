@@ -1,74 +1,91 @@
-# File: src/pez_core/launch/joy_launch.py
-
 import os
 
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, GroupAction, SetEnvironmentVariable, DeclareLaunchArgument, IncludeLaunchDescription
-from launch_ros.actions import Node, PushRosNamespace
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    GroupAction,
+    IncludeLaunchDescription,
+    SetEnvironmentVariable,
+)
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
-
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node, PushRosNamespace
 from ament_index_python.packages import get_package_share_directory
+
 
 def generate_launch_description():
     # ——————————————————————————————————————————————————
-    # 1) Arguments & env
+    # 1) Declare flags & environment
     # ——————————————————————————————————————————————————
-    display_flag  = LaunchConfiguration('display_flag')
-    fish_robot    = LaunchConfiguration('fish_robot')
-    comms_flag    = LaunchConfiguration('comms_flag')
+    display_flag = LaunchConfiguration('display_flag')
+    fish_robot   = LaunchConfiguration('fish_robot')
+    comms_flag   = LaunchConfiguration('comms_flag')
 
-    # force domain
-    set_domain = SetEnvironmentVariable('ROS_DOMAIN_ID', '21')
-
-    # declare flags
     declare_display = DeclareLaunchArgument(
         'display_flag', default_value='true',
         description='If true, launch PlotJuggler & RQT'
     )
-    declare_fish_robot = DeclareLaunchArgument(
+    declare_fish    = DeclareLaunchArgument(
         'fish_robot', default_value='true',
         description='If false, run host-side teleop instead of on-robot controller'
     )
-    declare_comms = DeclareLaunchArgument(
+    declare_comms   = DeclareLaunchArgument(
         'comms_flag', default_value='false',
         description='If true, launch the pez_comms bridge'
     )
 
+    set_domain = SetEnvironmentVariable('ROS_DOMAIN_ID', '21')
+
     # ——————————————————————————————————————————————————
-    # 2) Core teleop under /pez
+    # 2) Teleop grouping logic
     # ——————————————————————————————————————————————————
-    pkg_core = get_package_share_directory('pez_core')
+    pkg_core   = get_package_share_directory('pez_core')
     joy_params = os.path.join(pkg_core, 'config', 'joystick_params.yaml')
 
-    pez_group = GroupAction([
-        PushRosNamespace('pez'),
-        # joystick driver
-        Node(
-            package='joy',
-            executable='joy_node',
-            name='joy_node',
-            output='screen',
-            parameters=[{
-                'dev': '/dev/input/js0',
-                'deadzone': 0.05,
-            }],
-        ),
-        # fish_joy converter (joy→/pez/cmd_vel)
-        Node(
-            package='pez_core',
-            executable='fish_joy',
-            name='fish_joy_node',
-            output='screen',
-            parameters=[joy_params],
-        ),
+    # /pez if no comms OR on-robot teleop
+    pez_condition = PythonExpression([
+        '"', comms_flag, '" == "false" or "', fish_robot, '" == "true"'
     ])
+    pez_teleop_group = GroupAction(
+        actions=[
+            PushRosNamespace('pez'),
+            Node(
+                package='joy', executable='joy_node', name='joy_node', output='screen',
+                parameters=[{'dev': '/dev/input/js0', 'deadzone': 0.05}],
+            ),
+            Node(
+                package='pez_core', executable='fish_joy', name='fish_joy_node', output='screen',
+                parameters=[joy_params],
+            ),
+        ],
+        condition=IfCondition(pez_condition)
+    )
+
+    # /host if comms AND host-side teleop
+    host_condition = PythonExpression([
+        '"', comms_flag, '" == "true" and "', fish_robot, '" == "false"'
+    ])
+    host_teleop_group = GroupAction(
+        actions=[
+            PushRosNamespace('host'),
+            Node(
+                package='joy', executable='joy_node', name='joy_node', output='screen',
+                parameters=[{'dev': '/dev/input/js0', 'deadzone': 0.05}],
+            ),
+            Node(
+                package='pez_core', executable='fish_joy', name='fish_joy_node', output='screen',
+                parameters=[joy_params],
+            ),
+        ],
+        condition=IfCondition(host_condition)
+    )
 
     # ——————————————————————————————————————————————————
-    # 3) Host-side teleop (only if fish_robot==false)
+    # 3) Host-side teleop include when fish_robot == false
     # ——————————————————————————————————————————————————
-    teleop_include = IncludeLaunchDescription(
+    teleop_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_core, 'launch', 'teleop_launch.py')
         ),
@@ -77,66 +94,58 @@ def generate_launch_description():
     )
 
     # ——————————————————————————————————————————————————
-    # 4) Comms bridge (test or host) when comms_flag==true
+    # 4) Comms bridge logic
     # ——————————————————————————————————————————————————
-    pkg_comms = get_package_share_directory('pez_comms')
-    test_launch   = os.path.join(pkg_comms, 'launch', 'test_launch.py')
-    host_launch   = os.path.join(pkg_comms, 'launch', 'host_launch.py')
-    host_cfg      = os.path.join(pkg_comms, 'config', 'host_comms.yaml')
-    host_ns       = 'host'
+    pkg_comms   = get_package_share_directory('pez_comms')
+    test_launch = os.path.join(pkg_comms, 'launch', 'test_launch.py')
+    host_launch = os.path.join(pkg_comms, 'launch', 'host_launch.py')
+    host_cfg    = os.path.join(pkg_comms, 'config', 'host_comms.yaml')
 
-    # 4a) Full test bridge (both pez+host via socat) if comms_flag && !fish_robot
     test_bridge = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(test_launch),
-        condition=IfCondition(
-            PythonExpression([
-                "'", comms_flag, "' == 'true' and '", fish_robot, "' == 'false'"
-            ])
-        )
+        condition=IfCondition(host_condition)
     )
 
-    # 4b) Hardware host-only bridge if comms_flag && fish_robot
+    hw_condition = PythonExpression([
+        '"', comms_flag, '" == "true" and "', fish_robot, '" == "true"'
+    ])
     host_bridge = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(host_launch),
         launch_arguments={
             'config_file': host_cfg,
-            'namespace':    host_ns,
+            'namespace':   'host',
         }.items(),
-        condition=IfCondition(
-            PythonExpression([
-                "'", comms_flag, "' == 'true' and '", fish_robot, "' == 'true'"
-            ])
-        )
+        condition=IfCondition(hw_condition)
     )
 
     # ——————————————————————————————————————————————————
     # 5) RQT & PlotJuggler
     # ——————————————————————————————————————————————————
-    perspective_file = os.path.join(pkg_core, 'config', 'pez.perspective')
-    layout_file      = os.path.join(pkg_core, 'config', 'test.xml')
+    perspective = os.path.join(pkg_core, 'config', 'pez.perspective')
+    layout      = os.path.join(pkg_core, 'config', 'test.xml')
 
     rqt = ExecuteProcess(
-        cmd=['rqt', '--perspective-file', perspective_file],
-        output='screen',
+        cmd=['rqt', '--perspective-file', perspective], output='screen',
         condition=IfCondition(display_flag),
     )
     pj  = ExecuteProcess(
-        cmd=['ros2', 'run', 'plotjuggler', 'plotjuggler', '--layout', layout_file],
-        output='screen',
+        cmd=['ros2', 'run', 'plotjuggler', 'plotjuggler', '--layout', layout], output='screen',
         condition=IfCondition(display_flag),
     )
 
     # ——————————————————————————————————————————————————
-    # 6) Assemble the launch description
+    # 6) Assemble LaunchDescription
     # ——————————————————————————————————————————————————
     return LaunchDescription([
         set_domain,
         declare_display,
-        declare_fish_robot,
+        declare_fish,
         declare_comms,
 
-        pez_group,
-        teleop_include,
+        pez_teleop_group,
+        host_teleop_group,
+
+        teleop_launch,
 
         test_bridge,
         host_bridge,
