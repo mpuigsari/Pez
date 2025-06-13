@@ -61,7 +61,7 @@ def _crc8_bytes(data: bytes) -> int:
 class PacketA_Normal(PacketDefinition):
     @property
     def packet_id(self) -> str:
-        return "A_NORMAL"
+        return 0xA
 
     def encode(self, x: int, y: int, z: int) -> bytes:
         header = ((x & 0x7) << 4) | ((y & 0x3) << 2) | (z & 0x3)
@@ -79,7 +79,7 @@ _CRC3_POLY = 0b1011
 class PacketB_Command(PacketDefinition):
     @property
     def packet_id(self) -> str:
-        return "B_COMMAND"
+        return "PacketB"
 
     def encode(self, service_id: int, value: int, seq: int) -> bytes:
         header = (1 << 7) | ((service_id & 0x3) << 5) | ((value & 0x1) << 4)
@@ -94,11 +94,13 @@ class PacketB_Command(PacketDefinition):
         seq        = byte_val & 0x1
         return {"service_id": service_id, "value": value, "seq": seq}
 
-# New 40-bit packet
+
+
 class Packet40(PacketDefinition):
     @property
-    def packet_id(self) -> str:
-        return "PACKET_40"
+    def packet_id(self) -> int:
+        # This must match the first byte you put on the wire for a 40-bit packet.
+        return 0x40
 
     def encode(self,
                seq: int,
@@ -110,22 +112,26 @@ class Packet40(PacketDefinition):
                svc_val: int) -> bytes:
         # pack bits 0–31 into a 32-bit word
         word = (
-            ((seq & 0x0F)        << 28) |
-            ((vx  & 0xFF)        << 20) |
-            ((vy  & 0xFF)        << 12) |
-            ((vz  & 0xFF)        <<  4) |
-            ((svc_pending & 0x1) <<  3) |
-            ((svc_id       & 0x3) <<  1) |
-            ((svc_val      & 0x1) <<  0)
+            ((seq        & 0x0F) << 28) |
+            ((vx         & 0xFF) << 20) |
+            ((vy         & 0xFF) << 12) |
+            ((vz         & 0xFF) <<  4) |
+            ((svc_pending&   0x1) <<  3) |
+            ((svc_id     &   0x3) <<  1) |
+            ((svc_val    &   0x1) <<  0)
         )
         b4 = struct.pack('>I', word)
         crc = _crc8_bytes(b4)
-        return b4 + struct.pack('B', crc)
+        # Prepend the packet_id byte, then payload+CRC
+        return bytes([self.packet_id]) + b4 + struct.pack('B', crc)
 
     def decode(self, raw: bytes) -> Dict[str, int]:
-        if len(raw) != 5:
-            raise ValueError("Invalid length for PACKET_40")
-        payload, recv_crc = raw[:4], raw[4]
+        # Expect exactly 1 (ID) + 4 (payload) + 1 (CRC) = 6 bytes total
+        if len(raw) != 6:
+            raise ValueError(f"Invalid length for PACKET_40: got {len(raw)}")
+        pid, payload, recv_crc = raw[0], raw[1:5], raw[5]
+        if pid != self.packet_id:
+            raise ValueError(f"Wrong packet_id: {pid}")
         if _crc8_bytes(payload) != recv_crc:
             raise ValueError("CRC mismatch in PACKET_40")
         w = struct.unpack('>I', payload)[0]
@@ -138,8 +144,59 @@ class Packet40(PacketDefinition):
             "svc_id":      (w >>  1) & 0x3,
             "svc_val":     (w >>  0) & 0x1,
         }
+    
+class PacketB_Full(PacketDefinition):
+    """
+    40-bit PacketB: full-width command ACK/NACK frame.
+
+    Frame layout (40 bits):
+      [ID (8)] [Payload (32)] [CRC8 (8)]
+    Payload bits (MSB->LSB):
+      • seq        : 4 bits
+      • service_id : 4 bits
+      • value      : 4 bits
+      • reserved   : 20 bits (zero)
+    """
+    @property
+    def packet_id(self) -> int:
+        # First-byte identifier for PacketB_Full
+        return 0x0B
+
+    def encode(self, *, seq: int, service_id: int, value: int) -> bytes:
+        # Pack payload: seq (4) | service_id (4) | value (4) | zeros (20)
+        payload = (
+            ((seq & 0x0F)        << 28) |
+            ((service_id & 0x0F) << 24) |
+            ((value & 0x0F)      << 20)
+        )
+        # 32-bit big-endian
+        b4 = struct.pack('>I', payload)
+        # 1-byte CRC over payload
+        crc = _crc8_bytes(b4)
+        # Return: ID + payload + CRC
+        return bytes([self.packet_id]) + b4 + struct.pack('B', crc)
+
+    def decode(self, raw: bytes) -> Dict[str, int]:
+        if len(raw) != 6:
+            raise ValueError(f"Invalid length for PacketB_Full: got {len(raw)} bytes")
+        pid = raw[0]
+        if pid != self.packet_id:
+            raise ValueError(f"Wrong packet_id: expected 0x{self.packet_id:02X}, got 0x{pid:02X}")
+        payload = raw[1:5]
+        recv_crc = raw[5]
+        if _crc8_bytes(payload) != recv_crc:
+            raise ValueError("CRC mismatch in PacketB_Full")
+        word = struct.unpack('>I', payload)[0]
+        return {
+            'seq':        (word >> 28) & 0x0F,
+            'service_id': (word >> 24) & 0x0F,
+            'value':      (word >> 20) & 0x0F,
+        }
+
 
 # Register all packets
 register_packet(PacketA_Normal())
 register_packet(PacketB_Command())
 register_packet(Packet40())
+register_packet(PacketB_Full())
+

@@ -19,7 +19,7 @@ ros__parameters:
         - name: send_A
           duration: 0.25
           encode:
-            type: A_NORMAL
+            type: 0xA
             x:   param:x
             y:   param:y
             z:   param:z
@@ -33,13 +33,13 @@ ros__parameters:
     - module: pez_comms.plugins.host_side
       config:
         mode:            '40'           # 'AB' or '40'
-        packet_a:        A_NORMAL
-        packet_b:        B_COMMAND
-        packet_40:       PACKET_40
+        packet_a:        0xA
+        packet_b:        0xB
+        packet_40:       0x40
         topic_cmd_vel:   cmd_vel
         topic_camera:    camera_control
         services:
-          "0": teleoperation
+          "0": teleoperation/swim
           "1": teleoperation/toggle_magnet
           "2": teleoperation/toggle_neutral
         camera_svc_id:   3

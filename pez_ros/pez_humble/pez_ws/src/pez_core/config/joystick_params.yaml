@@ -21,7 +21,7 @@ joy_controller:
     button_neutral: 4
 
     # (If you later parameterize your service names)
-    start_service:   "teleoperation/start_swim"
-    stop_service:    "teleoperation/stop_swim"
+    start_service:   "teleoperation/swim_start"
+    stop_service:    "teleoperation/swim_stop"
     magnet_service:  "teleoperation/toggle_magnet"
     neutral_service: "teleoperation/toggle_neutral"
