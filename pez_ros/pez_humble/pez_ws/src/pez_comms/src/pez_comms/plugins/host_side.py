@@ -81,7 +81,7 @@ def register(node: Node, cfg: dict):
     # Camera tilt subscription
     def camera_cb(msg: Float64):
         nonlocal svc_cmd
-        if svc_cmd is None:
+        if svc_cmd is None and msg.data != 0:
             svc_cmd = (cam_id, 1 if msg.data > 0 else 0)
             ack_ready.clear()
             node.get_logger().info(

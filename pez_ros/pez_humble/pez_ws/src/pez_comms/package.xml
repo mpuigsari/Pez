@@ -3,7 +3,7 @@
   <name>pez_comms</name>
   <version>0.1.0</version>
   <description>
-    Config-driven, unified communications engine for the Pez robotic fish (host & fish-side).
+    Config-driven, unified communications engine for the Pez robotic fish (host and fish-side).
   </description>
   <maintainer email="you@example.com">Your Name</maintainer>
   <license>Apache-2.0</license>
