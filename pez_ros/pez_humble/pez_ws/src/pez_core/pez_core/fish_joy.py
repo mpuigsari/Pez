@@ -35,8 +35,8 @@ class JoystickController(Node):
         self.declare_parameter('button_mode_0',  3)
         self.declare_parameter('button_neutral', 4)
 
-        self.declare_parameter('start_service',   'teleoperation/start_swim')
-        self.declare_parameter('stop_service',    'teleoperation/stop_swim')
+        self.declare_parameter('start_service',   'teleoperation/swim_start')
+        self.declare_parameter('stop_service',    'teleoperation/swim_stop')
         self.declare_parameter('magnet_service',  'teleoperation/toggle_magnet')
         self.declare_parameter('neutral_service', 'teleoperation/toggle_neutral')
 

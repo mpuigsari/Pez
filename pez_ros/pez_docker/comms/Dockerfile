@@ -9,6 +9,7 @@ RUN apt-get update \
       python3-colcon-common-extensions \
       python3-rosdep \
       python3-serial \
+      python3-yaml \
       socat \
       nano \
     && rm -rf /var/lib/apt/lists/*
@@ -26,7 +27,7 @@ COPY pez_ros/pez_humble/pez_ws/src/pez_comms      /pez_ws/src/pez_comms
 
 RUN source /opt/ros/humble/setup.bash \
  && cd /pez_ws \
- && colcon build --symlink-install
+ && colcon build --merge-install
 
 # 5) Source ROS 2 and your overlay for every container start
 COPY pez_ros/pez_docker/comms/entrypoint.sh /entrypoint.sh

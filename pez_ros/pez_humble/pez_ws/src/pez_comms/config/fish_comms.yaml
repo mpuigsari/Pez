@@ -1,0 +1,29 @@
+# File: config/fish_comms.yaml
+ros__parameters:
+  # 1) Serial port for fish side
+  modem_io:
+    port: '/tmp/pez_fish'
+    baud: 9600
+    timeout: 0.1
+
+  # 2) No built-in schedules/triggers/services—plugin does everything
+  schedules:   []
+  triggers:    []
+  publishers:  []
+  services:    []
+
+  # 3) Plugin: handles both AB and 40-bit modes
+  plugins:
+    - module: pez_comms.plugins.fish_side
+      config:
+        mode:            '40'           # 'AB' or '40'
+        packet_a:        0xA
+        packet_b:        0xB
+        packet_40:       0x40
+        topic_cmd_vel:   cmd_vel
+        topic_camera:    camera_control
+        service_map:
+          "0": teleoperation/swim
+          "1": teleoperation/toggle_magnet
+          "2": teleoperation/toggle_neutral
+        camera_svc_id:   3

@@ -148,8 +148,8 @@ class PezController(Node):
 
 
         # Teleoperation services
-        self.create_service(Trigger, f'{ns}/teleoperation/start_swim',      self.handle_start)
-        self.create_service(Trigger, f'{ns}/teleoperation/stop_swim',       self.handle_stop)
+        self.create_service(Trigger, f'{ns}/teleoperation/swim_start',      self.handle_start)
+        self.create_service(Trigger, f'{ns}/teleoperation/swim_stop',       self.handle_stop)
         self.create_service(Trigger, f'{ns}/teleoperation/toggle_magnet',   self.handle_toggle_magnet)
         self.create_service(Trigger, f'{ns}/teleoperation/toggle_neutral',   self.handle_toggle_neutral)
 
