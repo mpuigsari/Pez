@@ -253,12 +253,12 @@ def register(node: Node, cfg: dict):
                     )
                     node.modem.send_packet(pkt)
                     node.get_logger().info(
-                        f"Sent Packet40 seq={last_seq} bytes={packet40.to_hex_string(pkt)}"
+                        f"Sent Packet40 seq={last_seq} (4 bytes): {packet40.to_hex_string(pkt)}"
                     )
 
                     # advance full 4-bit counter
                     last_seq = (last_seq + 1) & 0x0F
-                    time.sleep(5.0)
+                    time.sleep(1.0)
 
 
     # Start threads

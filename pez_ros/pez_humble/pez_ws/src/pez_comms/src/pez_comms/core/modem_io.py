@@ -13,48 +13,48 @@ class ModemIOMgr:
     into an internal Queue, from which scheduler steps can consume them. 
     """
 
-    class ModemIOMgr:
-        def __init__(self,
-                    port: str,
-                    baud: int = 9600,
-                    timeout: Optional[float] = 0.1):
-            """
-            port:        e.g. "/dev/ttyUSB0"
-            baud:        e.g. 9600
-            timeout:     per‐read timeout in seconds;
-                        use None to block until at least 1 byte arrives
-                        use 0.0 for completely non‐blocking reads
-            """
-            self._port    = port
-            self._baud    = baud
-            self._timeout = timeout
+    
+    def __init__(self,
+                port: str,
+                baud: int = 9600,
+                timeout: Optional[float] = 0.1):
+        """
+        port:        e.g. "/dev/ttyUSB0"
+        baud:        e.g. 9600
+        timeout:     per‐read timeout in seconds;
+                    use None to block until at least 1 byte arrives
+                    use 0.0 for completely non‐blocking reads
+        """
+        self._port    = port
+        self._baud    = baud
+        self._timeout = timeout
 
-            # open in _exactly_ the right mode:
-            self._ser = serial.Serial(
-                port=self._port,
-                baudrate=self._baud,
-                bytesize=serial.EIGHTBITS,      # 8 data bits
-                parity=serial.PARITY_NONE,      # no parity
-                stopbits=serial.STOPBITS_ONE,   # 1 stop bit
-                timeout=self._timeout,          # maps to VMIN/VTIME
-                xonxoff=False,                  # no software flow‐control
-                rtscts=False,                   # no hardware flow‐control
-                dsrdtr=False,                   # no DSR/DTR flow‐control
-                exclusive=True                  # Linux: lock the port (pySerial ≥3.4)
-            )
+        # open in _exactly_ the right mode:
+        self._ser = serial.Serial(
+            port=self._port,
+            baudrate=self._baud,
+            bytesize=serial.EIGHTBITS,      # 8 data bits
+            parity=serial.PARITY_NONE,      # no parity
+            stopbits=serial.STOPBITS_ONE,   # 1 stop bit
+            timeout=self._timeout,          # maps to VMIN/VTIME
+            xonxoff=False,                  # no software flow‐control
+            rtscts=False,                   # no hardware flow‐control
+            dsrdtr=False,                   # no DSR/DTR flow‐control
+            exclusive=True                  # Linux: lock the port (pySerial ≥3.4)
+        )
 
-            # clear any junk in the buffers
-            self._ser.reset_input_buffer()
-            self._ser.reset_output_buffer()
+        # clear any junk in the buffers
+        self._ser.reset_input_buffer()
+        self._ser.reset_output_buffer()
 
-            
-            self._rx_queue    = Queue()
-            self._stop_event  = threading.Event()
-            self._reader_thread = threading.Thread(
-                target=self._reader_loop,
-                daemon=True
-            )
-            self._reader_thread.start()
+        
+        self._rx_queue    = Queue()
+        self._stop_event  = threading.Event()
+        self._reader_thread = threading.Thread(
+            target=self._reader_loop,
+            daemon=True
+        )
+        self._reader_thread.start()
 
     def _reader_loop(self):
         """Continuously read single bytes and enqueue them until stopped."""

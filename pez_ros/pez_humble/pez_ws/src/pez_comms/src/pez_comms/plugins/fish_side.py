@@ -132,7 +132,7 @@ def register(node: Node, cfg: dict):
             if not first:
                 continue
 
-            """b0   = first[0]
+            b0   = first[0]
             pid3 = b0 >> 5      # Packet40’s 3-bit ID
             # pick expected length
             if mode == '40' and packet40 and pid3 == packet40.packet_id:
@@ -141,8 +141,7 @@ def register(node: Node, cfg: dict):
                 exp_len = pA_len
             else:
                 node.get_logger().warn(f"Unknown PID {b0:02x}, skipping")
-                continue"""
-            exp_len = p40_len
+                continue
             # read the rest of the packet
             buf = bytearray(first)
             start = time.time()
