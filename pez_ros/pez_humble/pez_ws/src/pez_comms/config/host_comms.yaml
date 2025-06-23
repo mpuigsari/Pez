@@ -4,7 +4,7 @@ ros__parameters:
   modem_io:
     port: '/tmp/pez_host'  #'/dev/ttyUSB1'
     baud: 9600
-    timeout: 0
+    timeout: 2
 
   # 2) Teleop axes (used by legacy A_NORMAL)
   x: 0.0

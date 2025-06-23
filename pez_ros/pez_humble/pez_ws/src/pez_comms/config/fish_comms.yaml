@@ -4,7 +4,7 @@ ros__parameters:
   modem_io:
     port: '/tmp/pez_fish' #/dev/ttyUSB0' #
     baud: 9600
-    timeout: 0.1
+    timeout: 2
 
   # 2) No built-in schedules/triggers/services—plugin does everything
   schedules:   []
