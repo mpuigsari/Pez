@@ -32,6 +32,27 @@ class PacketDefinition(ABC):
     @abstractmethod
     def decode(self, raw: bytes) -> Dict[str, Any]:
         pass
+    
+    @staticmethod
+    def to_hex_string(pkt: bytes) -> str:
+        return ' '.join(f'{b:02X}' for b in pkt)
+    
+    @staticmethod
+    def _quant(v: float, bits: int) -> int:
+        # signed two’s-complement quant: v=0 → q=0 exactly
+        max_mag = (1 << (bits - 1)) - 1               # e.g. 31 for 6 bits
+        v_clamped = max(-1.0, min(1.0, v))
+        q_signed  = int(round(v_clamped * max_mag))  # in [-max_mag..+max_mag]
+        return q_signed & ((1 << bits) - 1)           # pack to unsigned
+
+    @staticmethod
+    def _dequant(q: int, bits: int) -> float:
+        # invert two’s-complement
+        sign_bit = 1 << (bits - 1)
+        if q & sign_bit:
+            q -= (1 << bits)
+        max_mag = (1 << (bits - 1)) - 1
+        return q / max_mag
 
 # CRC utilities
 import struct
@@ -96,102 +117,181 @@ class PacketB_Command(PacketDefinition):
 
 
 
+# CRC-4 polynomial x^4 + x + 1 → 0b1_0011
+_CRC4_POLY = 0b10011
+
 class Packet40(PacketDefinition):
+    """
+    32-bit wire format (big-endian):
+      [ID:3][CRC-4][SEQ:3][VX:6][VY:6][VZ:6][SVC_P:1][SVC_ID:2][SVC_V:1]
+    All velocities are two-s-compl. quantised to 6 bits, mapping −1.0…+1.0.
+    """
+
+    # ---------- constants ----------
+    _ID_SHIFT   = 29          # bits 31-29
+    _CRC_SHIFT  = 25          # bits 28-25
+    _SEQ_SHIFT  = 22          # bits 24-22
+    _VX_SHIFT   = 16          # bits 21-16
+    _VY_SHIFT   = 10          # bits 15-10
+    _VZ_SHIFT   = 4           # bits  9-4
+    _SVCP_SHIFT = 3           # bit   3
+    _SVCI_SHIFT = 1           # bits  2-1
+    _SVCV_SHIFT = 0           # bit   0
+
     @property
-    def packet_id(self) -> int:
-        # This must match the first byte you put on the wire for a 40-bit packet.
-        return 0x40
+    def packet_id(self) -> int:           # 0…7
+        return 0x04
 
-    def encode(self,
-               seq: int,
-               vx: int,
-               vy: int,
-               vz: int,
-               svc_pending: int,
-               svc_id: int,
-               svc_val: int) -> bytes:
-        # pack bits 0–31 into a 32-bit word
-        word = (
-            ((seq        & 0x0F) << 28) |
-            ((vx         & 0xFF) << 20) |
-            ((vy         & 0xFF) << 12) |
-            ((vz         & 0xFF) <<  4) |
-            ((svc_pending&   0x1) <<  3) |
-            ((svc_id     &   0x3) <<  1) |
-            ((svc_val    &   0x1) <<  0)
+    # ---------- helpers ----------
+    @staticmethod
+    def _quant(v: float, bits: int) -> int:
+        m = (1 << (bits - 1)) - 1
+        q = int(round(max(-1.0, min(1.0, v)) * m))
+        return q & ((1 << bits) - 1)
+
+    @staticmethod
+    def _dequant(q: int, bits: int) -> float:
+        if q & (1 << (bits - 1)):                       # sign-extend
+            q -= 1 << bits
+        return q / ((1 << (bits - 1)) - 1)
+
+    # ---------- ENCODE ----------
+    def encode(
+        self, *, seq: int,
+        vx: float, vy: float, vz: float,
+        svc_pending: int, svc_id: int, svc_val: int
+    ) -> bytes:
+
+        qx, qy, qz = (self._quant(v, 6) for v in (vx, vy, vz))
+
+        # body = everything *below* the CRC (25 bits)
+        body25 = (
+            (seq & 0x7)        << self._SEQ_SHIFT  |
+            qx                 << self._VX_SHIFT   |
+            qy                 << self._VY_SHIFT   |
+            qz                 << self._VZ_SHIFT   |
+            (svc_pending & 1)  << self._SVCP_SHIFT |
+            (svc_id      & 3)  << self._SVCI_SHIFT |
+            (svc_val     & 1)  << self._SVCV_SHIFT
         )
-        b4 = struct.pack('>I', word)
-        crc = _crc8_bytes(b4)
-        # Prepend the packet_id byte, then payload+CRC
-        return bytes([self.packet_id]) + b4 + struct.pack('B', crc)
 
-    def decode(self, raw: bytes) -> Dict[str, int]:
-        # Expect exactly 1 (ID) + 4 (payload) + 1 (CRC) = 6 bytes total
-        if len(raw) != 6:
-            raise ValueError(f"Invalid length for PACKET_40: got {len(raw)}")
-        pid, payload, recv_crc = raw[0], raw[1:5], raw[5]
-        if pid != self.packet_id:
-            raise ValueError(f"Wrong packet_id: {pid}")
-        if _crc8_bytes(payload) != recv_crc:
-            raise ValueError("CRC mismatch in PACKET_40")
-        w = struct.unpack('>I', payload)[0]
+        crc4 = _crc_generic(body25, width=4, poly=_CRC4_POLY) & 0xF
+
+        word32 = (
+            (self.packet_id & 0x7) << self._ID_SHIFT |
+            crc4                    << self._CRC_SHIFT |
+            body25
+        )
+        return word32.to_bytes(4, "big")
+
+    # ---------- DECODE ----------
+    def decode(self, raw: bytes) -> Dict[str, Any]:
+        if len(raw) != 4:
+            raise ValueError("need 4 bytes")
+        w = int.from_bytes(raw, "big")
+
+        pid3     = (w >> self._ID_SHIFT)   & 0x7
+        recv_crc = (w >> self._CRC_SHIFT)  & 0xF
+        body25   =  w & 0x01_FF_FF_FF      # low 25 bits
+
+        if pid3 != (self.packet_id & 0x7):
+            raise ValueError(f"wrong packet_id {pid3}")
+
+        if (_crc_generic(body25, width=4, poly=_CRC4_POLY) & 0xF) != recv_crc:
+            raise ValueError("CRC mismatch")
+
+        seq3 = (w >> self._SEQ_SHIFT) & 0x7
+        qx   = (w >> self._VX_SHIFT)  & 0x3F
+        qy   = (w >> self._VY_SHIFT)  & 0x3F
+        qz   = (w >> self._VZ_SHIFT)  & 0x3F
+        svcP = (w >> self._SVCP_SHIFT) & 0x1
+        svcI = (w >> self._SVCI_SHIFT) & 0x3
+        svcV =  w & 0x1
+
         return {
-            "seq":         (w >> 28) & 0x0F,
-            "vx":          (w >> 20) & 0xFF,
-            "vy":          (w >> 12) & 0xFF,
-            "vz":          (w >>  4) & 0xFF,
-            "svc_pending": (w >>  3) & 0x1,
-            "svc_id":      (w >>  1) & 0x3,
-            "svc_val":     (w >>  0) & 0x1,
+            "seq": seq3,
+            "vx":  self._dequant(qx, 6),
+            "vy":  self._dequant(qy, 6),
+            "vz":  self._dequant(qz, 6),
+            "svc_pending": svcP,
+            "svc_id":      svcI,
+            "svc_val":     svcV,
         }
-    
+
+
+
+
+
 class PacketB_Full(PacketDefinition):
     """
-    40-bit PacketB: full-width command ACK/NACK frame.
+    32-bit PacketB_Full:
 
-    Frame layout (40 bits):
-      [ID (8)] [Payload (32)] [CRC8 (8)]
-    Payload bits (MSB->LSB):
-      • seq        : 4 bits
-      • service_id : 4 bits
-      • value      : 4 bits
-      • reserved   : 20 bits (zero)
+      [ ID:4 │ CRC:4 │ SEQ:4 │ SERVICE_ID:4 │ VALUE:4 │ RESERVED:12 ]
     """
+
     @property
     def packet_id(self) -> int:
-        # First-byte identifier for PacketB_Full
+        # We'll truncate this to 4 bits (0x0B & 0x0F == 0x0B)
         return 0x0B
 
     def encode(self, *, seq: int, service_id: int, value: int) -> bytes:
-        # Pack payload: seq (4) | service_id (4) | value (4) | zeros (20)
-        payload = (
-            ((seq & 0x0F)        << 28) |
-            ((service_id & 0x0F) << 24) |
-            ((value & 0x0F)      << 20)
+        # 1) mask all fields to their bit-width
+        pid4  = self.packet_id   & 0x0F
+        seq4  = seq              & 0x0F
+        sid4  = service_id       & 0x0F
+        val4  = value            & 0x0F
+        # reserved12 = 0
+
+        # 2) build the 32-bit word with CRC field zeroed
+        #    bits 31–28: ID4
+        #    bits 27–24: CRC4 (zero for now)
+        #    bits 23–20: SEQ4
+        #    bits 19–16: SERVICE_ID4
+        #    bits 15–12: VALUE4
+        #    bits 11– 0: RESERVED12 (all zero)
+        word_no_crc = (
+            (pid4 << 28) |
+            (seq4 << 20) |
+            (sid4 << 16) |
+            (val4 << 12)
         )
-        # 32-bit big-endian
-        b4 = struct.pack('>I', payload)
-        # 1-byte CRC over payload
-        crc = _crc8_bytes(b4)
-        # Return: ID + payload + CRC
-        return bytes([self.packet_id]) + b4 + struct.pack('B', crc)
+
+        # 3) compute 4-bit CRC over that word
+        crc4 = _crc_generic(word_no_crc, width=4, poly=_CRC4_POLY) & 0x0F
+
+        # 4) splice CRC into bits 27–24
+        word32 = word_no_crc | (crc4 << 24)
+
+        # 5) emit as 4 bytes big-endian
+        return word32.to_bytes(4, 'big')
 
     def decode(self, raw: bytes) -> Dict[str, int]:
-        if len(raw) != 6:
-            raise ValueError(f"Invalid length for PacketB_Full: got {len(raw)} bytes")
-        pid = raw[0]
-        if pid != self.packet_id:
-            raise ValueError(f"Wrong packet_id: expected 0x{self.packet_id:02X}, got 0x{pid:02X}")
-        payload = raw[1:5]
-        recv_crc = raw[5]
-        if _crc8_bytes(payload) != recv_crc:
+        if len(raw) != 4:
+            raise ValueError(f"Expected 4 bytes, got {len(raw)}")
+
+        word32 = int.from_bytes(raw, 'big')
+
+        # 1) extract CRC and clear it out
+        recv_crc = (word32 >> 24) & 0x0F
+        word_no_crc = word32 & ~(0x0F << 24)
+
+        # 2) verify CRC
+        if (_crc_generic(word_no_crc, width=4, poly=_CRC4_POLY) & 0x0F) != recv_crc:
             raise ValueError("CRC mismatch in PacketB_Full")
-        word = struct.unpack('>I', payload)[0]
+
+        # 3) peel out each field
+        pid4 = (word_no_crc >> 28) & 0x0F
+        if pid4 != (self.packet_id & 0x0F):
+            raise ValueError(f"Wrong packet_id: {pid4}")
+
         return {
-            'seq':        (word >> 28) & 0x0F,
-            'service_id': (word >> 24) & 0x0F,
-            'value':      (word >> 20) & 0x0F,
+            "seq":         (word_no_crc >> 20) & 0x0F,
+            "service_id":  (word_no_crc >> 16) & 0x0F,
+            "value":       (word_no_crc >> 12) & 0x0F,
+            # reserved is always zero; drop it
         }
+
+
 
 
 # Register all packets

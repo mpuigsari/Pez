@@ -2,28 +2,16 @@
 ros__parameters:
   # 1) Serial port for host side
   modem_io:
-    port: '/tmp/pez_host'
+    port: '/tmp/pez_host'  #'/dev/ttyUSB1'
     baud: 9600
-    timeout: 0.1
+    timeout: 0
 
   # 2) Teleop axes (used by legacy A_NORMAL)
   x: 0.0
   y: 0.0
   z: 0.0
 
-  # 3) Legacy A_NORMAL schedule @ 4 Hz (only used in AB mode)
-  schedules:
-    - name: drive_loop
-      loop: true
-      steps:
-        - name: send_A
-          duration: 0.25
-          encode:
-            type: 0xA
-            x:   param:x
-            y:   param:y
-            z:   param:z
-
+  schedules: []
   triggers:   []   # all other logic in plugin
   publishers: []
   services:   []
@@ -35,7 +23,7 @@ ros__parameters:
         mode:            '40'           # 'AB' or '40'
         packet_a:        0xA
         packet_b:        0xB
-        packet_40:       0x40
+        packet_40:       0x04
         topic_cmd_vel:   cmd_vel
         topic_camera:    camera_control
         services:

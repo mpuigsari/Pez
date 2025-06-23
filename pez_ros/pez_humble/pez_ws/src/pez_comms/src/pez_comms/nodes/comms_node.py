@@ -330,9 +330,12 @@ class CommsFullNode(Node):
             self.create_service(cls, svc['name'], handle)
 
     @staticmethod
-    def _dequant(q:int,bits:int)->float:
-        levels=(1<<bits)-1
-        return (q/levels)*2.0-1.0
+    def _dequant(q: int, bits: int) -> float:
+        sign_bit = 1 << (bits - 1)
+        if q & sign_bit:
+            q -= (1 << bits)
+        max_mag = (1 << (bits - 1)) - 1
+        return q / max_mag
 
     def destroy_node(self):
         self.get_logger().info("Destroying CommsFullNode, running cleanup...")

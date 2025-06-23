@@ -130,36 +130,53 @@ def register(node: Node, cfg: dict):
             first = node.modem.get_byte(timeout=0.1)
             if first is None:
                 continue
-            pid = first[0]
-            if pid != packetB.packet_id:
+
+            b0   = first[0]
+            pid4 = b0 >> 4         # top‐4‐bit ID for PacketB_Full
+
+            # Only proceed if this matches PacketB_Full’s ID
+            if pid4 != packetB.packet_id:
                 continue
+
+            # Gather full frame
             buf = bytearray(first)
             start = time.time()
             while len(buf) < pB_len and (time.time() - start) < 0.1:
                 nxt = node.modem.get_byte(timeout=0.1)
                 if nxt:
                     buf.extend(nxt)
+
             if len(buf) != pB_len:
                 node.get_logger().warn(
-                    f"Incomplete ACK frame: got {len(buf)}/{pB_len} bytes")
+                    f"Incomplete ACK frame: got {len(buf)}/{pB_len} bytes"
+                )
                 continue
+
             raw = bytes(buf)
             hex_str = ' '.join(f"{b:02X}" for b in raw)
             node.get_logger().debug(f"Reader received full ACK: {hex_str}")
+
+            # Decode and signal
             try:
                 fields = packetB.decode(raw)
                 seq = fields.get('seq', 0)
+                # success iff the returned seq matches what we last sent
                 ack_success = (seq == last_seq)
                 ack_ready.set()
                 node.get_logger().info(
-                    f"Received ACK/NACK seq={seq}, success={ack_success}")
+                    f"Received ACK/NACK seq={seq}, success={ack_success}"
+                )
             except Exception as e:
-                node.get_logger().warn(f"PacketB.decode error: {e}, data={hex_str}")
+                node.get_logger().warn(
+                    f"PacketB.decode error: {e}, data={hex_str}"
+                )
+
 
     # Transmission thread: send PacketA/B or Packet40
     def tx_loop():
         nonlocal svc_cmd, last_seq
         node.get_logger().info("Starting host-side transmission thread")
+
         if mode == 'AB':
             period = 1.0 / rate
             while rclpy.ok() and not stop_event.is_set():
@@ -169,62 +186,80 @@ def register(node: Node, cfg: dict):
                     za = quant(axes['z'], 2)
                     pkt = packetA.encode(x=xa, y=ya, z=za)
                     node.modem.send_packet(pkt)
-                    node.get_logger().info(
-                        f"Sent PacketA x={xa},y={ya},z={za}")
+                    node.get_logger().info(f"Sent PacketA x={xa},y={ya},z={za}")
                     time.sleep(period)
                 else:
                     sid, val = svc_cmd
                     last_seq = 1 - last_seq
                     pkt = packetB.encode(seq=last_seq,
-                                         service_id=sid,
-                                         value=val)
+                                        service_id=sid,
+                                        value=val)
                     node.modem.send_packet(pkt)
                     node.get_logger().info(
-                        f"Sent PacketB_Full svc_id={sid},value={val},seq={last_seq}")
+                        f"Sent PacketB_Full svc_id={sid},value={val},seq={last_seq}"
+                    )
                     start = time.time()
                     while (rclpy.ok() and not ack_ready.is_set() and
-                           (time.time() - start) < svc_wait):
+                        (time.time() - start) < svc_wait):
                         time.sleep(0.01)
                     svc_cmd = None
-        else:
+
+        else:  # mode == '40'
             if not packet40:
                 node.get_logger().error(
-                    "Packet40 unavailable, cannot operate in 40-bit mode. Exiting tx loop.")
+                    "Packet40 unavailable, cannot operate in 40-bit mode. Exiting tx loop."
+                )
                 return
+
             while rclpy.ok() and not stop_event.is_set():
                 if svc_cmd is not None:
                     sid, val = svc_cmd
+                    # pass raw floats into Packet40
                     pkt = packet40.encode(
                         seq=last_seq,
-                        vx=quant(axes['x'], 8),
-                        vy=quant(axes['y'], 8),
-                        vz=quant(axes['z'], 8),
+                        vx=axes['x'],
+                        vy=axes['y'],
+                        vz=axes['z'],
                         svc_pending=1,
                         svc_id=sid,
-                        svc_val=val)
+                        svc_val=val
+                    )
                     node.modem.send_packet(pkt)
                     node.get_logger().info(
-                        f"Sent Packet40 pending svc_id={sid},value={val},seq={last_seq}")
+                        f"Sent Packet40 pending svc_id={sid},value={val},seq={last_seq}"
+                    )
+
+                    # wait for ACK/NACK
                     ack_ready.clear()
                     start = time.time()
                     while (rclpy.ok() and not ack_ready.is_set() and
-                           (time.time() - start) < svc_wait):
+                        (time.time() - start) < svc_wait):
                         time.sleep(0.01)
+
                     svc_cmd = None
-                    last_seq = 1 - last_seq
+                    # toggle only the LSB for next seq
+                    last_seq = last_seq ^ 0x1
+
                 else:
+                    # regular heartbeat with no pending service
                     pkt = packet40.encode(
                         seq=last_seq,
-                        vx=quant(axes['x'], 8),
-                        vy=quant(axes['y'], 8),
-                        vz=quant(axes['z'], 8),
+                        vx=axes['x'],
+                        vy=axes['y'],
+                        vz=axes['z'],
                         svc_pending=0,
                         svc_id=0,
-                        svc_val=0)
+                        svc_val=0
+                    )
                     node.modem.send_packet(pkt)
-                    node.get_logger().info(f"Sent Packet40 seq={last_seq}")
+                    node.get_logger().info(
+                        f"Sent Packet40 seq={last_seq} bytes={packet40.to_hex_string(pkt)}"
+                    )
+
+                    # advance full 4-bit counter
                     last_seq = (last_seq + 1) & 0x0F
-                    time.sleep(1.0)
+                    time.sleep(5.0)
+
 
     # Start threads
     reader_thread = threading.Thread(target=reader_loop, daemon=True)

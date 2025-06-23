@@ -68,15 +68,18 @@ def register(node: Node, cfg: dict):
         node.get_logger().info("Processed PacketA")
 
     def handle_B(fields: dict):
-        sid = fields['service_id']
-        val = fields['value']
-        seq = fields['seq']
-        ack = False
+        sid  = fields['service_id']  & 0x0F
+        val4 = fields['value']       & 0x0F
+        seq4 = fields['seq']         & 0x0F
+        ack  = False
+
         # Teleop services
         if sid in svc_map:
             base = svc_map[sid]
-            name = f"{base}_start" if sid == 0 and val else (
-                   f"{base}_stop"  if sid == 0 else base)
+            # on/off only cares about LSB of val4
+            bit = val4 & 0x1
+            name = f"{base}_start" if sid == 0 and bit else (
+                f"{base}_stop"  if sid == 0 else base)
             node.get_logger().info(f"Calling service {name}")
             cli = node.create_client(Trigger, name)
             if cli.wait_for_service(timeout_sec=5.0):
@@ -84,23 +87,35 @@ def register(node: Node, cfg: dict):
                 rclpy.spin_until_future_complete(node, fut, timeout_sec=2.0)
                 ack = fut.done() and fut.result().success
                 node.get_logger().info(f"Service {name} responded ack={ack}")
-        # Camera control
+
+        # Camera control (boolean)
         elif sid == cam_id:
-            cam_pub.publish(Float64(data=1.0 if val else -1.0))
+            bit = val4 & 0x1
+            cam_pub.publish(Float64(data=1.0 if bit else -1.0))
             ack = True
-        # Prepare ACK/NACK
-        resp_seq = seq if ack else (1 - seq)
-        pkt = packetB.encode(seq=resp_seq, service_id=sid, value=val)
+
+        # Compute response sequence: 
+        #   if ACK, mirror the incoming LSB; 
+        #   if NACK, flip just that LSB
+        resp_seq = seq4 if ack else (seq4 ^ 0x1)
+
+        # Build & send the 4-byte PacketB_Full
+        pkt = packetB.encode(seq=resp_seq,
+                            service_id=sid,
+                            value=val4)
         node.modem.send_packet(pkt)
-        node.get_logger().info(f"Sent PacketB_Full ACK seq={resp_seq}")
+        node.get_logger().info(f"Sent PacketB_Full {'ACK' if ack else 'NACK'} seq={resp_seq}")
 
     def handle_40(fields: dict):
+        # fields['vx'], ['vy'], ['vz'] are already de-quantized floats ∈ [–1,1]
         twist = Twist()
-        twist.linear.x = node._dequant(fields['vx'], bits=8)
-        twist.linear.y = node._dequant(fields['vy'], bits=8)
-        twist.linear.z = node._dequant(fields['vz'], bits=8)
+        twist.linear.x = fields['vx']
+        twist.linear.y = fields['vy']
+        twist.linear.z = fields['vz']
         cmd_pub.publish(twist)
         node.get_logger().info("Processed Packet40")
+
+        # If a service request is pending, dispatch it via PacketB_Full
         if fields.get('svc_pending', 0):
             node.get_logger().info("Handling pending service from Packet40")
             handle_B({
@@ -109,46 +124,54 @@ def register(node: Node, cfg: dict):
                 'seq':        fields['seq']
             })
 
+
     def serial_loop():
         node.get_logger().info("Starting fish-side serial loop")
         while rclpy.ok():
             first = node.modem.get_byte(timeout=0.1)
-            if first is None:
+            if not first:
                 continue
-            pid = first[0]
-            # Determine expected length
-            if mode == '40' and packet40 and pid == packet40.packet_id:
+
+            """b0   = first[0]
+            pid3 = b0 >> 5      # Packet40’s 3-bit ID
+            # pick expected length
+            if mode == '40' and packet40 and pid3 == packet40.packet_id:
                 exp_len = p40_len
-            elif pid == packetA.packet_id:
+            elif b0 == packetA.packet_id:
                 exp_len = pA_len
-            elif pid == packetB.packet_id:
-                exp_len = pB_len
             else:
-                node.get_logger().debug(f"Unknown PID {pid}, skipping")
-                continue
-            # Accumulate full frame
+                node.get_logger().warn(f"Unknown PID {b0:02x}, skipping")
+                continue"""
+            exp_len = p40_len
+            # read the rest of the packet
             buf = bytearray(first)
             start = time.time()
             while len(buf) < exp_len and (time.time() - start) < 0.1:
                 nxt = node.modem.get_byte(timeout=0.1)
                 if nxt:
                     buf.extend(nxt)
+
             if len(buf) != exp_len:
-                node.get_logger().warn(f"Incomplete packet: got {len(buf)}/{exp_len} bytes")
+                hex_str = ' '.join(f"{x:02X}" for x in buf)
+                node.get_logger().warn(
+                    f"Incomplete packet: got {len(buf)}/{exp_len} bytes : {hex_str}"
+                )
                 continue
+
             raw = bytes(buf)
-            hex_str = ' '.join(f"{b:02X}" for b in raw)
+            hex_str = ' '.join(f"{x:02X}" for x in raw)
             node.get_logger().info(f"Received full packet ({exp_len} bytes): {hex_str}")
-            # Decode
+
+            # dispatch to the right handler
             try:
-                if pid == packetA.packet_id:
-                    handle_A(packetA.decode(raw))
-                elif pid == packetB.packet_id:
-                    handle_B(packetB.decode(raw))
-                elif packet40 and pid == packet40.packet_id:
+                if mode == '40' and packet40 and pid3 == packet40.packet_id:
                     handle_40(packet40.decode(raw))
+                elif mode == 'AB':  # must be PacketA
+                    handle_A(packetA.decode(raw))
             except Exception as e:
                 node.get_logger().warn(f"Decode failed: {e}, data={hex_str}")
+
+
 
     thread = threading.Thread(target=serial_loop, daemon=True)
     thread.start()
