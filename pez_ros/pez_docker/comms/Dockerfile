@@ -1,5 +1,5 @@
 # Use the ROS 2 Humble base for ARM64 (Raspberry Pi 4+)
-FROM arm64v8/ros:humble-ros-base-jammy
+FROM ros:humble-ros-base-jammy
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
