@@ -16,18 +16,21 @@ def generate_launch_description():
     fish_cfg = PathJoinSubstitution([share, 'config', 'fish_comms.yaml'])
     host_cfg = PathJoinSubstitution([share, 'config', 'host_comms.yaml'])
 
-    return LaunchDescription([
-
-        # 1) create virtual ports
-        ExecuteProcess(
+    
+    socat = ExecuteProcess(
             cmd=[
                 'socat','-d','-d',
                 f'pty,raw,echo=0,link={host_port}',
                 f'pty,raw,echo=0,link={fish_port}',
             ],
             output='screen'
-        ),
-        LogInfo(msg=[f'Linked {host_port} ↔ {fish_port}']),
+        )
+    socat_log = LogInfo(msg=[f'Linked {host_port} ↔ {fish_port}'])
+    
+    return LaunchDescription([
+
+        #socat
+        #socat_log
 
         # 2) wait for PTYs, then launch both
         TimerAction(

@@ -104,7 +104,7 @@ def register(node: Node, cfg: dict):
                             service_id=sid,
                             value=val4)
         node.modem.send_packet(pkt)
-        node.get_logger().info(f"Sent PacketB_Full {'ACK' if ack else 'NACK'} seq={resp_seq}")
+        node.get_logger().info(f"Sent PacketB_Full {'ACK' if ack else 'NACK'} resp_seq={resp_seq}: {packetB.to_hex_string(pkt)}")
 
     def handle_40(fields: dict):
         # fields['vx'], ['vy'], ['vz'] are already de-quantized floats ∈ [–1,1]
@@ -128,7 +128,7 @@ def register(node: Node, cfg: dict):
     def serial_loop():
         node.get_logger().info("Starting fish-side serial loop")
         while rclpy.ok():
-            first = node.modem.get_byte(timeout=0.1)
+            first = node.modem.get_byte(timeout=0)
             if not first:
                 continue
 
@@ -140,7 +140,7 @@ def register(node: Node, cfg: dict):
             elif b0 == packetA.packet_id:
                 exp_len = pA_len
             else:
-                node.get_logger().warn(f"Unknown PID {b0:02x}, skipping")
+                node.get_logger().warn(f"Unknown PID 0x{b0:02x}, Expected 0x{packet40.packet_id:02x} got 0x{pid3}")
                 continue
             # read the rest of the packet
             buf = bytearray(first)

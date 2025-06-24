@@ -8,7 +8,7 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     # 1) Fixed namespace and port for fish side
-    ns    = LaunchConfiguration('namespace',  default='fish')
+    ns    = LaunchConfiguration('namespace',  default='pez')
     port  = LaunchConfiguration('port',       default='/tmp/pez_fish')
     config= PathJoinSubstitution([
                 FindPackageShare('pez_comms'),

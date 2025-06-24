@@ -2,7 +2,7 @@
 ros__parameters:
   # 1) Serial port for fish side
   modem_io:
-    port: '/tmp/pez_fish' #/dev/ttyUSB0' #
+    port: /dev/ttyUSB0 #'/tmp/pez_fish'
     baud: 9600
     timeout: 2
 
@@ -18,7 +18,7 @@ ros__parameters:
       config:
         mode:            '40'           # 'AB' or '40'
         packet_a:        0xA
-        packet_b:        0xB
+        packet_b:        0x0B
         packet_40:       0x04
         topic_cmd_vel:   cmd_vel
         topic_camera:    camera_control

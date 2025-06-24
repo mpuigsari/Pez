@@ -113,7 +113,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(host_launch),
         launch_arguments={
             'config_file': host_cfg,
-            'namespace':   'host',
+            'namespace':   'pez',
         }.items(),
         condition=IfCondition(hw_condition)
     )

@@ -23,7 +23,7 @@ RUN rm -f /etc/ros/rosdep/sources.list.d/20-default.list \
 # 3) Copy & Build your local ROS 2 packages
 ####################################################
 RUN mkdir -p /pez_ws/src
-COPY pez_ros/pez_humble/pez_ws/src/pez_comms      /pez_ws/src/pez_comms
+COPY pez_ros/pez_humble/pez_ws/src/      /pez_ws/src/
 
 RUN source /opt/ros/humble/setup.bash \
  && cd /pez_ws \

@@ -9,7 +9,10 @@ from launch.actions import (
     SetEnvironmentVariable,
     RegisterEventHandler,
     EmitEvent,
+    IncludeLaunchDescription,
 )
+from launch.substitutions import LaunchConfiguration
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import Node
@@ -33,6 +36,12 @@ def generate_launch_description():
         'test_flag',
         default_value='false',
         description='If true, launch test mode instead of sensors & camera'
+    )
+    comms_flag = LaunchConfiguration('comms_flag')
+    declare_comms_flag = DeclareLaunchArgument(
+        'comms_flag',
+        default_value='false',
+        description='If true, launch accoustic modem mode'
     )
 
     # 3a) Sensor‐node-specific launch arguments:
@@ -106,6 +115,18 @@ def generate_launch_description():
         condition=IfCondition(test_flag),
     )
 
+    pkg_comms   = get_package_share_directory('pez_comms')
+    fish_launch = os.path.join(pkg_comms, 'launch', 'fish_launch.py')
+    fish_cfg    = os.path.join(pkg_comms, 'config', 'fish_comms.yaml')
+    fish_comms = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(fish_launch),
+        launch_arguments={
+            'config_file': fish_cfg,
+            'namespace':   'pez',
+        }.items(),
+        condition=IfCondition(comms_flag)
+    )
+
     # 5) USB camera node (only if test_flag is false)
     usb_cam_node = Node(
         package='usb_cam',
@@ -163,6 +184,7 @@ def generate_launch_description():
 
         # Launch arguments
         declare_test_flag,
+        declare_comms_flag,
         declare_pub_frequency,
         declare_pub_tsys01,
         declare_pub_ms_temp,
@@ -173,6 +195,7 @@ def generate_launch_description():
         # Nodes
         fish_teleop_node,
         fish_teleop_node_test,
+        fish_comms,
         usb_cam_node,
         sensors_node,
 

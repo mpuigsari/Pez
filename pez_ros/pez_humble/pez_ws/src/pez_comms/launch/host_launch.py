@@ -8,7 +8,7 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     # 1) Fixed namespace and port for host side
-    ns    = LaunchConfiguration('namespace',  default='host')
+    ns    = LaunchConfiguration('namespace',  default='pez')
     config= PathJoinSubstitution([
                 FindPackageShare('pez_comms'),
                 'config', 'host_comms.yaml'

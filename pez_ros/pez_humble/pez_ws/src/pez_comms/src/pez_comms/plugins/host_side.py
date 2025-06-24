@@ -51,7 +51,7 @@ def register(node: Node, cfg: dict):
 
     # Timing parameters
     rate = float(cfg.get('broadcast_rate', 4.0))
-    ack_timeout = float(cfg.get('ack_timeout', 2.0))
+    ack_timeout = float(cfg.get('ack_timeout', 5.0))
     svc_wait = float(cfg.get('svc_wait', 5.0))
     cam_id = int(cfg['camera_svc_id'])
 
@@ -102,7 +102,6 @@ def register(node: Node, cfg: dict):
                     resp.message = 'busy'
                     return resp
                 svc_cmd = (svc_id, val)
-                ack_ready.clear()
                 node.get_logger().info(
                     f"Service command queued: svc_id={svc_id}, value={val}")
                 start = time.time()
@@ -127,8 +126,15 @@ def register(node: Node, cfg: dict):
         nonlocal ack_success, last_seq
         node.get_logger().info("Starting host-side reader thread")
         while rclpy.ok() and not stop_event.is_set():
-            first = node.modem.get_byte(timeout=0.1)
+            if ack_ready.is_set():
+                time.sleep(0.01)
+                continue
+
+            first = node.modem.get_byte(timeout=5)
             if first is None:
+                node.get_logger().warn(
+                    f"Incomplete ACK frame: got None bytes"
+                )
                 continue
 
             b0   = first[0]
@@ -136,6 +142,9 @@ def register(node: Node, cfg: dict):
 
             # Only proceed if this matches PacketB_Full’s ID
             if pid4 != packetB.packet_id:
+                node.get_logger().warn(
+                    f"Response's packet ID ({packetB.packet_id}) not matched: {pid4:02X}"
+                )
                 continue
 
             # Gather full frame
@@ -154,7 +163,7 @@ def register(node: Node, cfg: dict):
 
             raw = bytes(buf)
             hex_str = ' '.join(f"{b:02X}" for b in raw)
-            node.get_logger().debug(f"Reader received full ACK: {hex_str}")
+            node.get_logger().info(f"Reader received full ACK: {hex_str}")
 
             # Decode and signal
             try:
@@ -162,14 +171,17 @@ def register(node: Node, cfg: dict):
                 seq = fields.get('seq', 0)
                 # success iff the returned seq matches what we last sent
                 ack_success = (seq == last_seq)
-                ack_ready.set()
                 node.get_logger().info(
                     f"Received ACK/NACK seq={seq}, success={ack_success}"
                 )
+                
             except Exception as e:
                 node.get_logger().warn(
                     f"PacketB.decode error: {e}, data={hex_str}"
                 )
+            finally:
+                ack_ready.set()
+                
 
 
     # Transmission thread: send PacketA/B or Packet40
@@ -235,7 +247,7 @@ def register(node: Node, cfg: dict):
                     while (rclpy.ok() and not ack_ready.is_set() and
                         (time.time() - start) < svc_wait):
                         time.sleep(0.01)
-
+                    node.get_logger().info(f"Stopped waiting")
                     svc_cmd = None
                     # toggle only the LSB for next seq
                     last_seq = last_seq ^ 0x1
@@ -256,8 +268,8 @@ def register(node: Node, cfg: dict):
                         f"Sent Packet40 seq={last_seq} (4 bytes): {packet40.to_hex_string(pkt)}"
                     )
 
-                    # advance full 4-bit counter
-                    last_seq = (last_seq + 1) & 0x0F
+                    # advance full 3-bit counter
+                    last_seq = (last_seq + 1) & 0x07
                     time.sleep(1.0)
 
 

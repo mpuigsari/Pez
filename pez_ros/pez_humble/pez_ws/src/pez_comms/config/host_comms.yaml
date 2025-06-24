@@ -2,7 +2,7 @@
 ros__parameters:
   # 1) Serial port for host side
   modem_io:
-    port: '/tmp/pez_host'  #'/dev/ttyUSB1'
+    port: '/dev/ttyUSB1'  #'/tmp/pez_host'
     baud: 9600
     timeout: 2
 
@@ -22,7 +22,7 @@ ros__parameters:
       config:
         mode:            '40'           # 'AB' or '40'
         packet_a:        0xA
-        packet_b:        0xB
+        packet_b:        0x0B
         packet_40:       0x04
         topic_cmd_vel:   cmd_vel
         topic_camera:    camera_control
@@ -32,5 +32,5 @@ ros__parameters:
           "2": teleoperation/toggle_neutral
         camera_svc_id:   3
         broadcast_rate:  4.0            # Hz for legacy A_NORMAL
-        ack_timeout:     2.0            # secs to wait for Packet B
+        ack_timeout:     5.0            # secs to wait for Packet B
         svc_wait:        5.0            # secs to wait for fish ACK
