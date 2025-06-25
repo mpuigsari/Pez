@@ -18,8 +18,8 @@ RUN mkdir -p /root/blueos_ws/src
 WORKDIR /root/blueos_ws/src
 
 # Copy pez_comms & bluerov_server package
-COPY pez_comms ./pez_comms
-COPY bluerov_server ./bluerov_server
+COPY ./blueos_ros/pez_comms ./pez_comms
+COPY ./blueos_ros/bluerov_server ./bluerov_server
 
 
 # 3) Build the workspace

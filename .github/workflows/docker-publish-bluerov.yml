@@ -38,8 +38,8 @@ jobs:
       - name: Build & push ARM32v7 image
         uses: docker/build-push-action@v4
         with:
-          context: ./blueos_ros
-          file: /blueos_ros/blueos_ros_extension/Dockerfile
+          context: .
+          file: ./blueos_ros/blueos_ros_extension/Dockerfile
           platforms: linux/arm/v7
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/blueos-ros-extension:arm32v7
