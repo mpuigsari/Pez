@@ -2,19 +2,19 @@
 FROM inesperez03/blueos-ros-usbcam:latest
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 0) Install helpers to fetch and add the ROS GPG key
+# 1) Fix ROS Noetic apt GPG key (resolves EXPKEYSIG errors)
 # ──────────────────────────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      curl \
-      gnupg2 \
-      apt-transport-https \
+      curl gnupg2 apt-transport-https \
     && rm -rf /var/lib/apt/lists/*
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 1) Re-import the official ROS Noetic GPG key (fixes EXPKEYSIG errors)
-# ──────────────────────────────────────────────────────────────────────────────
+# Import the official ROS key
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
     | apt-key add -
+
+# Also fetch directly from Ubuntu keyserver (in case)
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
+     --recv-keys F42ED6FBAB17C654 || true
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 2) Install pez_comms & server.py Python and ROS deps (minus pymavlink)
@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 3) Install pymavlink via pip (not available as an APT package on armhf)
+# 3) Install pymavlink via pip (not available on focal/armhf apt)
 # ──────────────────────────────────────────────────────────────────────────────
 RUN pip3 install pymavlink
 
@@ -41,7 +41,6 @@ RUN pip3 install pymavlink
 RUN mkdir -p /root/blueos_ws/src
 WORKDIR /root/blueos_ws/src
 
-# Copy in your packages
 COPY ./blueos_ros/pez_comms    ./pez_comms
 COPY ./blueos_ros/bluerov_server ./bluerov_server
 
@@ -52,7 +51,7 @@ WORKDIR /root/blueos_ws
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_make"
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 6) Ensure ROS environment is sourced on container startup
+# 6) Auto-source ROS on container start
 # ──────────────────────────────────────────────────────────────────────────────
 RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc \
  && echo "source /root/blueos_ws/devel/setup.bash" >> /root/.bashrc
