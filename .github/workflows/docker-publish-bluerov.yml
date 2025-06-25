@@ -6,10 +6,7 @@ on:
       - main
     # only run when these paths change:
     paths:
-      - 'Dockerfile'
-      - 'server.py'
-      - 'src/pez_comms/**'
-      - 'bluerov_server/**'
+      - 'blueos_ros/**'
       - '.github/workflows/docker-arm32v7-publish.yml'
 
 jobs:
@@ -41,8 +38,8 @@ jobs:
       - name: Build & push ARM32v7 image
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./blueos_ros
+          file: blueos_ros_extension/Dockerfile
           platforms: linux/arm/v7
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/blueos-ros-extension:arm32v7

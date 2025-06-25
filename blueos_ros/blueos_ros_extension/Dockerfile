@@ -17,12 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN mkdir -p /root/blueos_ws/src
 WORKDIR /root/blueos_ws/src
 
-# Copy pez_comms package
+# Copy pez_comms & bluerov_server package
 COPY pez_comms ./pez_comms
-
-# Copy server.py as a simple ROS‐node (you can wrap it in a package if you like)
-COPY server.py ./server/scripts/server.py
-RUN chmod +x server/scripts/server.py
+COPY bluerov_server ./bluerov_server
 
 
 # 3) Build the workspace
