@@ -3,6 +3,8 @@ FROM inesperez03/blueos-ros-usbcam:latest
 
 # 1) Remove the broken ROS apt source (Noetic is already in the base image)
 RUN rm -f /etc/apt/sources.list.d/ros-latest.list
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | apt-key add -
+
 
 # 2) Install Python build tools, lxml/future deps, and Catkin tooling
 RUN apt-get update && apt-get install -y --no-install-recommends \
