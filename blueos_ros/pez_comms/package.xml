@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>pez_comms</name>
+  <version>0.1.0</version>
+  <description>
+    Generic serial communications for ROS Noetic with a single YAML-driven node.
+  </description>
+
+  <maintainer email=""></maintainer>
+  <license>MIT</license>
+
+  <!-- Build tool -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- ROS dependencies -->
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>std_srvs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
+
+  <!-- Python YAML support -->
+  <build_depend>python3-yaml</build_depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <export>
+  </export>
+</package>

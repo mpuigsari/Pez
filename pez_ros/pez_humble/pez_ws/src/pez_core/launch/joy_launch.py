@@ -137,7 +137,7 @@ def generate_launch_description():
     # 6) Assemble LaunchDescription
     # ——————————————————————————————————————————————————
     return LaunchDescription([
-        set_domain,
+        #set_domain,
         declare_display,
         declare_fish,
         declare_comms,

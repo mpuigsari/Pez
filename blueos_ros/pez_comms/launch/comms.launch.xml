@@ -1,0 +1,22 @@
+<launch>
+  <!-- 
+    Path to your YAML config. 
+    You can override on the command-line with:
+      roslaunch pez_comms comms_full.launch config_file:=/path/to/other.yaml
+  -->
+  <arg name="config_file"
+       default="$(find pez_comms)/config/bluerov_config.yaml"/>
+
+  <node pkg="pez_comms"
+        type="comms_full_node_noetic.py"
+        name="comms_full"
+        output="screen"
+        args="-c $(arg config_file)">
+    <!--
+      If you’d rather load parameters onto the param server,
+      you could also do:
+        <rosparam file="$(arg config_file)" command="load"/>
+      but the node already reads the file via -c.
+    -->
+  </node>
+</launch>

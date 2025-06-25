@@ -2,7 +2,7 @@
 ros__parameters:
   # 1) Serial port for host side
   modem_io:
-    port: '/dev/ttyUSB1'  #'/tmp/pez_host'
+    port: '/dev/ttyUSB0'  #'/tmp/pez_host'
     baud: 9600
     timeout: 2
 
