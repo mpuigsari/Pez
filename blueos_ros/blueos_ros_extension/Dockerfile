@@ -32,7 +32,7 @@ COPY ./blueos_ros/bluerov_server ./bluerov_server
 # 6) Build the workspace, *sourcing* ROS so catkin is found
 WORKDIR /root/blueos_ws
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && \
-                  catkin_build --cmake-args -DCMAKE_BUILD_TYPE=Release"
+                  catkin build --cmake-args -DCMAKE_BUILD_TYPE=Release"
 
 # 7) Auto-source ROS and your workspace on container startup
 RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc \
