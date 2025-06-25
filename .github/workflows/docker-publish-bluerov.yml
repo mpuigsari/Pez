@@ -7,7 +7,7 @@ on:
     # only run when these paths change:
     paths:
       - 'blueos_ros/**'
-      - '.github/workflows/docker-arm32v7-publish.yml'
+      - '.github/workflows/docker-publish-bluerov.yml'
 
 jobs:
   build-arm32v7:
