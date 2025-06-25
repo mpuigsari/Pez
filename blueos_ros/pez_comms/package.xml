@@ -6,7 +6,7 @@
     Generic serial communications for ROS Noetic with a single YAML-driven node.
   </description>
 
-  <maintainer email=""></maintainer>
+  <maintainer email="you@example.com"></maintainer>
   <license>MIT</license>
 
   <!-- Build tool -->

@@ -6,7 +6,7 @@
     Translates /cmd_vel, /camara_servo, /arm_disarm and /luces_pwm into MAVROS RC-overrides for BlueRov.
   </description>
 
-  <maintainer email=""></maintainer>
+  <maintainer email="you@example.com"></maintainer>
   <license>MIT</license>
 
   <!-- Build tool -->
