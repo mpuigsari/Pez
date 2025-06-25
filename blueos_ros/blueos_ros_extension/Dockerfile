@@ -2,30 +2,32 @@
 FROM inesperez03/blueos-ros-usbcam:latest
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 1) Remove ROS apt source list to avoid EXPKEYSIG errors on focal/armhf
-#    (ROS packages are already baked into the base image.)
+# 1) Remove the ROS apt source list to avoid EXPKEYSIG errors
+#    (ROS is already baked into the base image)
 # ──────────────────────────────────────────────────────────────────────────────
 RUN rm -f /etc/apt/sources.list.d/ros-latest.list
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 2) Install Python, build tools, and the native deps lxml needs
+# 2) Install Python build tools, lxml deps, and pez_comms/server.py deps
 # ──────────────────────────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3-pip \
       python3-numpy \
       python3-yaml \
+      python3-lxml \
       python3-dev \
-      libxml2-dev \
-      libxslt1-dev \
+      python3-setuptools \
+      python3-wheel \
+      python3-future \
       cython \
       build-essential \
       python3-catkin-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 3) Install pymavlink via pip (now that lxml build deps are in place)
+# 3) Install pymavlink from PyPI without build isolation (uses system lxml/future)
 # ──────────────────────────────────────────────────────────────────────────────
-RUN pip3 install pymavlink
+RUN pip3 install --no-build-isolation pymavlink
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 4) Create a Catkin workspace and copy in your packages
@@ -33,7 +35,7 @@ RUN pip3 install pymavlink
 RUN mkdir -p /root/blueos_ws/src
 WORKDIR /root/blueos_ws/src
 
-COPY ./blueos_ros/pez_comms      ./pez_comms
+COPY ./blueos_ros/pez_comms    ./pez_comms
 COPY ./blueos_ros/bluerov_server ./bluerov_server
 
 # ──────────────────────────────────────────────────────────────────────────────
