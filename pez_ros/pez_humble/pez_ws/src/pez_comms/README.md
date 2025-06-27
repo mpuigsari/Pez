@@ -1,5 +1,7 @@
 # pez\_comms
 
+**Version 0.1.0**
+
 > Config-Driven Communication Engine for the Pez Robotic Fish
 
 `pez_comms` is a YAML-driven, plugin-extensible ROS 2 package providing a single, generic node (`comms`) that can drive **both** fish-side and host-side acoustic-modem links. Define your entire comms flow—packet decode rules, timed sends, topic- and service-triggered packets and more—by editing a simple YAML file. No code changes needed to modify or extend a flow!

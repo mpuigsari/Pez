@@ -36,13 +36,11 @@ Responsible for real-time teleoperation, control, and sensor data publishing:
 
 ### [`pez_comms`](./pez_ws/src/pez_comms/README.md)
 
-Manages acoustic modem-based communication:
+Manages acoustic modem-based communication through a YAML-configurable node:
 
-* Packet creation (Packet A and B) for wireless commands.
-* Reception and interpretation of remote commands.
-* Service requests handling through acoustic packets.
-
-> **Note:** `pez_comms` is under active development and detailed documentation will be provided upon completion.
+* Pre-defined packet formats for velocity and command data.
+* Serial communication configured entirely via YAML.
+* Topic and service behaviour extendable with custom plugins.
 
 ---
 
@@ -126,7 +124,7 @@ Launch the Pez robot control nodes, sensor integration, and visualization tools:
 For detailed instructions and explanations about individual components:
 
 * [pez\_core README](./pez_ws/src/pez_core/README.md)
-* [pez\_comms README](./pez_ws/src/pez_comms/README.md) *(Coming Soon)*
+* [pez\_comms README](./pez_ws/src/pez_comms/README.md)
 * [pez\_docker (Fish-side) README](/pez_ros/pez_docker/README.md)
 
 ---
