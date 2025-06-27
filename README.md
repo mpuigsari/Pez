@@ -116,7 +116,7 @@ Provides ROS2 Humble, joystick support, acoustic communication, sensor integrati
 ## 🔧 Core ROS Packages
 
 * **[`pez_core`](pez_ros/pez_humble/pez_ws/src/pez_core/README.md)**: Teleoperation, actuator control, and sensor nodes.
-* **[`pez_comms`](pez_ros/pez_humble/pez_ws/src/pez_comms/README.md)**: Acoustic communication (actively developing).
+* **[`pez_comms`](pez_ros/pez_humble/pez_ws/src/pez_comms/README.md)**: YAML-driven serial communication with plugin extensibility.
 
 ---
 
