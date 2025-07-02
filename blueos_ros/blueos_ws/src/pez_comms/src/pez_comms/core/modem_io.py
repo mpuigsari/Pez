@@ -40,7 +40,7 @@ class ModemIOMgr:
             xonxoff=False,                  # no software flow‐control
             rtscts=False,                   # no hardware flow‐control
             dsrdtr=False,                   # no DSR/DTR flow‐control
-            exclusive=True                  # Linux: lock the port (pySerial ≥3.4)
+            exclusive=False                  # Linux: lock the port (pySerial ≥3.4)
         )
 
         # clear any junk in the buffers

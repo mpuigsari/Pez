@@ -18,17 +18,21 @@ setup(
         ('share/pez_comms/config', [
             'config/fish_comms.yaml',
             'config/host_comms.yaml',
+            'config/bluerov_comms.yaml',
+            'config/bluerov_joy_config.yaml',
         ]),
         ('share/pez_comms/launch', [
             'launch/comms_launch.py',
             'launch/fish_launch.py',
             'launch/host_launch.py',
             'launch/test_launch.py',
+            'launch/bluerov_launch.py',
         ]),
     ],
     entry_points={
         'console_scripts': [
             'comms = pez_comms.nodes.comms_node:main',
+            'joy_teleop = pez_comms.nodes.bluerov_joy_node:main',
         ],
     },
 )

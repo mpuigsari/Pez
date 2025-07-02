@@ -8,8 +8,8 @@
        default="$(find pez_comms)/config/bluerov_config.yaml"/>
 
   <node pkg="pez_comms"
-        type="comms_full_node_noetic.py"
-        name="comms_full"
+        type="comms_node.py"
+        name="comms"
         output="screen"
         args="-c $(arg config_file)">
     <!--

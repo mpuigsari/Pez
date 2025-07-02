@@ -1,0 +1,49 @@
+joy_teleop:
+  ros__parameters:
+
+    ###############################################################
+    # 1)  AXIS INDICES  →  geometry_msgs/Twist
+    #
+    #      vx → linear.x   (surge   – forward / back)
+    #      vy → linear.y   (sway    – left / right)
+    #      vz → linear.z   (heave   – up / down)
+    #      wz → angular.z  (yaw rate)
+    #
+    ###############################################################
+    axis_map:
+      vx:  1          # left-stick vertical
+      vy:  0          # left-stick horizontal
+      vz:  4          # RT – LT  (RT positive)
+      wz:  3          # right-stick horizontal
+
+    ###############################################################
+    # 2)  PER-AXIS SCALE  (multiply the raw value)
+    #     •  1.0  keep as-is
+    #     • –1.0  invert
+    #     •  0.5  half speed, etc.
+    ###############################################################
+    scale_map:
+      vx:  0.5        # forward  +, back –
+      vy: -0.5        # right  +, left –   (invert)
+      vz:  0.5        # up  +, down –
+      wz: -0.5        # CW  +, CCW –       (invert)
+
+    ###############################################################
+    # 3)  DEADZONE & DEFAULT GLOBAL GAINS
+    ###############################################################
+    deadzone:       0.10      # ignore small stick wobble
+    publish_hz:    1.0       # Twist output rate (Hz)
+
+    ###############################################################
+    # 4)  BUTTONS → SERVICE CALLS
+    #
+    #  /start    : std_srvs/Trigger         – arm
+    #  /stop     : std_srvs/Trigger         – disarm
+    #  /lights   : std_srvs/SetBool         – True = ON (1900 µs),
+    #                                         False = OFF (1100 µs)
+    ###############################################################
+    button_map:
+      start:       7           # “Start / Options”
+      stop:        6           # “Back / Select”
+      lights_on:   5           # RB
+      lights_off:  4           # LB

@@ -291,7 +291,109 @@ class PacketB_Full(PacketDefinition):
             # reserved is always zero; drop it
         }
 
+class PacketBlueRov(PacketDefinition):
+    """
+    32-bit wire format (big-endian):
+      [ID:3][CRC-4][SEQ:3]
+      [VX:4][VY:4][VZ:5][WZ:4]
+      [SVC_P:1][SVC_ID:3][SVC_V:1]
 
+    Velocities are floats in [-0.5, +0.5], quantized to the signed range of each bit-field.
+    """
+    # bit-positions (LSB) of each field
+    _ID_SHIFT   = 29
+    _CRC_SHIFT  = 25
+    _SEQ_SHIFT  = 22
+    _VX_SHIFT   = 18  # 4 bits
+    _VY_SHIFT   = 14  # 4 bits
+    _VZ_SHIFT   = 9   # 5 bits
+    _WZ_SHIFT   = 5   # 4 bits
+    _SVCP_SHIFT = 4   # 1 bit
+    _SVCI_SHIFT = 1   # 3 bits
+    _SVCV_SHIFT = 0   # 1 bit
+
+    @property
+    def packet_id(self) -> int:
+        return 0x02
+
+    @staticmethod
+    def _quant_half(v: float, bits: int) -> int:
+        # scale [-0.5..0.5] → [-1..1] then quantize
+        return PacketDefinition._quant(v * 2.0, bits)
+
+    @staticmethod
+    def _dequant_half(q: int, bits: int) -> float:
+        # dequant to [-1..1] then scale back
+        return PacketDefinition._dequant(q, bits) * 0.5
+
+    def encode(
+        self,
+        *,
+        seq: int,
+        vx: float, vy: float, vz: float, wz: float,
+        svc_pending: int, svc_id: int, svc_val: int
+    ) -> bytes:
+        qx = self._quant_half(vx, 4)
+        qy = self._quant_half(vy, 4)
+        qz = self._quant_half(vz, 5)
+        qw = self._quant_half(wz, 4)
+
+        body25 = (
+            ((seq       & 0x7) << self._SEQ_SHIFT) |
+            (qx               << self._VX_SHIFT)  |
+            (qy               << self._VY_SHIFT)  |
+            (qz               << self._VZ_SHIFT)  |
+            (qw               << self._WZ_SHIFT)  |
+            ((svc_pending & 1) << self._SVCP_SHIFT) |
+            ((svc_id      & 0x7) << self._SVCI_SHIFT) |
+            ((svc_val     & 1) << self._SVCV_SHIFT)
+        )
+
+        crc4 = _crc_generic(body25, width=4, poly=_CRC4_POLY) & 0xF
+
+        word32 = (
+            ((self.packet_id & 0x7) << self._ID_SHIFT) |
+            (crc4                    << self._CRC_SHIFT) |
+            body25
+        )
+        return word32.to_bytes(4, 'big')
+
+    def decode(self, raw: bytes) -> Dict[str, Any]:
+        if len(raw) != 4:
+            raise ValueError("PacketBlueRov requires exactly 4 bytes")
+        w = int.from_bytes(raw, 'big')
+
+        pid = (w >> self._ID_SHIFT) & 0x7
+        if pid != (self.packet_id & 0x7):
+            raise ValueError(f"Bad packet_id: {pid}")
+
+        recv_crc = (w >> self._CRC_SHIFT) & 0xF
+        body25   = w & ((1 << self._CRC_SHIFT) - 1)
+        if (_crc_generic(body25, width=4, poly=_CRC4_POLY) & 0xF) != recv_crc:
+            raise ValueError("CRC mismatch")
+
+        seq         = (w >> self._SEQ_SHIFT)  & 0x7
+        qx          = (w >> self._VX_SHIFT)  & 0xF
+        qy          = (w >> self._VY_SHIFT)  & 0xF
+        qz          = (w >> self._VZ_SHIFT)  & 0x1F
+        qw          = (w >> self._WZ_SHIFT)  & 0xF
+        svc_pending = (w >> self._SVCP_SHIFT)& 0x1
+        svc_id      = (w >> self._SVCI_SHIFT)& 0x7
+        svc_val     =  w                       & 0x1
+
+        return {
+            'seq':         seq,
+            'vx':          self._dequant_half(qx, 4),
+            'vy':          self._dequant_half(qy, 4),
+            'vz':          self._dequant_half(qz, 5),
+            'wz':          self._dequant_half(qw, 4),
+            'svc_pending': svc_pending,
+            'svc_id':      svc_id,
+            'svc_val':     svc_val,
+        }
+
+# register under new name
+register_packet(PacketBlueRov())
 
 
 # Register all packets

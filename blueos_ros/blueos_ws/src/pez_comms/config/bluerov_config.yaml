@@ -1,0 +1,49 @@
+# bluerov_comms.yaml
+#
+# Robot-side profile
+#  ─────────────────
+#  • every   1 s  transmit a “status-poll” PacketBlueRov (all zeros)
+#  • on any  RX  PacketBlueRov …
+#       – publish the velocity fields to /cmd_vel
+#       – look at  svc_id  and automatically call the matching service:
+#              1 → /start      (std_srvs/Trigger)
+#              2 → /stop       (std_srvs/Trigger)
+#              3 → /lights     (std_srvs/SetBool   – req.data ⇐ svc_val)
+#
+#  The three services are also exposed locally so higher-level nodes
+#  can arm / disarm / toggle lights without crafting packets by hand.
+
+ros__parameters:
+
+  #################################################################
+  # 1) SERIAL PORT
+  #################################################################
+  modem_io:
+    port:    "/dev/ttyUSB0"
+    baud:     9600
+    timeout:   0          # seconds
+
+
+
+  #################################################################
+  # 3) INBOUND PACKET DECODER
+  #################################################################
+  serial_handlers:
+    - packet: 0x02 #BlueRov
+
+      # (a) turn the velocity bits into geometry_msgs/Twist
+      publish:
+        topic: "/cmd_vel"
+        type:  "geometry_msgs/msg/Twist"
+        mapping:
+          linear.x:  "vx"
+          linear.y:  "vy"
+          linear.z:  "vz"
+          angular.z: "wz"
+
+      # (b) call a ROS service depending on svc_id
+      service_map:
+        1: "/start"    # ARM
+        2: "/stop"     # DISARM
+        3: "/lights_on"   # LIGHTS on/off
+        4: "/lights_off"   # LIGHTS on/off

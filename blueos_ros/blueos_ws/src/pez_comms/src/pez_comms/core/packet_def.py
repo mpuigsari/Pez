@@ -314,7 +314,7 @@ class PacketBlueRov(PacketDefinition):
 
     @property
     def packet_id(self) -> int:
-        return 0x04
+        return 0x02
 
     @staticmethod
     def _quant_half(v: float, bits: int) -> int:

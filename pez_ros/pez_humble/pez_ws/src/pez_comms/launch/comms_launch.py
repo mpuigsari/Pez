@@ -8,7 +8,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'config_file',
-            default_value='config/full_comms.yaml',
+            default_value='config/bluerov_comms.yaml',
             description='Path to the comms YAML profile'
         ),
         Node(

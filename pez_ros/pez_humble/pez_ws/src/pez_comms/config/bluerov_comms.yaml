@@ -1,0 +1,112 @@
+# config/bluerov_tx.yaml
+# Sends PacketBlueRov toward the ROV:
+#   • encodes every /cmd_vel at the same rate it is published (nominal 1 Hz)
+#   • translates /start and /stop Trigger calls into service packets
+
+ros__parameters:
+
+  ###############################################################
+  # 1) MODEM I/O SETTINGS (adjust device name if needed)
+  ###############################################################
+  modem_io:
+    port: "/dev/ttyUSB1"
+    baud: 9600
+    timeout: 0.1
+
+  ###############################################################
+  # 2) GENERAL SCALAR PARAMS  (none needed now)
+  ###############################################################
+  # (left empty – remove or add as required)
+
+  ###############################################################
+  # 3) SCHEDULES  (not used – we stream on topic events)
+  ###############################################################
+
+  ###############################################################
+  # 4) TOPIC-TRIGGERED PACKETS  (/cmd_vel → PacketBlueRov)
+  ###############################################################
+  triggers:
+    - subscribe:
+        topic: "/bluerov/cmd_vel"
+        type:  "geometry_msgs/msg/Twist"
+        qos:   10
+      encode:
+        type: 0x02
+        seq:  0                 # static seq; change if you manage one
+        vx:   "msg.linear.x"
+        vy:   "msg.linear.y"
+        vz:   "msg.linear.z"
+        wz:   "msg.angular.z"
+        svc_pending: 0
+        svc_id:      0
+        svc_val:     0
+
+  ###############################################################
+  # 5) PUBLISHERS  (none required)
+  ###############################################################
+
+  ###############################################################
+  # 6) SERVICE-BASED PACKET SENDERS  (/start, /stop)
+  ###############################################################
+  services:
+
+    - name: "/bluerov/start"
+      srv_type: "std_srvs/srv/Trigger"
+      on_request:
+        encode:
+          type: 0x02
+          seq: 0
+          vx:  0.0
+          vy:  0.0
+          vz:  0.0
+          wz:  0.0
+          svc_pending: 1
+          svc_id:      1
+          svc_val:     1
+
+    - name: "/bluerov/stop"
+      srv_type: "std_srvs/srv/Trigger"
+      on_request:
+        encode:
+          type: 0x02
+          seq: 0
+          vx:  0.0
+          vy:  0.0
+          vz:  0.0
+          wz:  0.0
+          svc_pending: 1
+          svc_id:      2
+          svc_val:     0
+    
+    - name: "/bluerov/lights_on"
+      srv_type: "std_srvs/srv/Trigger"
+      on_request:
+        encode:
+          type: 0x02
+          seq: 0
+          vx:  0.0
+          vy:  0.0
+          vz:  0.0
+          wz:  0.0
+          svc_pending: 1
+          svc_id:      3
+          svc_val:     1
+    
+    - name: "/bluerov/lights_off"
+      srv_type: "std_srvs/srv/Trigger"
+      on_request:
+        encode:
+          type: 0x02
+          seq: 0
+          vx:  0.0
+          vy:  0.0
+          vz:  0.0
+          wz:  0.0
+          svc_pending: 1
+          svc_id:      3
+          svc_val:     0
+  ###############################################################
+  # 7) INBOUND HANDLERS & 8) PLUG-INS  (not needed on TX side)
+  ###############################################################
+  serial_handlers: []
+  plugins: []
