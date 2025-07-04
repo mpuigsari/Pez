@@ -21,7 +21,7 @@ ros__parameters:
   modem_io:
     port:    "/dev/ttyUSB0"
     baud:     9600
-    timeout:   0          # seconds
+    timeout:   3          # seconds
 
 
 

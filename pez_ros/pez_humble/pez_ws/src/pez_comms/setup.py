@@ -27,6 +27,7 @@ setup(
             'launch/host_launch.py',
             'launch/test_launch.py',
             'launch/bluerov_launch.py',
+            'launch/teleopboya_launch.py'
         ]),
     ],
     entry_points={

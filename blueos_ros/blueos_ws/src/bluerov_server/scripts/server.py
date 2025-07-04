@@ -83,12 +83,12 @@ def handle_stop(_req):
     return TriggerResponse(success=True, message="ROV disarmed")
 
 def handle_lights_on(_req):
-    set_rc_channel_pwm(9, 1900)
+    set_rc_channel_pwm(13, 1900)
     rospy.loginfo("Lights ON (PWM 1900)")
     return TriggerResponse(success=True, message="Lights ON")
 
 def handle_lights_off(_req):
-    set_rc_channel_pwm(9, 1100)
+    set_rc_channel_pwm(13, 1100)
     rospy.loginfo("Lights OFF (PWM 1100)")
     return TriggerResponse(success=True, message="Lights OFF")
 

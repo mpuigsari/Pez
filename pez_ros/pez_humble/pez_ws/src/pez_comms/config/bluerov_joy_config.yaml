@@ -31,8 +31,8 @@ joy_teleop:
     ###############################################################
     # 3)  DEADZONE & DEFAULT GLOBAL GAINS
     ###############################################################
-    deadzone:       0.10      # ignore small stick wobble
-    publish_hz:    1.0       # Twist output rate (Hz)
+    deadzone:       0.05      # ignore small stick wobble
+    publish_hz:    0.75       # Twist output rate (Hz)
 
     ###############################################################
     # 4)  BUTTONS → SERVICE CALLS

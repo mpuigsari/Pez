@@ -9,7 +9,7 @@ ros__parameters:
   # 1) MODEM I/O SETTINGS (adjust device name if needed)
   ###############################################################
   modem_io:
-    port: "/dev/ttyUSB1"
+    port: "/dev/ttyUSB0"
     baud: 9600
     timeout: 0.1
 

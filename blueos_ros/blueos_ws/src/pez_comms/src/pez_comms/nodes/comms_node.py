@@ -99,32 +99,44 @@ class CommsFullNode:
                 svc_map=h.get('service_map', {})
             ))
 
-    # serial read thread with 4-byte sliding window
     def _serial_loop(self):
-        rospy.loginfo("Serial reader running (4-byte window)")
-        buf = bytearray()
+        rospy.loginfo("Serial reader running (4-byte sliding window)")
+
+        # --- quick-filter lookup:  top-3 bits that belong to every packet class we care about
+        want_ids = {h['pkt'].packet_id & 0x7 for h in self._handlers}
+
+        buf = bytearray()                                    # rolling window
         while not rospy.is_shutdown() and not self._stop.is_set():
-            b = self.modem.get_byte(timeout=0.1)
-            if b is None:
+            byte = self.modem.get_byte(timeout=0.05)         # short poll
+            if byte is None:
                 continue
-            buf += b
+
+            # keep the newest 4 bytes
+            buf.append(byte[0])
             if len(buf) < 4:
-                continue            # wait until we have 4 bytes
-            if len(buf) > 4:        # keep only the newest 4
-                buf = buf[-4:]
+                continue
+            if len(buf) > 4:
+                del buf[0]
+
+            # ------------------------------------------------------------------
+            # fast pre-filter:   upper 3 bits of the first byte == packet-ID?
+            # ------------------------------------------------------------------
+            if (buf[0] >> 5) not in want_ids:
+                continue                                     # impossible → slide on
 
             raw4 = bytes(buf)
-            rospy.logdebug("RX 4B window: %s", raw4.hex())
+            rospy.loginfo("RX 4B window: %s", raw4.hex())
 
             handled = False
             for h in self._handlers:
+                # let the handler’s own matcher do a full decode / CRC check
                 if not h['match'](raw4):
-                    rospy.logdebug("%s decode failed",
-                                   h['pkt'].__class__.__name__)
+                    rospy.logwarn("%s decode failed", h['pkt'].__class__.__name__)
                     continue
+
+                # ---------------- got a valid packet --------------------------
                 fields = h['pkt'].decode(raw4)
-                rospy.loginfo("Decoded %s: %s",
-                              h['pkt'].__class__.__name__, fields)
+                rospy.loginfo("Decoded %s: %s", h['pkt'].__class__.__name__, fields)
 
                 sid = fields.get('service_id') or fields.get('svc_id')
                 if sid in h['svc_map']:
@@ -132,11 +144,15 @@ class CommsFullNode:
 
                 if h['pub_cfg'] and h['pub']:
                     self._publish_mapped(h['pub_cfg'], fields, h['pub'])
+
                 handled = True
                 break
 
             if not handled:
                 rospy.logdebug("No handler accepted packet")
+
+        rospy.loginfo("Serial reader ended")
+
 
     # ────────────────────────────────────────────────────────────────
     # Triggers (topic → packet)
