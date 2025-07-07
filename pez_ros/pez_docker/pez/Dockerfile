@@ -24,6 +24,9 @@ RUN apt-get update \
       i2c-tools \
       libgpiod2 \
       python3-rpi.gpio \
+      python3-serial \
+      python3-yaml \
+      socat \
       nano \
  && rm -rf /var/lib/apt/lists/*
 
@@ -37,8 +40,7 @@ RUN pip3 install --no-cache-dir \
 # 2) Copy & Build your local ROS 2 packages
 ####################################################
 RUN mkdir -p /pez_ws/src
-COPY pez_ros/pez_humble/pez_ws/src/pez_core      /pez_ws/src/pez_core
-COPY pez_ros/pez_humble/pez_ws/src/pez_interfaces /pez_ws/src/pez_interfaces
+COPY pez_ros/pez_humble/pez_ws/src/      /pez_ws/src/
 
 RUN source /opt/ros/humble/setup.bash \
  && cd /pez_ws \
