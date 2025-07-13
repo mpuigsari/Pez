@@ -48,6 +48,8 @@ pez_comms/
 │   ├── comms_launch.py    # generic `comms` node launcher
 │   ├── fish_launch.py     # wraps `comms_launch.py` under /fish
 │   ├── host_launch.py     # wraps `comms_launch.py` under /host
+│   ├── bluerov_launch.py  # host teleop of a BlueROV2
+│   ├── teleopboya_launch.py # teleop when modem is on a surface buoy
 │   └── test_launch.py     # socat + dual-namespace end-to-end test
 ├── nodes/                 # generic comms node
 │   └── comms_node.py      # entry point for `comms` executable
@@ -119,6 +121,12 @@ ros2 launch pez_comms fish_launch.py \
 # Host-side (namespaced /host):
 ros2 launch pez_comms host_launch.py \
   config_file:=config/host_comms.yaml
+
+# Teleoperate a BlueROV2 over the modem:
+ros2 launch pez_comms bluerov_launch.py
+
+# Teleoperate when the modem is on a surface buoy:
+ros2 launch pez_comms teleopboya_launch.py
 
 # End-to-end test (socat + both namespaces):
 ros2 launch pez_comms test_launch.py
