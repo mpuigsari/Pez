@@ -82,7 +82,7 @@ We provide two Docker-based options for simplified, reproducible environments. S
   Use the [`pez_docker`](../../pez_docker/pez/README.md) image on the Raspberry Pi 4 (64-bit) for onboard control of servos, camera, electromagnet, and sensor publishing.
 
 * **Host-side Container**:
-  Use the [`pez_humble`](/pez_ros/pez_humble/README.md) environment on your development machine (Jammy-compatible architecture). It provides ROS2 Humble with joystick support, RQT, PlotJuggler, and sensor monitoring.
+  Use the [`core-amd64` container](../../pez_docker/host/README.md) on your development machine. It provides ROS 2 Humble with joystick support, RQT, PlotJuggler and sensor monitoring.
 
 ---
 

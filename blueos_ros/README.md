@@ -43,7 +43,6 @@ Relevant code lines show the engine setup and serial thread start:
  89     )
  90     self._serial_thread.start()
 ```
-【F:blueos_ros/pez_comms/src/pez_comms/nodes/comms_node.py†L23-L90】
 
 The default configuration [`bluerov_config.yaml`](./pez_comms/config/bluerov_config.yaml) polls `PacketBlueRov` once per second and publishes the decoded fields as a `geometry_msgs/Twist` message:
 ```
@@ -61,8 +60,6 @@ The default configuration [`bluerov_config.yaml`](./pez_comms/config/bluerov_con
  30         wz:          0.0
  31         svc_pending: 0
 ```
-【F:blueos_ros/pez_comms/config/bluerov_config.yaml†L19-L31】
-and maps the fields to `/cmd_vel`:
 ```
  39 - packet: PacketBlueRov
  40   publish:
@@ -74,9 +71,7 @@ and maps the fields to `/cmd_vel`:
  46       linear.z:   "vz"
  47       angular.z:  "wz"
 ```
-【F:blueos_ros/pez_comms/config/bluerov_config.yaml†L39-L47】
 
-Launch the node with:
 ```bash
 roslaunch pez_comms comms.launch.xml
 ```
@@ -96,21 +91,18 @@ The helper used to send RC values can be seen around these lines:
  72      master.target_component,
  73      *rc_channel_values)
 ```
-【F:blueos_ros/bluerov_server/scripts/server.py†L68-L75】
 
 Subscriptions are set up in `listener()`:
+```python
+rospy.init_node('cmd_vel_subscriber', anonymous=True)
+rospy.Subscriber('cmd_vel', Twist, callback)
+rospy.Subscriber('camara_servo', Int32, callback_camara_servo)
+rospy.Subscriber('arm_disarm', Bool, callback_armar)
+rospy.Subscriber('luces_pwm', Int32, callback_luces_pwm)
 ```
- 189  rospy.init_node('cmd_vel_subscriber', anonymous=True)
- 191  rospy.Subscriber('cmd_vel', Twist, callback)
- 192  rospy.Subscriber('camara_servo', Int32, callback_camara_servo)
- 193  rospy.Subscriber('arm_disarm', Bool, callback_armar)
- 194  rospy.Subscriber('luces_pwm', Int32, callback_luces_pwm)
-```
-【F:blueos_ros/bluerov_server/scripts/server.py†L189-L195】
 Each callback converts the received command into the appropriate RC channel override, enabling thruster control, camera tilt and light brightness.
 
 ---
-
 ## Teleoperation pipeline
 1. `comms_node.py` reads and writes acoustic packets on the serial link to the MicronModem.
 2. Decoded velocity data is published on `/cmd_vel`, while start/stop services are available as standard ROS services.

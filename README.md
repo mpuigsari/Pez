@@ -67,7 +67,7 @@ To enable acoustic teleoperation add `comms` after the image name:
 
 ### Host-side (Ubuntu Jammy, 64-bit compatible)
 
-Clone the repository and launch:
+Clone the repository and launch the host container (`mapuigsari/pez:core-amd64`):
 
 ```bash
 git clone https://github.com/mpuigsari/Pez
@@ -96,24 +96,27 @@ source install/setup.bash
 
 ```
 Pez
-├── pez_docker/       # Fish-side Docker container (on-board Pi)
-├── pez_humble/       # Host-side Docker & ROS2 workspace
-└── pez_noetic/       # Deprecated ROS1/BlueOS (archived)
+├── pez_ros/
+│   ├── pez_docker/   # Docker setups for fish, host and buoy
+│   ├── pez_humble/   # ROS 2 packages shared across all platforms
+│   └── pez_noetic(discarded)/
+├── blueos_ros/       # ROS Noetic workspace for BlueROV2 teleop
+└── README.md
 ```
 
 ---
 
 ## 🐟 Fish-side Container
 
-Runs ROS2 Humble, Navigator-lib onboard Raspberry Pi, providing direct control of actuators and sensors:
+ROS 2 Humble image for the onboard Raspberry Pi. It exposes Navigator-driven PWM control and publishes sensor data.
 
-* [pez\_docker](pez_ros/pez_docker/README.md)
+*See [pez_docker](pez_ros/pez_docker/README.md) for all container images.*
 
 ---
 
 ## 🖥️ Host-side Container & Workspace
 
-Provides ROS2 Humble, joystick support, acoustic communication, sensor integration, and visualization tools:
+Provides ROS 2 Humble with joystick support, visualization tools and optional acoustic modem bridge. The container tag is `mapuigsari/pez:core-amd64`.
 
 * [pez\_humble](pez_ros/pez_humble/README.md)
 
@@ -128,22 +131,25 @@ Provides ROS2 Humble, joystick support, acoustic communication, sensor integrati
 
 ## 📡 Acoustic Communication
 
-Custom lightweight acoustic communication packets:
+Custom lightweight packets are defined in `pez_comms/core/packet_def.py`:
 
-* **Packet A**: Continuous joystick and real-time command data
-* **Packet B**: Service requests and responses
-* *(Packet C: future implementation for 6DOF pose data)*
+* **PacketA_Normal** – 8‑bit thruster commands for simple motion.
+* **PacketB_Command** – 8‑bit service request/response format.
+* **Packet40** – 32‑bit velocity + service field packet for ROS 2 teleop.
+* **PacketB_Full** – 32‑bit service command with CRC protection.
+* **PacketBlueRov** – 32‑bit twist packet for BlueROV2 control.
 
-Detailed documentation will follow upon completion of development.
+These allow a Noetic vehicle and a Humble host to communicate seamlessly over the acoustic modem.
 
 ---
 
 ## 🚧 Future Work & Roadmap
 
-* **Packet C Implementation**: Extended acoustic packets with 6DOF pose data
-* **Forward Error Correction (FEC)**: Enhanced reliability of acoustic transmissions
-* **Additional Architectures**: Docker support for multiple hardware platforms
-* **Enhanced Simulation Environment**: Improved simulation tools and automated testing
+* **Packet C Implementation** – extended packet carrying 6‑DoF pose data
+* **Forward Error Correction (FEC)** – improve reliability of acoustic transmissions
+* **Boya Surface Buoy** – Wi‑Fi link to host and acoustic link to fish for increased range
+* **Additional Architectures** – Docker support for multiple hardware platforms
+* **Enhanced Simulation Environment** – improved simulation tools and automated testing
 
 ---
 
