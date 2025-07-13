@@ -57,8 +57,14 @@ This project facilitates both simulation-based testing and real-world robotic fi
 Pull and run the container:
 
 ```bash
-docker pull mapuigsari/blueos-ros2-navigator:arm64v8
-docker-compose -f pez_ros/pez_docker/docker-compose.yml up -d
+docker pull mapuigsari/pez:core-arm64v8
+docker compose -f pez_ros/pez_docker/pez/docker-compose.yml up -d
+```
+Run with the optional `comms` argument to enable acoustic control instead of
+wired serial:
+
+```bash
+docker compose -f pez_ros/pez_docker/pez/docker-compose.yml run --rm pez_ros2_navigator comms
 ```
 
 ### Host-side (Ubuntu Jammy, 64-bit compatible)
@@ -67,11 +73,12 @@ Clone the repository and launch:
 
 ```bash
 git clone https://github.com/mpuigsari/Pez
-cd pez_ros/pez_humble
-docker-compose up --build
+cd Pez/pez_ros/pez_docker/host
+docker compose up -d
 ```
 
-Ensure your joystick is connected and X11 DISPLAY is correctly configured.
+Ensure your joystick and USB serial adapter are plugged in before starting.
+See the [launch section](pez_ros/pez_humble/pez_ws/src/pez_core/README.md#6-launch-files--runtime-flags) for usage details.
 
 ### Native ROS2 Build (optional)
 
