@@ -21,7 +21,7 @@ It has been tested on Raspberry Pi 4 (ARM64), published to Docker Hub, and ca
 Built and published automatically via GitHub Actions for **ARM64 (Raspberry Pi 4)**:
 
 ```bash
-docker pull mapuigsari/blueos-ros2-navigator:arm64v8
+docker pull mapuigsari/pez:core-arm64v8
 ```
 
 Future tags may include additional architectures as needed.
@@ -36,13 +36,15 @@ Future tags may include additional architectures as needed.
 version: '3.8'
 services:
   pez:
-    image: mapuigsari/blueos-ros2-navigator:arm64v8
+    image: mapuigsari/pez:core-arm64v8
     restart: unless-stopped    # auto-restart on reboot or failure
     privileged: true           # allow PWM and device access
     volumes:
       - /dev:/dev              # expose hardware interfaces
     environment:
       - DISPLAY=${DISPLAY}     # for GUI tools if needed
+  # start acoustic comms by passing "comms" instead of the default bash
+  #command: ["comms"]
 ```
 
 Save as `docker-compose.yml` and run:
@@ -59,7 +61,14 @@ docker run -d \
   --privileged \
   --restart unless-stopped \
   -v /dev:/dev \
-  yourorg/pez_docker:arm64-latest
+  mapuigsari/pez:core-arm64v8
+```
+
+Append `comms` at the end of the command to start the acoustic teleoperation
+nodes:
+
+```bash
+docker run ... mapuigsari/pez:core-arm64v8 comms
 ```
 
 No additional setup is required; the container initializes ROS 2 and launches teleop nodes automatically.
@@ -73,7 +82,7 @@ The Dockerfile is based on `ros:humble-ros-base-jammy` and can be rebuilt for an
 ```bash
 docker build \
   --platform linux/amd64 \
-  -t yourorg/pez_docker:amd64-latest \
+  -t mapuigsari/pez:core-amd64 \
   .
 ```
 

@@ -57,9 +57,13 @@ This project facilitates both simulation-based testing and real-world robotic fi
 Pull and run the container:
 
 ```bash
-docker pull mapuigsari/blueos-ros2-navigator:arm64v8
+docker pull mapuigsari/pez:core-arm64v8
 docker-compose -f pez_ros/pez_docker/docker-compose.yml up -d
 ```
+
+To enable acoustic teleoperation, pass `comms` as the first argument when
+starting the container (e.g. `docker run ... mapuigsari/pez:core-arm64v8 comms`
+or set `command: ["comms"]` in the compose file).
 
 ### Host-side (Ubuntu Jammy, 64-bit compatible)
 
