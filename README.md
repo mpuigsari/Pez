@@ -58,12 +58,12 @@ Pull and run the container:
 
 ```bash
 docker pull mapuigsari/pez:core-arm64v8
-docker-compose -f pez_ros/pez_docker/docker-compose.yml up -d
+docker compose -f pez_ros/pez_docker/pez/docker-compose.yml up -d
 ```
 
-To enable acoustic teleoperation, pass `comms` as the first argument when
-starting the container (e.g. `docker run ... mapuigsari/pez:core-arm64v8 comms`
-or set `command: ["comms"]` in the compose file).
+To enable acoustic teleoperation add `comms` after the image name:
+`docker run ... mapuigsari/pez:core-arm64v8 comms` or set
+`command: ["comms"]` in the compose file.
 
 ### Host-side (Ubuntu Jammy, 64-bit compatible)
 
@@ -71,11 +71,13 @@ Clone the repository and launch:
 
 ```bash
 git clone https://github.com/mpuigsari/Pez
-cd pez_ros/pez_humble
-docker-compose up --build
+cd Pez/pez_ros/pez_docker/host
+docker compose up -d
 ```
 
-Ensure your joystick is connected and X11 DISPLAY is correctly configured.
+Plug in your joystick (and USB‑serial adapter for acoustic comms) before
+starting the container.  See [pez_core](pez_ros/pez_humble/pez_ws/src/pez_core/README.md)
+for launch commands.
 
 ### Native ROS2 Build (optional)
 

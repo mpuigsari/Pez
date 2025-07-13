@@ -17,6 +17,20 @@ The `pez_core` package provides ROS2 nodes for teleoperating, controlling, and s
 
 ---
 
+### Repository Layout
+
+```
+pez_core/
+├── config/   # YAML parameters and RQT perspective
+├── launch/   # ros2 launch files
+├── pez_core/ # Python modules
+└── test/     # lint tests
+```
+
+See the README files inside each subfolder for details.
+
+---
+
 ## 2. Dependencies
 
 * ROS 2 Humble
@@ -65,7 +79,7 @@ Use this method if you prefer a native ROS2 workspace build and have the requisi
 We provide two Docker-based options for simplified, reproducible environments. See the corresponding container READMEs for full details:
 
 * **Fish-side Container**:
-  Use the [`pez_docker`](/pez_ros/pez_docker/README.md) image on the Raspberry Pi 4 (64-bit) for onboard control of servos, camera, electromagnet, and sensor publishing.
+  Use the [`pez_docker`](../../pez_docker/pez/README.md) image on the Raspberry Pi 4 (64-bit) for onboard control of servos, camera, electromagnet, and sensor publishing.
 
 * **Host-side Container**:
   Use the [`pez_humble`](/pez_ros/pez_humble/README.md) environment on your development machine (Jammy-compatible architecture). It provides ROS2 Humble with joystick support, RQT, PlotJuggler, and sensor monitoring.
@@ -126,20 +140,27 @@ Parameters can be dynamically adjusted at runtime via `rqt_reconfigure`:
 
 ### `joy_launch.py`
 
-Joystick teleoperation, GUI visualization, and sensor node launching:
+Joystick teleoperation with optional GUI tools.
+Parameters:
+- `display_flag` – show RQT/PlotJuggler windows when `true`.
+- `fish_robot` – `true` when running on the robot, `false` for host teleop.
+- `comms_flag` – start the acoustic bridge via `pez_comms`.
 
+Example:
 ```bash
-ros2 launch pez_core joy_launch.py display_flag:=true fish_robot:=true
-ros2 run pez_core fish_sense
+ros2 launch pez_core joy_launch.py display_flag:=true fish_robot:=false comms_flag:=true
 ```
 
 ### `teleop_launch.py`
 
-Main teleoperation and camera nodes, used for robot or host simulation:
+Main motor, camera and sensor stack.
+Parameters:
+- `test_flag` – run without sensors and camera when `true`.
+- `comms_flag` – enable the acoustic modem node.
 
+Example:
 ```bash
-ros2 launch pez_core teleop_launch.py test_flag:=false
-ros2 run pez_core fish_sense
+ros2 launch pez_core teleop_launch.py test_flag:=false comms_flag:=true
 ```
 
 ---

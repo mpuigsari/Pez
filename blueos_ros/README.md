@@ -1,6 +1,6 @@
 # blueos_ros
 
-This directory provides the ROS Noetic implementation for operating a BlueROV2 from BlueOS while communicating over Tritech MicronModem acoustic links.  It contains the `pez_comms` package for modem handling and the `bluerov_server` package that bridges received velocity commands into MAVLink RC overrides.  Docker files exist under `blueos_ros_extension`, but containerisation is still work in progress and omitted here.
+This directory provides the ROS Noetic implementation for operating a BlueROV2 from BlueOS while communicating over Tritech MicronModem acoustic links.  It contains the `pez_comms` package for modem handling and the `bluerov_server` package that bridges received velocity commands into MAVLink RC overrides.  A prebuilt container is available on Docker Hub as `mapuigsari/blueos-ros-server:arm32-v7-comms`.
 
 ---
 
@@ -8,9 +8,8 @@ This directory provides the ROS Noetic implementation for operating a BlueROV2 f
 
 ```
 blueos_ros/
-├── pez_comms/          # generic serial communications node
-├── bluerov_server/     # MAVLink RC override server
-└── blueos_ros_extension/ (WIP Docker setup)
+├── blueos_ws/       # catkin workspace (pez_comms + bluerov_server)
+└── blueos_ros_extension/ (legacy Dockerfile)
 ```
 
 ---
@@ -118,6 +117,10 @@ Each callback converts the received command into the appropriate RC channel over
 3. `bluerov_server` subscribes to those topics and issues MAVLink RC overrides to the vehicle.
 4. Video from the onboard camera can be viewed using any ROS image viewer (e.g. `rqt_image_view`) by subscribing to the corresponding camera topic provided by BlueOS.
 
+The same packet definitions are used by the ROS 2 implementation of
+`pez_comms`, allowing a Noetic vehicle to communicate with a Humble
+host over the acoustic modem.
+
 ---
 
 ## Usage
@@ -130,4 +133,4 @@ Open an image viewer for the camera topic and teleoperate the vehicle over the a
 
 ---
 
-This README summarises the current ROS Noetic code base.  Docker support under `blueos_ros_extension` is under development and therefore not covered here.
+This README summarises the current ROS Noetic code base.  Use the prebuilt image `mapuigsari/blueos-ros-server:arm32-v7-comms` when running on BlueOS.
