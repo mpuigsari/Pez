@@ -101,7 +101,7 @@ Pez
 
 Runs ROS2 Humble, Navigator-lib onboard Raspberry Pi, providing direct control of actuators and sensors:
 
-* [pez\_docker](pez_ros/pez_docker/README.md)
+* [pez\_docker](pez_ros/pez_docker/pez/README.md)
 
 ---
 

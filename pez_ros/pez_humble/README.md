@@ -115,7 +115,7 @@ Launch the Pez robot control nodes, sensor integration, and visualization tools:
 * **Host-side Development:** Use Docker Compose setup for consistency across development environments.
 * **Sensor Testing:** Verify sensor readings via ROS topics (`/tsys01/temperature`, `/ms5837/pressure`).
 * **Visualization:** Utilize RQT and PlotJuggler for debugging, parameter tuning, and sensor data visualization.
-* **Deployment:** Deploy `pez_core` directly onto Raspberry Pi using [`pez_docker`](/pez_ros/pez_docker/README.md) container for onboard control and sensing.
+* **Deployment:** Deploy `pez_core` directly onto Raspberry Pi using [`pez_docker`](/pez_ros/pez_docker/pez/README.md) container for onboard control and sensing.
 
 ---
 
@@ -125,7 +125,7 @@ For detailed instructions and explanations about individual components:
 
 * [pez\_core README](./pez_ws/src/pez_core/README.md)
 * [pez\_comms README](./pez_ws/src/pez_comms/README.md)
-* [pez\_docker (Fish-side) README](/pez_ros/pez_docker/README.md)
+* [pez\_docker (Fish-side) README](/pez_ros/pez_docker/pez/README.md)
 
 ---
 

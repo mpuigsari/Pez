@@ -31,11 +31,21 @@ The `pez_core` package provides ROS2 nodes for teleoperating, controlling, and s
 
 ---
 
-## 3. Installation & Build
+## 3. Directory Layout
+
+```
+pez_core/
+├── config/       # YAML parameters and RQT/PlotJuggler layouts
+├── launch/       # Launch files for teleoperation and sensors
+├── pez_core/     # Python nodes (fish_joy, fish_teleop, fish_sense, etc.)
+└── test/         # Flake8, PEP257, and other quality tests
+```
+
+## 4. Installation & Build
 
 There are two primary ways to deploy and run `pez_core`:
 
-### 3.1. Local ROS2 Build
+### 4.1. Local ROS2 Build
 
 Use this method if you prefer a native ROS2 workspace build and have the requisite hardware and libraries installed.
 
@@ -60,19 +70,19 @@ Use this method if you prefer a native ROS2 workspace build and have the requisi
    source install/setup.bash
    ```
 
-### 3.2. Docker Container Deployment
+### 4.2. Docker Container Deployment
 
 We provide two Docker-based options for simplified, reproducible environments. See the corresponding container READMEs for full details:
 
 * **Fish-side Container**:
-  Use the [`pez_docker`](/pez_ros/pez_docker/README.md) image on the Raspberry Pi 4 (64-bit) for onboard control of servos, camera, electromagnet, and sensor publishing.
+  Use the [`pez_docker`](/pez_ros/pez_docker/pez/README.md) image on the Raspberry Pi 4 (64-bit) for onboard control of servos, camera, electromagnet, and sensor publishing.
 
 * **Host-side Container**:
   Use the [`pez_humble`](/pez_ros/pez_humble/README.md) environment on your development machine (Jammy-compatible architecture). It provides ROS2 Humble with joystick support, RQT, PlotJuggler, and sensor monitoring.
 
 ---
 
-## 4. Parameters
+## 5. Parameters
 
 Parameters can be dynamically adjusted at runtime via `rqt_reconfigure`:
 
@@ -92,16 +102,16 @@ Parameters can be dynamically adjusted at runtime via `rqt_reconfigure`:
 
 ---
 
-## 5. ROS Interfaces
+## 6. ROS Interfaces
 
-### 5.1 Subscribed Topics
+### 6.1 Subscribed Topics
 
 | Topic                 | Type                  | Description                                               |
 | --------------------- | --------------------- | --------------------------------------------------------- |
 | `/pez/cmd_vel`        | `geometry_msgs/Twist` | Controls linear x (forward), y (steering), z (dive/climb) |
 | `/pez/camera_control` | `std_msgs/Float64`    | Camera pan commands (±1 steps, zero ignored)              |
 
-### 5.2 Published Topics
+### 6.2 Published Topics
 
 | Topic                 | Type                         | Description                                               |
 | --------------------- | ---------------------------- | --------------------------------------------------------- |
@@ -111,7 +121,7 @@ Parameters can be dynamically adjusted at runtime via `rqt_reconfigure`:
 | `/ms5837/pressure`    | `sensor_msgs/FluidPressure`  | MS5837 Pressure readings (converted to Pa)                |
 | `/ms5837/depth`       | `std_msgs/Float32`           | MS5837 Depth readings (m)                                 |
 
-### 5.3 Services
+### 6.3 Services
 
 | Service                             | Type               | Description                           |
 | ----------------------------------- | ------------------ | ------------------------------------- |
@@ -122,15 +132,17 @@ Parameters can be dynamically adjusted at runtime via `rqt_reconfigure`:
 
 ---
 
-## 6. Launch Files & Runtime Flags
+## 7. Launch Files & Runtime Flags
 
 ### `joy_launch.py`
 
 Joystick teleoperation, GUI visualization, and sensor node launching:
 
 ```bash
-ros2 launch pez_core joy_launch.py display_flag:=true fish_robot:=true
-ros2 run pez_core fish_sense
+ros2 launch pez_core joy_launch.py \
+  display_flag:=true \
+  fish_robot:=true \
+  comms_flag:=false
 ```
 
 ### `teleop_launch.py`
@@ -138,8 +150,15 @@ ros2 run pez_core fish_sense
 Main teleoperation and camera nodes, used for robot or host simulation:
 
 ```bash
-ros2 launch pez_core teleop_launch.py test_flag:=false
-ros2 run pez_core fish_sense
+ros2 launch pez_core teleop_launch.py \
+  test_flag:=false \
+  comms_flag:=false \
+  publish_frequency:=1.0 \
+  publish_tsys01_temperature:=true \
+  publish_ms5837_temperature:=true \
+  publish_ms5837_pressure:=true \
+  publish_ms5837_depth:=true \
+  fluid_density:=997.0
 ```
 
 ---
