@@ -1,6 +1,6 @@
 # blueos_ros
 
-This directory provides the ROS Noetic implementation for operating a BlueROV2 from BlueOS while communicating over Tritech MicronModem acoustic links.  It contains the `pez_comms` package for modem handling and the `bluerov_server` package that bridges received velocity commands into MAVLink RC overrides.  Docker files exist under `blueos_ros_extension`, but containerisation is still work in progress and omitted here.
+This directory provides the ROS Noetic implementation for operating a BlueROV2 from BlueOS while communicating over Tritech MicronModem acoustic links.  It contains the `pez_comms` package for modem handling and the `bluerov_server` package that bridges received velocity commands into MAVLink RC overrides.  A prebuilt container is available on Docker Hub as `mapuigsari/blueos-ros-server:arm32-v7-comms`.
 
 ---
 
@@ -8,9 +8,8 @@ This directory provides the ROS Noetic implementation for operating a BlueROV2 f
 
 ```
 blueos_ros/
-├── pez_comms/          # generic serial communications node
-├── bluerov_server/     # MAVLink RC override server
-└── blueos_ros_extension/ (WIP Docker setup)
+├── blueos_ws/       # catkin workspace (pez_comms + bluerov_server)
+└── blueos_ros_extension/ (legacy Dockerfile)
 ```
 
 ---
@@ -44,7 +43,6 @@ Relevant code lines show the engine setup and serial thread start:
  89     )
  90     self._serial_thread.start()
 ```
-【F:blueos_ros/pez_comms/src/pez_comms/nodes/comms_node.py†L23-L90】
 
 The default configuration [`bluerov_config.yaml`](./pez_comms/config/bluerov_config.yaml) polls `PacketBlueRov` once per second and publishes the decoded fields as a `geometry_msgs/Twist` message:
 ```
@@ -62,8 +60,6 @@ The default configuration [`bluerov_config.yaml`](./pez_comms/config/bluerov_con
  30         wz:          0.0
  31         svc_pending: 0
 ```
-【F:blueos_ros/pez_comms/config/bluerov_config.yaml†L19-L31】
-and maps the fields to `/cmd_vel`:
 ```
  39 - packet: PacketBlueRov
  40   publish:
@@ -75,9 +71,7 @@ and maps the fields to `/cmd_vel`:
  46       linear.z:   "vz"
  47       angular.z:  "wz"
 ```
-【F:blueos_ros/pez_comms/config/bluerov_config.yaml†L39-L47】
 
-Launch the node with:
 ```bash
 roslaunch pez_comms comms.launch.xml
 ```
@@ -97,26 +91,27 @@ The helper used to send RC values can be seen around these lines:
  72      master.target_component,
  73      *rc_channel_values)
 ```
-【F:blueos_ros/bluerov_server/scripts/server.py†L68-L75】
 
 Subscriptions are set up in `listener()`:
+```python
+rospy.init_node('cmd_vel_subscriber', anonymous=True)
+rospy.Subscriber('cmd_vel', Twist, callback)
+rospy.Subscriber('camara_servo', Int32, callback_camara_servo)
+rospy.Subscriber('arm_disarm', Bool, callback_armar)
+rospy.Subscriber('luces_pwm', Int32, callback_luces_pwm)
 ```
- 189  rospy.init_node('cmd_vel_subscriber', anonymous=True)
- 191  rospy.Subscriber('cmd_vel', Twist, callback)
- 192  rospy.Subscriber('camara_servo', Int32, callback_camara_servo)
- 193  rospy.Subscriber('arm_disarm', Bool, callback_armar)
- 194  rospy.Subscriber('luces_pwm', Int32, callback_luces_pwm)
-```
-【F:blueos_ros/bluerov_server/scripts/server.py†L189-L195】
 Each callback converts the received command into the appropriate RC channel override, enabling thruster control, camera tilt and light brightness.
 
 ---
-
 ## Teleoperation pipeline
 1. `comms_node.py` reads and writes acoustic packets on the serial link to the MicronModem.
 2. Decoded velocity data is published on `/cmd_vel`, while start/stop services are available as standard ROS services.
 3. `bluerov_server` subscribes to those topics and issues MAVLink RC overrides to the vehicle.
 4. Video from the onboard camera can be viewed using any ROS image viewer (e.g. `rqt_image_view`) by subscribing to the corresponding camera topic provided by BlueOS.
+
+The same packet definitions are used by the ROS 2 implementation of
+`pez_comms`, allowing a Noetic vehicle to communicate with a Humble
+host over the acoustic modem.
 
 ---
 
@@ -130,4 +125,4 @@ Open an image viewer for the camera topic and teleoperate the vehicle over the a
 
 ---
 
-This README summarises the current ROS Noetic code base.  Docker support under `blueos_ros_extension` is under development and therefore not covered here.
+This README summarises the current ROS Noetic code base.  Use the prebuilt image `mapuigsari/blueos-ros-server:arm32-v7-comms` when running on BlueOS.

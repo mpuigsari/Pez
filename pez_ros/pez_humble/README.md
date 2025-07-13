@@ -1,17 +1,16 @@
-# Pez Humble (Host-side)
+# Pez Humble – ROS 2 Packages
 
-The `pez_humble` directory provides a comprehensive ROS 2 Humble environment tailored for developing, controlling, interacting, and sensor integration for the **Pez robot fish**. It integrates ROS packages (`pez_core` and `pez_comms`) and includes Docker configurations (`Dockerfile`, `entrypoint.sh`, and `docker-compose.yml`) for seamless deployment.
+The `pez_humble` directory holds the ROS 2 packages used across all sides of the project (fish, host and buoy). Dockerfiles were moved to [`pez_docker`](../pez_docker), where the `core-amd64` tag provides the host container.
 
 ---
 
 ## Overview
 
-`pez_humble` provides a **host-side Docker container** for ROS 2 Humble, tailored to control and interact with the Pez robot fish. The ROS2 packages (`pez_core`, `pez_comms`) can be built and used in any ROS2 environment, including the fish-side container in `pez_docker` or a native installation.
+`pez_humble` previously bundled a host Dockerfile but now focuses solely on the ROS 2 packages. The same sources are mounted in the `pez_docker` containers or can be built natively.
 
 Core components include:
 
-* ROS 2 Humble environment within Docker (host-side)
-* Shared ROS2 packages:
+* Shared ROS 2 packages:
 
   * `pez_core`: Teleoperation, actuator control, and sensor integration (`fish_sense`).
   * `pez_comms`: Acoustic communication handling.
@@ -46,7 +45,7 @@ Manages acoustic modem-based communication through a YAML-configurable node:
 
 ## Docker Deployment
 
-The provided Docker configuration simplifies host-side deployments, ensuring a consistent development and operational environment.
+The host container is now built from [`pez_docker/host`](../pez_docker/host) and published as `mapuigsari/pez:core-amd64`. The following notes describe the original layout:
 
 ### Dockerfile
 
@@ -112,7 +111,7 @@ Launch the Pez robot control nodes, sensor integration, and visualization tools:
 
 ## Recommended Usage
 
-* **Host-side Development:** Use Docker Compose setup for consistency across development environments.
+* **Host-side Development:** Use the `core-amd64` container from `pez_docker` for consistency.
 * **Sensor Testing:** Verify sensor readings via ROS topics (`/tsys01/temperature`, `/ms5837/pressure`).
 * **Visualization:** Utilize RQT and PlotJuggler for debugging, parameter tuning, and sensor data visualization.
 * **Deployment:** Deploy `pez_core` directly onto Raspberry Pi using [`pez_docker`](/pez_ros/pez_docker/README.md) container for onboard control and sensing.
