@@ -58,16 +58,16 @@ class PezController(Node):
             ('tail_freq_fast',    5.0,   float, (2.0,10.0,0.2)),
             ('tail_deg_amp_slow', 30.0,  float, (0.0,60.0,1.0)),
             ('tail_deg_amp_fast', 20.0,  float, (0.0,60.0,1.0)),
-            ('tail_max_deflect',  75,    int,   (0,150,1)),
+            ('tail_max_deflect',  40,    int,   (0,150,1)),
             ('rate_hz',           50,    int,   (10,200,5)),
-            ('fin_max_deflect',   75,    int,   (0,150,1)),
+            ('fin_max_deflect',   90,    int,   (0,150,1)),
             ('fin_turn_max_deflect', 20, int,   (0,50,1)),
             ('fin_blend',         0.5,   float, (0.0,1.0,0.05)),
         ]
 
         # --- 2. PWM SPECS: attr-name, default, min, max ---
         pwm_specs = [
-            ('cam_pwm',  290, 190, 390),
+            ('cam_pwm',  350, 200, 500),
             ('tail_pwm', 303, 176, 434),
             ('left_fin_pwm',  231, 153.5, 307),
             ('right_fin_pwm',  231, 153.5, 307)

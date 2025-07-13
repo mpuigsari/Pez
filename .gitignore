@@ -3,3 +3,7 @@
 **/build
 **/install
 **log
+*.tar
+*.db3
+/pez_ros/pez_humble/pez_ws/2025-07-11-08-18-46
+*.mp4
