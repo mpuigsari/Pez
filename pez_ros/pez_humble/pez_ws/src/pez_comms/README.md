@@ -45,10 +45,12 @@ pez_comms/
 │   ├── host_comms.yaml    # host-side default flow
 │   └── guide_config.yaml  # annotated example for all sections
 ├── launch/                # launch scripts
-│   ├── comms_launch.py    # generic `comms` node launcher
-│   ├── fish_launch.py     # wraps `comms_launch.py` under /fish
-│   ├── host_launch.py     # wraps `comms_launch.py` under /host
-│   └── test_launch.py     # socat + dual-namespace end-to-end test
+│   ├── comms_launch.py      # generic `comms` node launcher
+│   ├── fish_launch.py       # wraps `comms_launch.py` under /fish
+│   ├── host_launch.py       # wraps `comms_launch.py` under /host
+│   ├── test_launch.py       # socat + dual-namespace end-to-end test
+│   ├── bluerov_launch.py    # host-side BlueROV2 teleop
+│   └── teleopboya_launch.py # joystick control for buoy modem
 ├── nodes/                 # generic comms node
 │   └── comms_node.py      # entry point for `comms` executable
 ├── plugins/               # optional custom logic
@@ -122,7 +124,22 @@ ros2 launch pez_comms host_launch.py \
 
 # End-to-end test (socat + both namespaces):
 ros2 launch pez_comms test_launch.py
+
+# Host-side BlueROV2 teleoperation:
+ros2 launch pez_comms bluerov_launch.py
+
+# Buoy-mounted modem teleop:
+ros2 launch pez_comms teleopboya_launch.py
 ```
+
+`bluerov_launch.py` brings up the joystick bridge and communications node for
+controlling a BlueROV2 from the surface. The matching robot-side stack lives in
+[`blueos_ros`](../../../blueos_ros/README.md) and should be running on the
+vehicle.
+
+`teleopboya_launch.py` omits the comms node and is tailored for the buoy
+scenario where only joystick commands need to be sent to a modem mounted on the
+surface buoy.
 
 ---
 
