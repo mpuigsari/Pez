@@ -40,12 +40,11 @@ RUN rosdep install --from-paths src --ignore-src -r -y \
  && colcon build --symlink-install
 
 # 5) Build PlotJuggler from source
-WORKDIR /ws_plotjuggler
-RUN mkdir -p src \
- && cd src \
+RUN cd src \
  && git clone https://github.com/PlotJuggler/plotjuggler_msgs.git \
  && git clone https://github.com/facontidavide/PlotJuggler.git \
- && git clone https://github.com/PlotJuggler/plotjuggler-ros-plugins.git
+ && git clone https://github.com/PlotJuggler/plotjuggler-ros-plugins.git \
+ cd ..
 
 RUN rosdep install --from-paths src --ignore-src -r -y \
  && source /opt/ros/humble/setup.bash \

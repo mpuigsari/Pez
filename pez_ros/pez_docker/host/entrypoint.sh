@@ -6,7 +6,6 @@ umask 000
 
 # 2) Source ROS 2 Humble environment
 source /opt/ros/humble/setup.bash
-source /ws_plotjuggler/install/setup.bash
 
 # 3) Source the workspace (if it's already been built)
 if [ -f /pez_ws/install/setup.bash ]; then

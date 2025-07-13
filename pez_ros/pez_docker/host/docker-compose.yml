@@ -16,8 +16,8 @@ services:
           mode: 0700
 
     devices:
-      #- "/dev:/dev"
-      - "/dev/input:/dev/input"
+      - "/dev:/dev"
+      #- "/dev/input:/dev/input"
       #- "/dev/ttyUSB0:/dev/ttyUSB0"
       #- "/dev/ttyUSB1:/dev/ttyUSB1"
 
