@@ -1,6 +1,6 @@
 # blueos_ros
 
-This directory provides the ROS Noetic implementation for operating a BlueROV2 from BlueOS while communicating over Tritech MicronModem acoustic links.  It contains the `pez_comms` package for modem handling and the `bluerov_server` package that bridges received velocity commands into MAVLink RC overrides.  Docker files exist under `blueos_ros_extension`, but containerisation is still work in progress and omitted here.
+This directory provides the ROS Noetic implementation for operating a BlueROV2 from BlueOS while communicating over Tritech MicronModem acoustic links.  It contains the `pez_comms` package for modem handling and the `bluerov_server` package that bridges received velocity commands into MAVLink RC overrides.  A Docker image built from this workspace is published as `mapuigsari/blueos-ros-server:arm32-v7-comms` for easy deployment on BlueOS.
 
 ---
 
@@ -10,8 +10,9 @@ This directory provides the ROS Noetic implementation for operating a BlueROV2 f
 blueos_ros/
 ├── pez_comms/          # generic serial communications node
 ├── bluerov_server/     # MAVLink RC override server
-└── blueos_ros_extension/ (WIP Docker setup)
 ```
+
+The repository also contains the Dockerfile used to build the `blueos-ros-server` image.
 
 ---
 
@@ -120,6 +121,11 @@ Each callback converts the received command into the appropriate RC channel over
 
 ---
 
+## ROS1–ROS2 bridging
+The packet definitions used by `pez_comms` match those in the ROS2 workspace under `pez_ros/pez_humble`. Using the same YAML configuration allows packets to flow between ROS1 and ROS2 systems, enabling mixed deployments.
+
+---
+
 ## Usage
 Ensure ROS Noetic and MAVROS are installed. Launch the communications node with your desired YAML configuration and run the RC bridge:
 ```bash
@@ -130,4 +136,4 @@ Open an image viewer for the camera topic and teleoperate the vehicle over the a
 
 ---
 
-This README summarises the current ROS Noetic code base.  Docker support under `blueos_ros_extension` is under development and therefore not covered here.
+This README summarises the current ROS Noetic code base.  A prebuilt container is available from Docker Hub as `mapuigsari/blueos-ros-server:arm32-v7-comms`.

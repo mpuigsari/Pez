@@ -1,4 +1,4 @@
-name: Build & Publish ARM32v7 Extension
+name: Build & Publish BlueOS ROS Server
 
 on:
   push:
@@ -42,4 +42,4 @@ jobs:
           file: ./blueos_ros/blueos_ros_extension/Dockerfile
           platforms: linux/arm/v7
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/blueos-ros-extension:arm32v7
+          tags: mapuigsari/blueos-ros-server:arm32-v7-comms
