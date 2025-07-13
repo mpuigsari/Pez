@@ -67,7 +67,7 @@ This directory remains solely for **historical reference and archival purposes**
 
 Please refer to the actively maintained and supported solutions:
 
-* [**pez\_docker**](../pez_docker/README.md): Raspberry Pi 64-bit ROS2 container for onboard control
+* [**pez\_docker**](../pez_docker/pez/README.md): Raspberry Pi 64-bit ROS2 container for onboard control
 * [**pez\_humble**](../pez_humble/README.md): Host-side ROS2 Humble stack for development and teleoperation
 
 These updated repositories ensure full compatibility with the Navigator library, ROS2 Humble, and modern Python environments.

@@ -65,7 +65,7 @@ Use this method if you prefer a native ROS2 workspace build and have the requisi
 We provide two Docker-based options for simplified, reproducible environments. See the corresponding container READMEs for full details:
 
 * **Fish-side Container**:
-  Use the [`pez_docker`](/pez_ros/pez_docker/README.md) image on the Raspberry Pi 4 (64-bit) for onboard control of servos, camera, electromagnet, and sensor publishing.
+  Use the [`pez_docker`](/pez_ros/pez_docker/pez/README.md) image on the Raspberry Pi 4 (64-bit) for onboard control of servos, camera, electromagnet, and sensor publishing.
 
 * **Host-side Container**:
   Use the [`pez_humble`](/pez_ros/pez_humble/README.md) environment on your development machine (Jammy-compatible architecture). It provides ROS2 Humble with joystick support, RQT, PlotJuggler, and sensor monitoring.

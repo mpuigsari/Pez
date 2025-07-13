@@ -67,11 +67,11 @@ Clone the repository and launch:
 
 ```bash
 git clone https://github.com/mpuigsari/Pez
-cd pez_ros/pez_humble
-docker-compose up --build
+cd Pez/pez_ros/pez_docker/host
+docker compose up -d
 ```
 
-Ensure your joystick is connected and X11 DISPLAY is correctly configured.
+Ensure joysticks and any serial adapters are connected before launching. X11 DISPLAY must also be configured.
 
 ### Native ROS2 Build (optional)
 
@@ -101,7 +101,7 @@ Pez
 
 Runs ROS2 Humble, Navigator-lib onboard Raspberry Pi, providing direct control of actuators and sensors:
 
-* [pez\_docker](pez_ros/pez_docker/README.md)
+* [pez\_docker](pez_ros/pez_docker/pez/README.md)
 
 ---
 
