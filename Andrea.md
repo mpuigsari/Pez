@@ -6,7 +6,10 @@ Esta guía está pensada para usuarios sin experiencia en programación. Explica
 
 - **Pez**: el robot que nada bajo el agua. En su Raspberry Pi se ejecuta el contenedor `mapuigsari/pez:core-arm64v8`.
 - **Host**: tu ordenador, desde el que manejas el Pez. Utiliza el contenedor `mapuigsari/pez:core-amd64`.
-- **Comms**: un contenedor opcional (`mapuigsari/pez:comms-arm64v8`) para colocar el módem acústico en una boya y aumentar el alcance.
+- **Modos**: tanto el Pez como el host comparten tres modos de arranque:
+  - `dev` para una consola interactiva,
+  - `cable` para teleoperar con el cable USB/serie,
+ - `comms` para activar el módem acústico.
 
 Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/mapuigsari/pez).
 
@@ -18,37 +21,60 @@ Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/ma
    cd Pez/pez_ros/pez_docker/host
    ```
 2. Conecta el mando (joystick) al ordenador.
-3. Inicia el contenedor del host:
+3. Inicia el modo por cable:
    ```bash
-   docker compose up -d
+   docker compose up pez-cable
    ```
-4. Dentro del contenedor, lanza la teleoperación básica:
+4. Cuando termines, detén los contenedores con `docker compose down`.
+5. Para una terminal temporal dentro del contenedor puedes usar:
    ```bash
-   ros2 launch pez_core teleop_launch.py
+   docker compose run --rm pez-dev
    ```
-5. Usa el joystick para mover el pez. Puedes ver datos y gráficas con RQT y PlotJuggler.
+6. Usa el joystick para mover el pez y visualiza datos con RQT o PlotJuggler.
+
+### Mapa básico de botones
+
+| Acción               | Botón (Logitech F710) |
+|----------------------|-----------------------|
+| Iniciar nado         | 7 (Start/Options)     |
+| Detener motores      | 6 (Back/Select)       |
+| Activar electroimán | 2 (X)                 |
+| Modo neutro          | 4 (Y)                 |
+
+### Ejes principales
+
+| Movimiento                | Eje (Logitech F710)          |
+|---------------------------|------------------------------|
+| Avance / retroceso        | 4 (gatillos RT y LT)         |
+| Giro izquierda / derecha  | 0 (stick izquierdo horizontal) |
+| Subir / bajar             | 1 (stick izquierdo vertical) |
+| Cámara (pan)              | 6 (cruceta horizontal)       |
+
+La configuración completa de botones y ejes se encuentra en
+[`joystick_params.yaml`](pez_ros/pez_humble/pez_ws/src/pez_core/config/joystick_params.yaml).
 
 ## 3. Usar el Pez con módem acústico
 
-1. En el Pez (Raspberry Pi) ejecuta el contenedor añadiendo la opción de comunicaciones:
+1. En el Pez (Raspberry Pi) arranca el modo de comunicaciones:
    ```bash
-   docker compose -f pez_ros/pez_docker/pez/docker-compose.yml up -d
+   cd Pez/pez_ros/pez_docker/pez
+   docker compose up pez-comms
    ```
-   o bien inicia la imagen directamente con `comms`.
-2. En tu ordenador arranca el contenedor del host como en el apartado anterior.
-3. Lanza la teleoperación incluyendo la bandera `comms_flag` para activar el puente acústico:
+2. En tu ordenador inicia también el host en modo `pez-comms`:
    ```bash
-   ros2 launch pez_core teleop_launch.py comms_flag:=true
+   cd Pez/pez_ros/pez_docker/host
+   docker compose up pez-comms
    ```
-4. Si el módem está en una boya (con el contenedor `comms`), usa el lanzamiento especial:
-   ```bash
-   ros2 launch pez_comms teleopboya_launch.py
-   ```
+3. Los contenedores lanzarán automáticamente los nodos con la opción de comunicaciones activada.
 
 ## 4. Más información
 
 - Cada paquete tiene un README detallado dentro del repositorio.
-- Los contenedores Docker se describen en `pez_ros/pez_docker/README.md`.
-- Para entender los paquetes principales consulta `pez_core` y `pez_comms` en `pez_ros/pez_humble/pez_ws/src`.
+- Los contenedores Docker se describen en
+  [`pez_ros/pez_docker`](pez_ros/pez_docker/README.md).
+- Para entender los paquetes principales consulta
+  [`pez_core`](pez_ros/pez_humble/pez_ws/src/pez_core/README.md) y
+  [`pez_comms`](pez_ros/pez_humble/pez_ws/src/pez_comms/README.md) dentro de
+  [`pez_ros/pez_humble`](pez_ros/pez_humble/README.md).
 
 Con estos pasos deberías ser capaz de poner en marcha el robot y empezar a experimentar tanto con conexión directa como con comunicaciones acústicas.

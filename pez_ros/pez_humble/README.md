@@ -45,41 +45,9 @@ Manages acoustic modem-based communication through a YAML-configurable node:
 
 ## Docker Deployment
 
-The host container is now built from [`pez_docker/host`](../pez_docker/host) and published as `mapuigsari/pez:core-amd64`. The following notes describe the original layout:
-
-### Dockerfile
-
-Builds a ROS 2 Humble container with necessary dependencies:
-
-* ROS 2 Humble (Jammy-based)
-* Essential development tools (`colcon`, joystick libraries, Navigator libs)
-* Python sensor libraries (`tsys01-python`, `ms5837-python`, `smbus2`)
-* ROS workspace setup
-
-### Entrypoint (`entrypoint.sh`)
-
-This script configures the runtime environment:
-
-* Sources ROS 2 Humble environment
-* Sources pre-built workspace setup (if available)
-* Ensures correct permissions for newly created files
-* Defaults to an interactive bash shell unless overridden by compose commands
-
-### Docker Compose (`docker-compose.yml`)
-
-Provides a ready-to-use Docker Compose setup:
-
-* Mounts workspace (`pez_ws`) and device files (joystick `/dev/input/js0`)
-* Configures GUI access through X11 (for visualization with RQT and PlotJuggler)
-* Enables interaction with the Pez robot or simulation mode
-
-#### Usage
-
-```bash
-docker-compose up --build
-```
-
-Ensure your joystick is connected before starting the container. Adjust the `DISPLAY` environment variable if needed for GUI access.
+Docker files for the host environment now live under
+[`pez_docker/host`](../pez_docker/host). See that directory’s README for
+current compose commands.
 
 ---
 

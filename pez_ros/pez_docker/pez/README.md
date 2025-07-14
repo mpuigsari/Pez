@@ -32,44 +32,33 @@ Future tags may include additional architectures as needed.
 
 ### 1. Example `docker-compose.yml` on Raspberry Pi OS (64‑bit)
 
-```yaml
-version: '3.8'
-services:
-  pez:
-    image: mapuigsari/pez:core-arm64v8
-    restart: unless-stopped    # auto-restart on reboot or failure
-    privileged: true           # allow PWM and device access
-    volumes:
-      - /dev:/dev              # expose hardware interfaces
-    environment:
-      - DISPLAY=${DISPLAY}     # for GUI tools if needed
-  # start acoustic comms by passing "comms" instead of the default bash
-  #command: ["comms"]
-```
+This repository already provides such a file. The compose services are:
 
-Save as `docker-compose.yml` and run:
+* **`pez-dev`** – interactive shell for maintenance
+* **`pez-cable`** – tele‑op over the USB tether
+* **`pez-comms`** – same launch with acoustic comms enabled
+
+Start a service with:
 
 ```bash
-docker-compose up -d
+docker compose up pez-cable
 ```
 
-### 2. Manual `docker run` with restart
+Or run a disposable shell with:
 
 ```bash
-docker run -d \
-  --name pez \
-  --privileged \
-  --restart unless-stopped \
-  -v /dev:/dev \
-  mapuigsari/pez:core-arm64v8
+docker compose run --rm pez-dev
 ```
 
-Append `comms` at the end of the command to start the acoustic teleoperation
-nodes:
+### 2. Manual `docker run`
 
 ```bash
-docker run ... mapuigsari/pez:core-arm64v8 comms
+docker run -d --name pez --privileged --restart unless-stopped \
+  -v /dev:/dev mapuigsari/pez:core-arm64v8 cable
 ```
+
+Replace `cable` with `comms` for the acoustic mode or `dev` for an
+interactive shell.
 
 No additional setup is required; the container initializes ROS 2 and launches teleop nodes automatically.
 
@@ -102,9 +91,9 @@ pez_docker/
 
 ## 🚀 Recommended Host‑side Setup
 
-To complement the onboard container, see:
-
-* [**pez\_humble**](../../pez_humble/README.md): Host‑side ROS 2 Humble environment with joystick, GUI tools, and wireless comms.
+To complement the onboard container, use the
+[**host Docker setup**](../host/README.md), which provides the laptop-side
+environment with joystick, GUI tools and acoustic communications.
 
 ---
 
