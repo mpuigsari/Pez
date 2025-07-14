@@ -52,32 +52,42 @@ This project facilitates both simulation-based testing and real-world robotic fi
 
 ## 🚀 Quick Start
 
-### Fish-side (Raspberry Pi 4, 64-bit)
+### Fish-side (Raspberry Pi 4, 64-bit)
 
-Pull and run the container:
+Pull the image and start one of the compose **modes**:
 
 ```bash
 docker pull mapuigsari/pez:core-arm64v8
-docker compose -f pez_ros/pez_docker/pez/docker-compose.yml up -d
+cd pez_ros/pez_docker/pez
+# Interactive shell for maintenance
+docker compose run --rm pez-dev
+# Tele‑op over USB
+docker compose up pez-cable
+# Tele‑op with acoustic comms
+docker compose up pez-comms
 ```
 
-To enable acoustic teleoperation add `comms` after the image name:
-`docker run ... mapuigsari/pez:core-arm64v8 comms` or set
-`command: ["comms"]` in the compose file.
+The same container image is reused – the first word after the image name
+(`dev`, `cable` or `comms`) selects the launch behaviour.
 
 ### Host-side (Ubuntu Jammy, 64-bit compatible)
 
-Clone the repository and launch the host container (`mapuigsari/pez:core-amd64`):
+Clone the repository and start the **host** container
+(`mapuigsari/pez:core-amd64`) in the desired mode:
 
 ```bash
 git clone https://github.com/mpuigsari/Pez
 cd Pez/pez_ros/pez_docker/host
-docker compose up -d
+# Short-lived dev shell
+docker compose run --rm pez-dev
+# USB/serial tether
+docker compose up pez-cable
+# Radio/MAVLink comms
+docker compose up pez-comms
 ```
 
-Plug in your joystick (and USB‑serial adapter for acoustic comms) before
-starting the container.  See [pez_core](pez_ros/pez_humble/pez_ws/src/pez_core/README.md)
-for launch commands.
+Plug in your joystick (and any serial adapters) before starting.
+See [host Docker README](pez_ros/pez_docker/host/README.md) for details.
 
 ### Native ROS2 Build (optional)
 
