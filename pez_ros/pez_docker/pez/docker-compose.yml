@@ -17,7 +17,8 @@ x-pez-common: &pez-common
 services:
   pez-dev:
     <<: *pez-common
-    command: "dev"            # shell only
+    entrypoint: ["/bin/bash", "-l"]   # <- replaces ENTRYPOINT
+    command: []            # no extra args
     container_name: pez_dev   # optional – remove if you may run >1 copy
 
   pez-cable:

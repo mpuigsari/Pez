@@ -24,8 +24,9 @@ x-pez-common: &pez-common
 services:
   pez-dev:
     <<: *pez-common
-    container_name: pez_dev           # must be unique
-    command: "dev"                    # leaves you in a bash shell
+    container_name: pez_dev
+    entrypoint: ["/bin/bash", "-l"]   # <- replaces ENTRYPOINT
+    command: []                       #    and no extra args
 
   pez-cable:
     <<: *pez-common
