@@ -129,8 +129,8 @@ Parameters can be dynamically adjusted at runtime via `rqt_reconfigure`:
 
 | Service                             | Type               | Description                           |
 | ----------------------------------- | ------------------ | ------------------------------------- |
-| `/pez/teleoperation/start_swim`     | `std_srvs/Trigger` | Starts swimming motion (tail & fins)  |
-| `/pez/teleoperation/stop_swim`      | `std_srvs/Trigger` | Stops swimming and resets PWM signals |
+| `/pez/teleoperation/swim_start`     | `std_srvs/Trigger` | Starts swimming motion (tail & fins)  |
+| `/pez/teleoperation/swim_stop`      | `std_srvs/Trigger` | Stops swimming and resets PWM signals |
 | `/pez/teleoperation/toggle_magnet`  | `std_srvs/Trigger` | Toggles electromagnet state (on/off)  |
 | `/pez/teleoperation/toggle_neutral` | `std_srvs/Trigger` | Toggles neutral buoyancy mode         |
 
