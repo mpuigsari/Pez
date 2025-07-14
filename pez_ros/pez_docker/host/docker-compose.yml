@@ -1,38 +1,37 @@
+# ---------- common settings everyone will inherit --------------------------
+x-pez-common: &pez-common
+  image: mapuigsari/pez:core-amd64
+  network_mode: host
+  volumes:
+    - ../../pez_humble/pez_ws:/pez_ws:rw
+    - /tmp/.X11-unix:/tmp/.X11-unix:ro
+    - type: tmpfs        # runtime dir for Qt/X11
+      target: /tmp/runtime-1000
+      tmpfs: { mode: 0700 }
+  devices:
+    - "/dev:/dev"
+  environment:
+    - DISPLAY=${DISPLAY}
+    - XAUTHORITY=/home/ros/.Xauthority
+    - XDG_RUNTIME_DIR=/tmp/runtime-1000
+    - LIBGL_ALWAYS_SOFTWARE=1
+    - QT_X11_NO_MITSHM=1
+  stdin_open: true
+  tty: true              # keeps an interactive shell open if you attach
+
+# ---------- service variants ----------------------------------------------
 services:
-  pez:
-    build:
-      context: ../../../
-      dockerfile: pez_ros/pez_docker/host/Dockerfile
-    image: pez_humble:latest
-    container_name: pez_humble
-    network_mode: host
-    volumes:
-      - ../../pez_humble/pez_ws:/pez_ws:rw
-      - /tmp/.X11-unix:/tmp/.X11-unix:ro
-      # mount a tmpfs for your runtime dir
-      - type: tmpfs
-        target: /tmp/runtime-1000
-        tmpfs:
-          mode: 0700
+  pez-dev:
+    <<: *pez-common
+    container_name: pez_dev           # must be unique
+    command: "dev"                    # leaves you in a bash shell
 
-    devices:
-      - "/dev:/dev"
-      #- "/dev/input:/dev/input"
-      #- "/dev/ttyUSB0:/dev/ttyUSB0"
-      #- "/dev/ttyUSB1:/dev/ttyUSB1"
+  pez-cable:
+    <<: *pez-common
+    container_name: pez_cable
+    command: "cable"                  # ros2 launch pez_core joy_launch.py
 
-    environment:
-      # X11 forwarding
-      - DISPLAY=${DISPLAY}
-      - XAUTHORITY=/home/ros/.Xauthority
-      # point Qt at a valid runtime dir
-      - XDG_RUNTIME_DIR=/tmp/runtime-1000
-      # force Mesa to use software rendering
-      - LIBGL_ALWAYS_SOFTWARE=1
-      # disable shared-memory transport (avoids MIT-SHM errors)
-      - QT_X11_NO_MITSHM=1
-    stdin_open: true   # keep STDIN open (so you get a shell)
-    tty: true          # allocate a TTY
-
-    # The image's ENTRYPOINT sources ROS and your workspace,
-    # and defaults to `bash`—so `docker-compose up` leaves you at a shell.
+  pez-comms:
+    <<: *pez-common
+    container_name: pez_comms
+    command: "comms"                  # ros2 launch … comms_flag:=true
