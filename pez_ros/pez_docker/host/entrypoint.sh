@@ -1,19 +1,38 @@
 #!/usr/bin/env bash
 set -e
 
-# 1) Make all newly created files world-writable/readable
+# ---------------------------------------------------------------------------
+#  Make all newly created files world-writable/readable
 umask 000
 
-# 2) Source ROS 2 Humble environment
+# ---------------------------------------------------------------------------
+#  ROS 2 environment
 source /opt/ros/humble/setup.bash
+source /pez_ws/install/setup.bash
 
-# 3) Source the workspace (if it's already been built)
-if [ -f /pez_ws/install/setup.bash ]; then
-  source /pez_ws/install/setup.bash
-fi
+# ---------------------------------------------------------------------------
+#  Decide what to run based on the first CLI argument
+MODE="${1:-dev}"        # default to “dev” if no arg given
+shift                   # remove the selector, pass the rest through
 
-# 4) Move into your workspace (the bound host pez_ws)
-cd /pez_ws
+case "$MODE" in
+  dev)
+    # Just drop the user into an interactive shell
+    exec bash "$@"
+    ;;
 
-# 5) Exec the given command (defaults to `bash` in your compose)
-exec "$@"
+  cable)
+    # Launch as normal (comms_flag defaults to false inside the launch file)
+    exec ros2 launch pez_core joy_launch.py "$@"
+    ;;
+
+  comms)
+    # Launch with comms_flag set to true
+    exec ros2 launch pez_core joy_launch.py comms_flag:=true "$@"
+    ;;
+
+  *)
+    echo "Usage: $0 {dev|cable|comms} [additional ROS 2 args]" >&2
+    exit 1
+    ;;
+esac

@@ -5,16 +5,29 @@ set -e
 source /opt/ros/humble/setup.bash
 source /pez_ws/install/setup.bash
 
-# --- Decide which value the launch file should get ---------------------------
-if [[ "$1" == "comms" ]]; then
-  comms_flag=true
-  shift          # drop the selector so the launch file never sees it
-else
-  comms_flag=false
-fi
+# ---------------------------------------------------------------------------
+#  Decide what to run based on the first CLI argument
+MODE="${1:-cable}"        # default to “cable” if no arg given
+shift                   # remove the selector, pass the rest through
 
-# --- Run the launch file (replace the shell with it) -------------------------
-exec ros2 launch pez_core teleop_launch.py \
-     comms_flag:=${comms_flag}
-     
-exec "$@"
+case "$MODE" in
+  dev)
+    # Just drop the user into an interactive shell
+    exec bash "$@"
+    ;;
+
+  cable)
+    # Launch as normal (comms_flag defaults to false inside the launch file)
+    exec ros2 launch pez_core teleop_launch.py comms_flag:=false "$@"
+    ;;
+
+  comms)
+    # Launch with comms_flag set to true
+    exec ros2 launch pez_core joy_launch.py comms_flag:=true "$@"
+    ;;
+
+  *)
+    echo "Usage: $0 {dev|cable|comms} [additional ROS 2 args]" >&2
+    exit 1
+    ;;
+esac
