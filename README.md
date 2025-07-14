@@ -54,11 +54,14 @@ This project facilitates both simulation-based testing and real-world robotic fi
 
 ### Fish-side (Raspberry Pi 4, 64-bit)
 
-Pull the image and start one of the compose **modes**:
+Copy the compose file from
+[`pez_docker/pez`](pez_ros/pez_docker/pez/docker-compose.yml) to the
+Raspberry Pi and start one of the **modes**. The compose file pulls the tagged
+image automatically:
 
 ```bash
-docker pull mapuigsari/pez:core-arm64v8
-cd pez_ros/pez_docker/pez
+cp pez_ros/pez_docker/pez/docker-compose.yml .
+
 # Interactive shell for maintenance
 docker compose run --rm pez-dev
 # Tele‑op over USB
@@ -67,17 +70,21 @@ docker compose up pez-cable
 docker compose up pez-comms
 ```
 
-The same container image is reused – the first word after the image name
+The same container image is reused – the first word passed to the entrypoint
 (`dev`, `cable` or `comms`) selects the launch behaviour.
 
 ### Host-side (Ubuntu Jammy, 64-bit compatible)
 
-Clone the repository and start the **host** container
-(`mapuigsari/pez:core-amd64`) in the desired mode:
+Clone the repository, copy the compose file from
+[`pez_docker/host`](pez_ros/pez_docker/host/docker-compose.yml) and start the
+**host** container (`mapuigsari/pez:core-amd64`) in the desired mode:
+
 
 ```bash
+# Clone and copy compose file
 git clone https://github.com/mpuigsari/Pez
-cd Pez/pez_ros/pez_docker/host
+cp Pez/pez_ros/pez_docker/host/docker-compose.yml ./host-compose.yml
+
 # Short-lived dev shell
 docker compose run --rm pez-dev
 # USB/serial tether

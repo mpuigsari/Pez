@@ -91,9 +91,9 @@ pez_docker/
 
 ## 🚀 Recommended Host‑side Setup
 
-To complement the onboard container, see:
-
-* [**pez\_humble**](../../pez_humble/README.md): Host‑side ROS 2 Humble environment with joystick, GUI tools, and wireless comms.
+To complement the onboard container, use the
+[**host Docker setup**](../host/README.md), which provides the laptop-side
+environment with joystick, GUI tools and acoustic communications.
 
 ---
 
