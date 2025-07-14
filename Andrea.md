@@ -11,6 +11,7 @@ Esta guía está pensada para usuarios sin experiencia en programación. Explica
   - `cable` para teleoperar con el cable USB/serie,
  - `comms` para activar el módem acústico.
 
+
 Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/mapuigsari/pez).
 
 ## 2. Usar el Pez sin módem
@@ -53,9 +54,16 @@ Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/ma
 La configuración completa de botones y ejes se encuentra en
 [`joystick_params.yaml`](pez_ros/pez_humble/pez_ws/src/pez_core/config/joystick_params.yaml).
 
+
 ## 3. Usar el Pez con módem acústico
 
 1. En el Pez (Raspberry Pi) arranca el modo de comunicaciones:
+   ```bash
+   cd Pez/pez_ros/pez_docker/pez
+   docker compose up pez-comms
+   ```
+2. En tu ordenador inicia también el host en modo `pez-comms`:
+   ```bash=======
    ```bash
    cd Pez/pez_ros/pez_docker/pez
    docker compose up pez-comms

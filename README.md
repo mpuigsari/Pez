@@ -61,6 +61,7 @@ image automatically:
 
 ```bash
 cp pez_ros/pez_docker/pez/docker-compose.yml .
+
 # Interactive shell for maintenance
 docker compose run --rm pez-dev
 # Tele‑op over USB
@@ -78,10 +79,12 @@ Clone the repository, copy the compose file from
 [`pez_docker/host`](pez_ros/pez_docker/host/docker-compose.yml) and start the
 **host** container (`mapuigsari/pez:core-amd64`) in the desired mode:
 
+
 ```bash
 # Clone and copy compose file
 git clone https://github.com/mpuigsari/Pez
 cp Pez/pez_ros/pez_docker/host/docker-compose.yml ./host-compose.yml
+
 # Short-lived dev shell
 docker compose run --rm pez-dev
 # USB/serial tether
