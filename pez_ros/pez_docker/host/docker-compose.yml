@@ -22,18 +22,17 @@ x-pez-common: &pez-common
 
 # ---------- service variants ----------------------------------------------
 services:
-  pez-dev:
+  pez-dev: # docker compose run --rm pez-dev
     <<: *pez-common
     container_name: pez_dev
-    entrypoint: ["/bin/bash", "-l"]   # <- replaces ENTRYPOINT
-    command: []                       #    and no extra args
+    entrypoint: ["/dev_entrypoint.sh"]   # <- replaces ENTRYPOINT
 
-  pez-cable:
+  pez-cable:  # docker compose up pez-cable 
     <<: *pez-common
     container_name: pez_cable
     command: "cable"                  # ros2 launch pez_core joy_launch.py
 
-  pez-comms:
+  pez-comms:  # docker compose up pez-comms
     <<: *pez-common
     container_name: pez_comms
     command: "comms"                  # ros2 launch … comms_flag:=true

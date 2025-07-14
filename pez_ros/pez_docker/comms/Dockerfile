@@ -32,5 +32,6 @@ RUN source /opt/ros/humble/setup.bash \
 # 5) Source ROS 2 and your overlay for every container start
 COPY pez_ros/pez_docker/comms/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bash"]
