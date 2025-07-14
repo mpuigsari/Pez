@@ -39,17 +39,17 @@ Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/ma
 |----------------------|-----------------------|
 | Iniciar nado         | 7 (Start/Options)     |
 | Detener motores      | 6 (Back/Select)       |
-| Activar electroimán | 2 (X)                 |
+| Activar electroimán  | 2 (X)                 |
 | Modo neutro          | 4 (Y)                 |
 
 ### Ejes principales
 
-| Movimiento                | Eje (Logitech F710)          |
-|---------------------------|------------------------------|
-| Avance / retroceso        | 4 (gatillos RT y LT)         |
+| Movimiento                | Eje (Logitech F710)            |
+|---------------------------|--------------------------------|
+| Velocidad                 | 4 (stick derecho vertical)     |
 | Giro izquierda / derecha  | 0 (stick izquierdo horizontal) |
-| Subir / bajar             | 1 (stick izquierdo vertical) |
-| Cámara (pan)              | 6 (cruceta horizontal)       |
+| Subir / bajar             | 1 (stick izquierdo vertical)   |
+| Cámara (pan)              | 6 (cruceta horizontal)         |
 
 La configuración completa de botones y ejes se encuentra en
 [`joystick_params.yaml`](pez_ros/pez_humble/pez_ws/src/pez_core/config/joystick_params.yaml).
