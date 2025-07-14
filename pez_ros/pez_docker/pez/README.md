@@ -104,7 +104,7 @@ pez_docker/
 
 To complement the onboard container, see:
 
-* [**pez\_humble**](../pez_humble/README.md): Host‑side ROS 2 Humble environment with joystick, GUI tools, and wireless comms.
+* [**pez\_humble**](../../pez_humble/README.md): Host‑side ROS 2 Humble environment with joystick, GUI tools, and wireless comms.
 
 ---
 
