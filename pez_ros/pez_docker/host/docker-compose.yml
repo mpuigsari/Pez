@@ -9,7 +9,8 @@ x-pez-common: &pez-common
       target: /tmp/runtime-1000
       tmpfs: { mode: 0700 }
   devices:
-    - "/dev:/dev"
+    - "/dev/input/:/dev/input/"  # example for input device
+    #- "dev/ttyUSB0:/dev/ttyUSB0"  # Comment this line if you don't need a serial device
   environment:
     - DISPLAY=${DISPLAY}
     - XAUTHORITY=/home/ros/.Xauthority

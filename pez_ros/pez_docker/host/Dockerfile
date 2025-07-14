@@ -20,6 +20,7 @@ RUN apt-get update \
       ros-humble-compressed-image-transport \
       ros-humble-compressed-depth-image-transport \
       ros-humble-theora-image-transport \
+      ros-humble-plotjuggler-ros \
       socat \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,13 +39,6 @@ COPY pez_ros/pez_humble/pez_ws/src/ ./src/
 RUN rosdep install --from-paths src --ignore-src -r -y \
  && source /opt/ros/humble/setup.bash \
  && colcon build --symlink-install
-
-# 5) Build PlotJuggler from source
-RUN cd src \
- && git clone https://github.com/PlotJuggler/plotjuggler_msgs.git \
- && git clone https://github.com/facontidavide/PlotJuggler.git \
- && git clone https://github.com/PlotJuggler/plotjuggler-ros-plugins.git \
- && cd ..
 
 RUN rosdep install --from-paths src --ignore-src -r -y \
  && source /opt/ros/humble/setup.bash \
