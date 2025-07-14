@@ -172,7 +172,8 @@ These allow a Noetic vehicle and a Humble host to communicate seamlessly over th
 
 ## 🤝 Contributing & License
 
-**License**: *(confirm or specify your license preference)*
+**License**: This project is licensed under the GNU General Public License v3.0.  
+See the [LICENSE](LICENSE) file for details.
 
 ---
 
