@@ -23,7 +23,7 @@ case "$MODE" in
 
   comms)
     # Launch with comms_flag set to true
-    exec ros2 launch pez_joy pez_launch.py comms_flag:=true "$@"
+    exec ros2 launch pez_core teleop_launch.py comms_flag:=true "$@"
     ;;
 
   *)

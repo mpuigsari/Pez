@@ -12,7 +12,7 @@ source /pez_ws/install/setup.bash
 
 # ---------------------------------------------------------------------------
 #  Decide what to run based on the first CLI argument
-MODE="${1:-comms}"        # default to “dev” if no arg given
+MODE="${1:-pez}"        # default to “dev” if no arg given
 shift                   # remove the selector, pass the rest through
 
 case "$MODE" in
@@ -21,13 +21,18 @@ case "$MODE" in
     exec bash "$@"
     ;;
 
-  comms)
+  pez)
     # Launch with comms_flag set to true
-    exec ros2 launch pez_joy joy_launch.py comms_flag:=true "$@"
+    exec ros2 launch pez_joy pez_launch.py comms_flag:=true robot:=pez display_flag:=false "$@"
+    ;;
+  
+  bluerov)
+    # Launch with comms_flag set to true
+    exec ros2 launch pez_joy pez_launch.py comms_flag:=true robot:=bluerov display_flag:=false "$@"
     ;;
 
   *)
-    echo "Usage: $0 {dev|cable|comms} [additional ROS 2 args]" >&2
+    echo "Usage: $0 {dev|pez|bluerov} [additional ROS 2 args]" >&2
     exit 1
     ;;
 esac

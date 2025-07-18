@@ -26,13 +26,18 @@ case "$MODE" in
     exec ros2 launch pez_joy pez_launch.py "$@"
     ;;
 
-  comms)
+  pez_comms)
     # Launch with comms_flag set to true
-    exec ros2 launch pez_joy pez_launch.py comms_flag:=true "$@"
+    exec ros2 launch pez_joy pez_launch.py comms_flag:=true robot:=pez "$@"
+    ;;
+
+  blue_comms)
+    # Launch with comms_flag set to true
+    exec ros2 launch pez_joy pez_launch.py comms_flag:=true robot:=bluerov "$@"
     ;;
 
   *)
-    echo "Usage: $0 {dev|cable|comms} [additional ROS 2 args]" >&2
+    echo "Usage: $0 {dev|cable|pez_comms|blue_comms} [additional ROS 2 args]" >&2
     exit 1
     ;;
 esac

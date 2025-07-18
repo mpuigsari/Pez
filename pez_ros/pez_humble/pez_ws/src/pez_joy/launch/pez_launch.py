@@ -60,7 +60,10 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_joy, "launch", "display_launch.py")
         ),
-        launch_arguments={"display_flag": display_flag}.items(),
+        launch_arguments={"display_flag": display_flag,
+                          "comms_flag": comms_flag,
+                          "robot": robot,
+                          }.items(),
     )
 
     bridge = IncludeLaunchDescription(

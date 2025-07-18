@@ -30,9 +30,14 @@ services:
   pez-cable:  # docker compose up pez-cable 
     <<: *pez-common
     container_name: pez_cable
-    command: "cable"                  # ros2 launch pez_core joy_launch.py
+    command: "cable"                  
 
   pez-comms:  # docker compose up pez-comms
     <<: *pez-common
     container_name: pez_comms
-    command: "comms"                  # ros2 launch … comms_flag:=true
+    command: "pez_comms"                 
+
+  bluerov-comms:  # docker compose up pez-comms
+    <<: *pez-common
+    container_name: bluerov_comms
+    command: "blue_comms" 

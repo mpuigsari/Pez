@@ -21,6 +21,10 @@ services:
     container_name: pez_comms_dev
   pez-comms:
     <<: *pez-common
-    command: "comms"          # ros2 launch pez_core joy_launch.py comms_flag:=true
+    command: "pez"          
     container_name: pez_comms
 
+  bluerov-comms:
+    <<: *pez-common
+    command: "bluerov"          
+    container_name: bluerov_comms
