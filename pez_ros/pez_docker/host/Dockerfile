@@ -40,10 +40,6 @@ RUN rosdep install --from-paths src --ignore-src -r -y \
  && source /opt/ros/humble/setup.bash \
  && colcon build --symlink-install
 
-RUN rosdep install --from-paths src --ignore-src -r -y \
- && source /opt/ros/humble/setup.bash \
- && colcon build --symlink-install
-
 # 6) Entrypoint: source ROS and both workspaces
 COPY pez_ros/pez_docker/host/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

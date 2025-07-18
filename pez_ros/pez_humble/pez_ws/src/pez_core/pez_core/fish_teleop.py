@@ -26,7 +26,7 @@ class PWMValue:
 
 
 class PwmChannel:
-    Ch9 = 9-1
+    Ch9 = 1-1
     Ch11 = 11-1
     Ch14 = 14-1
     Ch15 = 15-1
