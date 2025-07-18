@@ -44,8 +44,6 @@ RUN rosdep install --from-paths src --ignore-src -r -y \
 COPY pez_ros/pez_docker/host/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-COPY pez_ros/pez_docker/host/dev_entrypoint.sh /dev_entrypoint.sh
-RUN chmod +x /dev_entrypoint.sh
 
 RUN echo '' >> /root/.bashrc \
  && echo '# >>> ROS setup >>>'                     >> /root/.bashrc \

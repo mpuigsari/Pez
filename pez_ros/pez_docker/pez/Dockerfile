@@ -52,9 +52,6 @@ RUN source /opt/ros/humble/setup.bash \
 COPY pez_ros/pez_docker/pez/ros_entrypoint.sh /ros_entrypoint.sh
 RUN chmod +x /ros_entrypoint.sh
 
-COPY pez_ros/pez_docker/pez/dev_entrypoint.sh /dev_entrypoint.sh
-RUN chmod +x /dev_entrypoint.sh
-
 RUN echo '' >> /root/.bashrc \
  && echo '# >>> ROS setup >>>'                     >> /root/.bashrc \
  && echo 'source /opt/ros/humble/setup.bash'       >> /root/.bashrc \
