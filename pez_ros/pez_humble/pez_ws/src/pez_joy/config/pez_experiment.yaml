@@ -1,0 +1,12 @@
+# All times are offsets [s] from start-of-run ──────────────────────────────
+cmd_vel:
+  - {t: 0.0,  linear: {x:  1.0, y: 0.5, z: -0.2},  angular: {z: 0.0}}
+  - {t: 5.0,  linear: {x:  -0.5, y: -1.0, z: 0.2},  angular: {z: 0.0}}
+  - {t: 10.0,  linear: {x: 1.0, y: 0.0, z: -1.0},  angular: {z: 0.0}}
+  - {t: 15.0,  linear: {x:  0.0, y: 0.0, z: 0.0},  angular: {z: 0.0}}
+
+services:
+  - {t: 3.0,  service: pez/teleoperation/swim_start,  type: std_srvs/srv/Trigger}
+  - {t: 12.0, service: pez/teleoperation/toggle_magnet, type: std_srvs/srv/Trigger}
+  - {t: 12.0, service: get_sensor_snapshot,   type: pez_interfaces/srv/SnapSensors}
+  - {t: 18.0, service: pez/teleoperation/swim_stop,   type: std_srvs/srv/Trigger}

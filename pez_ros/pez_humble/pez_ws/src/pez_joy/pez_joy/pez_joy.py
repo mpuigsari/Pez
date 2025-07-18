@@ -10,6 +10,9 @@ from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 from std_srvs.srv import Trigger
+from pathlib import Path
+from ament_index_python.packages import get_package_share_directory
+
 
 from pez_interfaces.srv import SnapSensors
 
@@ -116,9 +119,15 @@ class JoystickController(Node):
         )
         self.create_timer(0.05, self.iterate)
 
-        # 6) Ensure a snapshots directory exists
-        self._snapshot_dir = '/home/robot-fish/snapshots'
-        os.makedirs(self._snapshot_dir, exist_ok=True)
+
+
+        # 6) snapshots directory (inside the pez_joy package)
+        pkg_root = Path(get_package_share_directory("pez_joy")).resolve()
+        snap_dir = pkg_root / "snapshots"          # → src/pez_joy/snapshots  (symlink-install)
+        snap_dir.mkdir(parents=True, exist_ok=True)
+
+        self._snapshot_dir = str(snap_dir)
+        self.get_logger().info(f"Snapshots will be stored in {self._snapshot_dir}")
 
         self.get_logger().info(f"[JoystickController] Initialized in mode {self.mode}")
 

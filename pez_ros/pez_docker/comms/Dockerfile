@@ -27,7 +27,7 @@ COPY pez_ros/pez_humble/pez_ws/src/      /pez_ws/src/
 
 RUN source /opt/ros/humble/setup.bash \
  && cd /pez_ws \
- && colcon build
+ && colcon build --symlink-install
 
 # 5) Source ROS 2 and your overlay for every container start
 COPY pez_ros/pez_docker/comms/entrypoint.sh /entrypoint.sh

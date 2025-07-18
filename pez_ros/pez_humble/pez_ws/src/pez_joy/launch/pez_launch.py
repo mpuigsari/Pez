@@ -62,7 +62,7 @@ def generate_launch_description():
         ),
         launch_arguments={"display_flag": display_flag,
                           "comms_flag": comms_flag,
-                          "robot": robot,
+                          "fish_robot": fish_robot,
                           }.items(),
     )
 

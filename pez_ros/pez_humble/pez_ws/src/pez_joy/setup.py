@@ -16,6 +16,7 @@ setup(
             'config/pez_rqt.perspective',
             'config/pez_plot.xml',
             'config/pez_joy_config.yaml',
+            'config/pez_experiment.yaml',
         ]),
         # launch files
         ('share/' + package_name + '/launch', [
@@ -23,6 +24,7 @@ setup(
             'launch/joy_launch.py',
             'launch/comms_launch.py',
             'launch/display_launch.py',
+            'launch/experiment_launch.py',
         ]),
     ],
     install_requires=['setuptools'],
@@ -36,6 +38,7 @@ setup(
         'console_scripts': [
             'bluerov_joy = pez_joy.bluerov_joy:main',
             'pez_joy     = pez_joy.pez_joy:main',
+            'command_player = pez_joy.experiment.experiment_player:main',
         ],
     },
 )
