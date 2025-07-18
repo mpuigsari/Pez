@@ -1,26 +1,26 @@
-version: '3.8'
+# ---------- factor-out the shared bits ------------------------------------
+x-pez-common: &pez-common
+  image: mapuigsari/pez:comms-arm64v8
+  network_mode: host
+  stdin_open: true
+  tty: true
+  restart: unless-stopped
+  privileged: true           # full /dev pass-through
+  volumes:
+    - /dev:/dev
+  environment:
+    - ROS_DOMAIN_ID=21
+    - LANG=C.UTF-8
+    - LC_ALL=C.UTF-8
 
+# ---------- each launch mode is its own service ---------------------------
 services:
-  pez_ros2_navigator:
-    image: mapuigsari/pez:comms-arm64v8
-    container_name: pez_ros2_comms
-    network_mode: host
-    stdin_open: true
-    tty: true
+  pez-comms-dev:
+    <<: *pez-common
+    command: "dev" 
+    container_name: pez_comms_dev
+  pez-comms:
+    <<: *pez-common
+    command: "comms"          # ros2 launch pez_core joy_launch.py comms_flag:=true
+    container_name: pez_comms
 
-    # restart automatically unless explicitly stopped
-    restart: unless-stopped
-
-    # match what BlueOS labels did: full device access
-    privileged: true
-    volumes:
-      - /dev:/dev                                       # pass through hardware
-
-    # environment
-    environment:
-      - ROS_DOMAIN_ID=21
-      - LANG=C.UTF-8
-      - LC_ALL=C.UTF-8
-
-    # drop you into bash by default
-    command: bash

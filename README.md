@@ -64,7 +64,7 @@ cp pez_ros/pez_docker/pez/docker-compose.yml .
 
 # Interactive shell for maintenance
 docker compose run --rm pez-dev
-# Tele‑op over USB
+# Tele‑op over umbilical cable
 docker compose up pez-cable
 # Tele‑op with acoustic comms
 docker compose up pez-comms

@@ -47,5 +47,12 @@ RUN chmod +x /entrypoint.sh
 COPY pez_ros/pez_docker/host/dev_entrypoint.sh /dev_entrypoint.sh
 RUN chmod +x /dev_entrypoint.sh
 
+RUN echo '' >> /root/.bashrc \
+ && echo '# >>> ROS setup >>>'                     >> /root/.bashrc \
+ && echo 'source /opt/ros/humble/setup.bash'       >> /root/.bashrc \
+ && echo '[ -f /pez_ws/install/setup.bash ] && \\' >> /root/.bashrc \
+ && echo '  source /pez_ws/install/setup.bash'     >> /root/.bashrc \
+ && echo '# <<< ROS setup <<<'                     >> /root/.bashrc
+
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bash"]

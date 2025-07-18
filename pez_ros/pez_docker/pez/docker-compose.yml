@@ -17,7 +17,7 @@ x-pez-common: &pez-common
 services:
   pez-dev:
     <<: *pez-common
-    entrypoint: ["/dev_entrypoint.sh"]   # <- replaces ENTRYPOINT
+    command: "dev" 
     container_name: pez_dev   # optional – remove if you may run >1 copy
 
   pez-cable:

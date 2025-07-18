@@ -25,7 +25,7 @@ services:
   pez-dev: # docker compose run --rm pez-dev
     <<: *pez-common
     container_name: pez_dev
-    entrypoint: ["/dev_entrypoint.sh"]   # <- replaces ENTRYPOINT
+    command: "dev" 
 
   pez-cable:  # docker compose up pez-cable 
     <<: *pez-common

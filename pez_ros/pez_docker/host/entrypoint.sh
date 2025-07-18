@@ -23,12 +23,12 @@ case "$MODE" in
 
   cable)
     # Launch as normal (comms_flag defaults to false inside the launch file)
-    exec ros2 launch pez_core joy_launch.py "$@"
+    exec ros2 launch pez_joy pez_launch.py "$@"
     ;;
 
   comms)
     # Launch with comms_flag set to true
-    exec ros2 launch pez_core joy_launch.py comms_flag:=true "$@"
+    exec ros2 launch pez_joy pez_launch.py comms_flag:=true "$@"
     ;;
 
   *)
