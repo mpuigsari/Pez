@@ -17,7 +17,7 @@ def generate_launch_description():
     display_flag = LaunchConfiguration("display_flag")
     fish_robot = LaunchConfiguration("fish_robot")
     comms_flag = LaunchConfiguration("comms_flag")
-    robot = LaunchConfiguration("robot", default="pez")
+    robot = LaunchConfiguration("robot")
 
     declare_display = DeclareLaunchArgument(
         "display_flag",
@@ -47,11 +47,12 @@ def generate_launch_description():
 
     teleop = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_joy, "launch", "teleop_launch.py")
+            os.path.join(pkg_joy, "launch", "joy_launch.py")
         ),
         launch_arguments={
             "fish_robot": fish_robot,
             "comms_flag": comms_flag,
+            "robot": robot,
         }.items(),
     )
 
@@ -64,7 +65,7 @@ def generate_launch_description():
 
     bridge = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_joy, "launch", "bridge_launch.py")
+            os.path.join(pkg_joy, "launch", "comms_launch.py")
         ),
         launch_arguments={
             "fish_robot": fish_robot,

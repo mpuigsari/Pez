@@ -19,10 +19,9 @@ setup(
         ]),
         # launch files
         ('share/' + package_name + '/launch', [
-            'launch/blueboat_launch.py',
             'launch/pez_launch.py',
-            'launch/teleop_launch.py',
-            'launch/bridge_launch.py',
+            'launch/joy_launch.py',
+            'launch/comms_launch.py',
             'launch/display_launch.py',
         ]),
     ],
