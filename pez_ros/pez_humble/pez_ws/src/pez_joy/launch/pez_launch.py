@@ -41,8 +41,9 @@ def generate_launch_description():
     # ——————————————————————————————————————————————————
     # 2) Teleop grouping logic
     # ——————————————————————————————————————————————————
-    pkg_core   = get_package_share_directory('pez_core')
-    joy_params = os.path.join(pkg_core, 'config', 'joystick_params.yaml')
+    
+    pkg_joy   = get_package_share_directory('pez_joy')
+    joy_params = os.path.join(pkg_joy, 'config', 'pez_joy_config.yaml')
 
     # /pez if no comms OR on-robot teleop
     pez_condition = PythonExpression([
@@ -56,7 +57,7 @@ def generate_launch_description():
                 parameters=[{'dev': '/dev/input/js0', 'deadzone': 0.05}],
             ),
             Node(
-                package='pez_core', executable='fish_joy', name='fish_joy_node', output='screen',
+                package='pez_joy', executable='pez_joy', name='pez_joy_node', output='screen',
                 parameters=[joy_params],
             ),
         ],
@@ -75,7 +76,7 @@ def generate_launch_description():
                 parameters=[{'dev': '/dev/input/js0', 'deadzone': 0.05}],
             ),
             Node(
-                package='pez_core', executable='fish_joy', name='fish_joy_node', output='screen',
+                package='pez_joy', executable='pez_joy', name='pez_joy_node', output='screen',
                 parameters=[joy_params],
             ),
         ],
@@ -85,6 +86,7 @@ def generate_launch_description():
     # ——————————————————————————————————————————————————
     # 3) Host-side teleop include when fish_robot == false
     # ——————————————————————————————————————————————————
+    pkg_core   = get_package_share_directory('pez_core')
     teleop_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_core, 'launch', 'teleop_launch.py')
@@ -121,8 +123,8 @@ def generate_launch_description():
     # ——————————————————————————————————————————————————
     # 5) RQT & PlotJuggler
     # ——————————————————————————————————————————————————
-    perspective = os.path.join(pkg_core, 'config', 'pez.perspective')
-    layout      = os.path.join(pkg_core, 'config', 'test.xml')
+    perspective = os.path.join(pkg_core, 'config', 'pez_rqt.perspective')
+    layout      = os.path.join(pkg_core, 'config', 'pez_plot.xml')
 
     rqt = ExecuteProcess(
         cmd=['rqt', '--perspective-file', perspective], output='screen',

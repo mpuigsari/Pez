@@ -41,9 +41,9 @@ def generate_launch_description():
         # ───────── joy_teleop  (our new bridge) ─────────────────────────────
         # Assumes you installed the script as an entry-point called “joy_teleop”
         Node(
-            package='pez_comms',               # adjust if you placed it elsewhere
-            executable='joy_teleop',
-            name='joy_teleop',
+            package='pez_joy',               # adjust if you placed it elsewhere
+            executable='bluerov_joy',
+            name='bluerov_joy',
             output='screen',
             arguments=['-c', LaunchConfiguration('teleop_config')],
         ),
