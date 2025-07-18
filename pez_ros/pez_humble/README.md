@@ -14,7 +14,8 @@ Core components include:
 
   * `pez_core`: Teleoperation, actuator control, and sensor integration (`fish_sense`).
   * `pez_comms`: Acoustic communication handling.
-* Joystick integration, visualization tools (RQT and PlotJuggler), and real-time sensor monitoring.
+  * `pez_joy`: Joystick teleoperation with optional display and comms bridge.
+* Visualization tools (RQT and PlotJuggler) and real-time sensor monitoring.
 
 ---
 
@@ -41,6 +42,14 @@ Manages acoustic modem-based communication through a YAML-configurable node:
 * Serial communication configured entirely via YAML.
 * Topic and service behaviour extendable with custom plugins.
 
+### [`pez_joy`](./pez_ws/src/pez_joy/README.md)
+
+Joystick driven teleoperation and helper launch files:
+
+* Maps joystick axes and buttons via YAML.
+* Stores sensor snapshots when the magnet is toggled off.
+* Provides `pez_launch.py` to include display and comms options.
+
 ---
 
 ## Docker Deployment
@@ -65,14 +74,14 @@ Launch the Pez robot control nodes, sensor integration, and visualization tools:
 * **Joystick Control, Sensors, and Visualization:**
 
   ```bash
-  ros2 launch pez_core joy_launch.py display_flag:=true fish_robot:=false
+  ros2 launch pez_joy pez_launch.py fish_robot:=false display_flag:=true
   ros2 run pez_core fish_sense --ros-args -p publish_tsys01_temperature:=True -p publish_ms5837_pressure:=True
   ```
 
 * **Simulation (No Robot Hardware):**
 
   ```bash
-  ros2 launch pez_core joy_launch.py fish_robot:=false display_flag:=true
+  ros2 launch pez_joy pez_launch.py fish_robot:=false display_flag:=true
   ```
 
 ---

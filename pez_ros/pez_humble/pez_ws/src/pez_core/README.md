@@ -138,18 +138,12 @@ Parameters can be dynamically adjusted at runtime via `rqt_reconfigure`:
 
 ## 6. Launch Files & Runtime Flags
 
-### `joy_launch.py`
+### Joystick Launch
 
-Joystick teleoperation with optional GUI tools.
-Parameters:
-- `display_flag` – show RQT/PlotJuggler windows when `true`.
-- `fish_robot` – `true` when running on the robot, `false` for host teleop.
-- `comms_flag` – start the acoustic bridge via `pez_comms`.
-
-Example:
-```bash
-ros2 launch pez_core joy_launch.py display_flag:=true fish_robot:=false comms_flag:=true
-```
+The old `joy_launch.py` file has moved to the dedicated
+[`pez_joy`](../pez_joy/README.md) package. Use `pez_launch.py` from that package
+to start joystick teleoperation together with optional display and comms
+bridges.
 
 ### `teleop_launch.py`
 
