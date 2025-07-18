@@ -143,6 +143,7 @@ Provides ROS 2 Humble with joystick support, visualization tools and optional ac
 
 * **[`pez_core`](pez_ros/pez_humble/pez_ws/src/pez_core/README.md)**: Teleoperation, actuator control, and sensor nodes.
 * **[`pez_comms`](pez_ros/pez_humble/pez_ws/src/pez_comms/README.md)**: YAML-driven serial communication with plugin extensibility.
+* **[`pez_joy`](pez_ros/pez_humble/pez_ws/src/pez_joy/README.md)**: Joystick teleoperation package with snapshot logging and launch helpers.
 
 ---
 

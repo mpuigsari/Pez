@@ -27,7 +27,7 @@ services:
 
   pez-comms:
     <<: *pez-common
-    command: "comms"          # ros2 launch pez_core joy_launch.py comms_flag:=true
+    command: "comms"          # ros2 launch pez_joy pez_launch.py comms_flag:=true
     container_name: pez_comms
     environment:
     - ROS_DOMAIN_ID=22
