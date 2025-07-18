@@ -141,7 +141,7 @@ def generate_launch_description():
             'framerate'       : 30.0,
             'camera_name'     : 'default_cam',
             'camera_info_url' : camera_info_url,
-            'video_device'    : '/dev/video4'
+            'video_device'    : '/dev/video0'
         }],
         condition=UnlessCondition(test_flag),
     )

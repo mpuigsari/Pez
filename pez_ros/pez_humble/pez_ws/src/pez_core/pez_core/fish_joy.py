@@ -128,38 +128,33 @@ class JoystickController(Node):
         self.process_axes()
 
     def process_buttons(self):
+        """
+        Handle button edges.
+
+        • Magnet button logic:
+            – On every edge we flip self.magnet_on and call the toggle-magnet service.
+            – No snapshot is taken here; it will be triggered from _on_response()
+            *after* a successful magnet-OFF response.
+        """
         b = self.joy_msg.buttons
 
-        # Start
+        # ── Start / Stop swim ────────────────────────────────────────────────────
         if b[self.buttons['start']] and self.mode != 0:
             self.mode = 0
             self.call_service(self.start_cli, "start")
 
-        # Stop
         if b[self.buttons['stop']] and self.mode != -1:
             self.mode = -1
             self.call_service(self.stop_cli, "stop")
 
-        # Toggle magnet
+        # ── Magnet toggle ───────────────────────────────────────────────────────
         mag_btn = bool(b[self.buttons['magnet']])
         if mag_btn and not self.prev_magnet_btn:
-            # Flip internal state
             self.magnet_on = not self.magnet_on
-
-            # Reset flags for this new cycle
-            self._pending_magnet_success   = False
-            self._pending_snapshot_success = False
-            self._last_snapshot_response   = None
-
-            # 1) Call the magnet service
             self.call_service(self.magnet_cli, "magnet")
-
-            # 2) Immediately call the snapshot service (result stored for later)
-            if self.magnet_on:
-                self._call_snapshot()
         self.prev_magnet_btn = mag_btn
 
-        # Toggle neutral
+        # ── Neutral ballast toggle ──────────────────────────────────────────────
         n_btn = bool(b[self.buttons['neutral']])
         if n_btn and not self.prev_neutral_btn:
             self.neutral_on = not self.neutral_on
@@ -176,30 +171,39 @@ class JoystickController(Node):
         fut.add_done_callback(lambda future, n=name: self._on_response(future, n))
 
     def _on_response(self, future, name):
+        """
+        Handle service responses.
+
+        • When a **magnet-OFF** response succeeds:
+            – Trigger a sensor snapshot.
+        """
         try:
             resp = future.result()
         except Exception as e:
             self.get_logger().error(f"{name} service call exception: {e}")
             return
 
-        if resp.success:
-            if name == 'magnet':
-                state = 'ON' if self.magnet_on else 'OFF'
-                self.get_logger().info(f"{name} service succeeded → magnet is now {state}")
-
-                if not self.magnet_on:
-                    self._pending_magnet_success = True
-                    # If snapshot already succeeded, write CSV now
-                    if self._pending_snapshot_success and self._last_snapshot_response is not None:
-                        self._write_snapshot_csv(self._last_snapshot_response)
-
-            elif name == 'neutral':
-                state = 'ON' if self.neutral_on else 'OFF'
-                self.get_logger().info(f"{name} service succeeded → neutral mode is now {state}")
-            else:
-                self.get_logger().info(f"{name} service succeeded")
-        else:
+        if not resp.success:
             self.get_logger().warn(f"{name} service returned failure")
+            return
+
+        # ────────────────────────────────────────────────────────────────────────
+        if name == 'neutral':
+            state = 'ON' if self.neutral_on else 'OFF'
+            self.get_logger().info(f"{name} service succeeded → neutral mode is now {state}")
+            return
+
+        if name != 'magnet':
+            self.get_logger().info(f"{name} service succeeded")
+            return
+
+        # ── Magnet success ──────────────────────────────────────────────────────
+        state = 'ON' if self.magnet_on else 'OFF'
+        self.get_logger().info(f"{name} service succeeded → magnet is now {state}")
+
+        # If the magnet was JUST TURNED OFF, capture a snapshot now
+        if not self.magnet_on:
+            self._call_snapshot()
 
     def _call_snapshot(self):
         if not self.snapshot_cli.wait_for_service(timeout_sec=5.0):
@@ -210,7 +214,12 @@ class JoystickController(Node):
         fut = self.snapshot_cli.call_async(req)
         fut.add_done_callback(self._on_snapshot_response)
 
+
     def _on_snapshot_response(self, future):
+        """
+        Write the CSV as soon as the snapshot succeeds.
+        (This function is only called after a successful magnet-OFF.)
+        """
         try:
             resp = future.result()
         except Exception as e:
@@ -221,13 +230,7 @@ class JoystickController(Node):
             self.get_logger().warn(f"Snapshot service returned failure: {resp.message}")
             return
 
-        # Mark snapshot success and store response
-        self._pending_snapshot_success = True
-        self._last_snapshot_response   = resp
-
-        # If magnet already succeeded, write CSV now
-        if self._pending_magnet_success:
-            self._write_snapshot_csv(resp)
+        self._write_snapshot_csv(resp)
 
     def _write_snapshot_csv(self, resp):
         """
