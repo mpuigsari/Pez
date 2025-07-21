@@ -22,13 +22,11 @@ case "$MODE" in
     ;;
 
   pez)
-    # Launch with comms_flag set to true
-    exec ros2 launch pez_joy pez_launch.py comms_flag:=true robot:=pez display_flag:=false "$@"
+    exec ros2 launch pez_comms host_launch.py  robot:=pez"$@"
     ;;
   
   bluerov)
-    # Launch with comms_flag set to true
-    exec ros2 launch pez_joy pez_launch.py comms_flag:=true robot:=bluerov display_flag:=false "$@"
+    exec ros2 launch pez_comms host_launch.py  robot:=bluerov"$@"
     ;;
 
   *)

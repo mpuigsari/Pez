@@ -5,13 +5,13 @@ Usage examples
 --------------
 
 # PEZ  (default)
-ros2 launch pez_joy host_launch.py
+ros2 launch pez_comms host_launch.py
 
 # BlueROV
-ros2 launch pez_joy host_launch.py robot:=bluerov
+ros2 launch pez_comms host_launch.py robot:=bluerov
 
 # Override the YAML that is passed to --config-file
-ros2 launch pez_joy host_launch.py robot:=pez \
+ros2 launch pez_comms host_launch.py robot:=pez \
                        config_file:=/tmp/custom_host.yaml
 """
 from launch import LaunchDescription
