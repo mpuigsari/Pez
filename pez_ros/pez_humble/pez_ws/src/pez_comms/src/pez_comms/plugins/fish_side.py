@@ -5,6 +5,10 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 from std_srvs.srv import Trigger
+# RTT logging
+from pez_interfaces.msg import ServiceRTT
+from builtin_interfaces.msg import Duration
+import itertools
 
 from pez_comms.core.packet_def import get_packet
 
@@ -58,6 +62,10 @@ def register(node: Node, cfg: dict):
     cam_pub = node.create_publisher(Float64, cfg['topic_camera'], 10)
     svc_map = {int(k): v for k, v in cfg['service_map'].items()}
     cam_id = int(cfg['camera_svc_id'])
+    # /service_rtt publisher
+    rtt_pub  = node.create_publisher(ServiceRTT, '/service_rtt', 10)
+    # monotonically increasing call-ID
+    call_id  = itertools.count()
 
     def handle_A(fields: dict):
         twist = Twist()
@@ -83,10 +91,13 @@ def register(node: Node, cfg: dict):
             node.get_logger().info(f"Calling service {name}")
             cli = node.create_client(Trigger, name)
             if cli.wait_for_service(timeout_sec=5.0):
+                t_request = node.get_clock().now()          # get request time (registered before)
                 fut = cli.call_async(Trigger.Request())
                 rclpy.spin_until_future_complete(node, fut, timeout_sec=2.0)
+                t_response = node.get_clock().now()         # get response time (registered after)
                 ack = fut.done() and fut.result().success
                 node.get_logger().info(f"Service {name} responded ack={ack}")
+                publish_rtt(name, t_request, t_response, ack)    # publish RTT
 
         # Camera control (boolean)
         elif sid == cam_id:
@@ -106,6 +117,20 @@ def register(node: Node, cfg: dict):
         node.modem.send_packet(pkt)
         node.get_logger().info(f"Sent PacketB_Full {'ACK' if ack else 'NACK'} resp_seq={resp_seq}: {packetB.to_hex_string(pkt)}")
 
+    def publish_rtt(service_name, t_request, t_response, success):
+        delta = t_response - t_request
+        msg   = ServiceRTT()
+        msg.service_name   = service_name
+        msg.call_id        = next(call_id)
+        msg.request_stamp  = t_request.to_msg()
+        msg.response_stamp = t_response.to_msg()
+        msg.rtt            = Duration(
+            sec      = int(delta.nanoseconds // 1_000_000_000),
+            nanosec  = int(delta.nanoseconds %  1_000_000_000))
+        msg.success = success
+        rtt_pub.publish(msg)
+
+    
     def handle_40(fields: dict):
         # fields['vx'], ['vy'], ['vz'] are already de-quantized floats ∈ [–1,1]
         twist = Twist()

@@ -66,8 +66,7 @@ def generate_launch_description() -> LaunchDescription:
     pez_params = pkg_joy_share("config", "pez_joy_config.yaml")
 
     pez_ns_cond = PythonExpression([
-        '("', robot, '" == "pez") and (("', comms_flag, '" == "false") or ("',
-        fish_robot, '" == "true"))'
+        '("', robot, '" == "pez") and (("', comms_flag, '" == "false"))' #and ("', fish_robot, '" == "true"))'
     ])
 
     pez_ns_group = GroupAction(
@@ -85,7 +84,7 @@ def generate_launch_description() -> LaunchDescription:
 
     host_ns_cond = PythonExpression([
         '("', robot, '" == "pez") and ("', comms_flag,
-        '" == "true") and ("', fish_robot, '" == "false")'
+        '" == "true")'# and ("', fish_robot, '" == "false")'
     ])
 
     host_ns_group = GroupAction(

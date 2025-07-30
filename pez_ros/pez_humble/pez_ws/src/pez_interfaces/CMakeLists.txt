@@ -11,11 +11,13 @@ message(STATUS "Python3 library:   ${Python3_LIBRARIES}")
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)  # for std_msgs/Header
+find_package(builtin_interfaces REQUIRED)  # for builtin_interfaces/Time
 
 # ─── Generate Python (and C++) service code from our .srv ───────────────────────
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SnapSensors.srv"
-  DEPENDENCIES std_msgs
+  "msg/ServiceRTT.msg"
+  DEPENDENCIES std_msgs builtin_interfaces
 )
 
 ament_export_dependencies(rosidl_default_runtime)

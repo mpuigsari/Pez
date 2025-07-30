@@ -181,7 +181,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         # Environment
-        SetEnvironmentVariable('ROS_DOMAIN_ID', '21'),
+        #SetEnvironmentVariable('ROS_DOMAIN_ID', '21'),
 
         # Launch arguments
         declare_test_flag,

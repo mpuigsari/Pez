@@ -12,6 +12,10 @@ from std_msgs.msg import Float64
 from std_srvs.srv import Trigger
 from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
+# RTT logging
+from pez_interfaces.msg import ServiceRTT
+from builtin_interfaces.msg import Duration
+import itertools
 
 
 from pez_interfaces.srv import SnapSensors
@@ -81,11 +85,16 @@ class JoystickController(Node):
             self.get_parameter('camera_topic').value,
             10
         )
-
-        # 3) Service clients for teleop calls
         ns = self.get_namespace().strip('/')
         if ns:
             ns = '/' + ns
+        # /service_rtt publisher
+        self.rtt_pub  = self.create_publisher(ServiceRTT, f"{ns}/service_rtt", 10)
+        # monotonically increasing call-ID
+        self.call_id  = itertools.count()
+
+        # 3) Service clients for teleop calls
+        
 
         self.start_cli   = self.create_client(Trigger, f"{ns}/{self.get_parameter('start_service').value}")
         self.stop_cli    = self.create_client(Trigger, f"{ns}/{self.get_parameter('stop_service').value}")
@@ -109,6 +118,7 @@ class JoystickController(Node):
         self._pending_magnet_success   = False
         self._pending_snapshot_success = False
         self._last_snapshot_response   = None
+
 
         # 5) Subscriber + timer
         self.create_subscription(
@@ -176,8 +186,34 @@ class JoystickController(Node):
             return
 
         req = Trigger.Request()
+        t_request = self.get_clock().now()
         fut = client.call_async(req)
-        fut.add_done_callback(lambda future, n=name: self._on_response(future, n))
+
+        def _cb(future, n=name, t0=t_request):
+            t1 = self.get_clock().now()
+            ok = False
+            try:
+                ok = future.result().success
+            except Exception:
+                pass                             # keep ok = False
+            self._publish_rtt(n, t0, t1, ok)    # publish RTT
+            self._on_response(future, n)        # keep existing behaviour
+
+        fut.add_done_callback(_cb)
+
+    def _publish_rtt(self, service_name, t_request, t_response, success):
+        delta = t_response - t_request
+        msg   = ServiceRTT()
+        msg.service_name   = service_name
+        msg.call_id        = next(self.call_id)
+        msg.request_stamp  = t_request.to_msg()
+        msg.response_stamp = t_response.to_msg()
+        msg.rtt            = Duration(
+            sec      = int(delta.nanoseconds // 1_000_000_000),
+            nanosec  = int(delta.nanoseconds %  1_000_000_000))
+        msg.success = success
+        self.rtt_pub.publish(msg)
+        self.get_logger().info(f"Published RTT for {service_name}: {msg.rtt.sec}s {msg.rtt.nanosec}ns, success={success}")
 
     def _on_response(self, future, name):
         """
