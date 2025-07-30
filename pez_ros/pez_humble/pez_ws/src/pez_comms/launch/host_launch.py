@@ -28,7 +28,7 @@ def _launch_setup(context, *args, **kwargs):
     robot = context.launch_configurations.get("robot", "pez")  # 'pez' | 'bluerov'
 
     # 1) Derive namespace, node-name and default YAML from the robot argument
-    ns = robot                                       # → 'pez'  or 'bluerov'
+    ns = "host"                                       # host
     node_name = f"comms_host_{robot}"                # → 'comms_host_pez' …
     cfg_basename = "host_comms.yaml" \
         if robot == "pez" else "bluerov_comms.yaml"

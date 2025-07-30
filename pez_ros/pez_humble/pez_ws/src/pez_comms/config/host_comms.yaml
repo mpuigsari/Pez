@@ -31,6 +31,6 @@ ros__parameters:
           "1": teleoperation/toggle_magnet
           "2": teleoperation/toggle_neutral
         camera_svc_id:   3
-        broadcast_rate:  4.0            # Hz for legacy A_NORMAL
+        broadcast_rate:  1.0            # Hz for legacy A_NORMAL
         ack_timeout:     5.0            # secs to wait for Packet B
         svc_wait:        5.0            # secs to wait for fish ACK

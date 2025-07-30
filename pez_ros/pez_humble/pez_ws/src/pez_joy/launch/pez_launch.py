@@ -18,6 +18,7 @@ def generate_launch_description():
     fish_robot = LaunchConfiguration("fish_robot")
     comms_flag = LaunchConfiguration("comms_flag")
     robot = LaunchConfiguration("robot")
+    experiment = LaunchConfiguration("experiment")
 
     declare_display = DeclareLaunchArgument(
         "display_flag",
@@ -39,6 +40,11 @@ def generate_launch_description():
         default_value="pez",
         description="Robot variant to use with the comms bridge (pez or bluerov)",
     )
+    delare_experiment = DeclareLaunchArgument(
+        "experiment",
+        default_value="false",
+        description="If true, launch the experiment player instead of joy_player",
+    )
 
     set_domain = SetEnvironmentVariable("ROS_DOMAIN_ID", "21")
 
@@ -53,6 +59,7 @@ def generate_launch_description():
             "fish_robot": fish_robot,
             "comms_flag": comms_flag,
             "robot": robot,
+            "experiment": experiment,
         }.items(),
     )
 
@@ -93,6 +100,7 @@ def generate_launch_description():
             declare_fish,
             declare_comms,
             declare_robot,
+            delare_experiment,
             teleop,
             teleop_include,
             bridge,

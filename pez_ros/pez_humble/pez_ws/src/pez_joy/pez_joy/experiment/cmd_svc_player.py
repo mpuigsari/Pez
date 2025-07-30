@@ -52,7 +52,7 @@ resolve_service_type._cache = {}
 
 
 class CommandPlayer(Node):
-    def __init__(self, yaml_file: str, namespace: str = "pez", rate_hz: float = 20.0):
+    def __init__(self, yaml_file: str, rate_hz: float = 20.0):
         super().__init__("command_player")
 
         # ─── Load YAML ────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ class CommandPlayer(Node):
             self.get_logger().warn("No cmd_vel entries found; publishing zeros.")
 
         # ─── Publisher & timer ────────────────────────────────────────────
-        self.cmd_pub = self.create_publisher(Twist, f"{namespace}/cmd_vel", 10)
+        self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
 
         self.active_twist = Twist()
         self._update_active_twist(initial=True)
@@ -150,7 +150,6 @@ class CommandPlayer(Node):
 def main():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-f", "--file", required=True, help="YAML script file")
-    parser.add_argument("-n", "--namespace", default="pez")
     parser.add_argument("-r", "--rate_hz", type=float, default=20.0,
                         help="Publish frequency (default 20 Hz)")
 
@@ -158,7 +157,7 @@ def main():
     args = parser.parse_args(clean)
 
     rclpy.init(args=sys.argv)
-    node = CommandPlayer(args.file, args.namespace, args.rate_hz)
+    node = CommandPlayer(args.file, args.rate_hz)
 
     try:
         rclpy.spin(node)

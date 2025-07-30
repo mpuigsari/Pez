@@ -14,6 +14,8 @@ from launch.substitutions import (
     PythonExpression,
     PathJoinSubstitution,
 )
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node, PushRosNamespace
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
@@ -55,49 +57,61 @@ def generate_launch_description() -> LaunchDescription:
         ),
         description="BlueROV joystick-mapping YAML.",
     )
+    experiment_arg = DeclareLaunchArgument(
+        "experiment", default_value="false",
+        description="true → sustituye joy_node por experiment_launch.",
+    )
 
     # handles
     robot      = LaunchConfiguration("robot")
     comms_flag = LaunchConfiguration("comms_flag")
-    fish_robot = LaunchConfiguration("fish_robot")
     joy_dev    = LaunchConfiguration("joy_dev")
+    experiment = LaunchConfiguration("experiment")
+
 
     # ─────────── PEZ branch ─────────────────────────────────
     pez_params = pkg_joy_share("config", "pez_joy_config.yaml")
 
-    pez_ns_cond = PythonExpression([
-        '("', robot, '" == "pez") and (("', comms_flag, '" == "false"))' #and ("', fish_robot, '" == "true"))'
-    ])
+    # ---------- el namespace que toca ----------
+    # pez  + !comms   => "pez"
+    # pez  +  comms   => "host"
+    # bluerov         => "bluerov"   (fuera de este grupo)
+    ns_name = PythonExpression([
+    '"bluerov" if "', robot, '" == "bluerov" else ('
+    '"host" if "', comms_flag, '" == "true" else "pez")'
+])
 
-    pez_ns_group = GroupAction(
+    pez_group = GroupAction(
         [
-            PushRosNamespace("pez"),
-            Node(package="joy", executable="joy_node",
-                 name="joy_node", output="screen",
-                 parameters=[{"dev": joy_dev, "deadzone": 0.05}]),
-            Node(package="pez_joy", executable="pez_joy",
-                 name="pez_joy_node", output="screen",
-                 parameters=[pez_params]),
-        ],
-        condition=IfCondition(pez_ns_cond),
-    )
+            # El namespace cambia según el modo
+            PushRosNamespace(ns_name),
 
-    host_ns_cond = PythonExpression([
-        '("', robot, '" == "pez") and ("', comms_flag,
-        '" == "true")'# and ("', fish_robot, '" == "false")'
-    ])
+            # 1) Launch JOY de siempre (si experiment==false)
+            Node(
+                package="joy", executable="joy_node",
+                name="joy_node", output="screen",
+                parameters=[{"dev": joy_dev, "deadzone": 0.05}],
+                condition=IfCondition(PythonExpression(["'", experiment, "' == 'false'"]))
+            ),
 
-    host_ns_group = GroupAction(
-        [
-            PushRosNamespace("host"),
-            Node(package="joy", executable="joy_node",
-                 name="joy_node", output="screen",
-                 parameters=[{"dev": joy_dev, "deadzone": 0.05}]),
-            Node(package="pez_joy", executable="pez_joy",
-                 name="pez_joy_node", output="screen",
-                 parameters=[pez_params]),
+            # 2) Launch experimental (si experiment==true)
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    PathJoinSubstitution([FindPackageShare("pez_joy"), "launch", "experiment_launch.py"])
+                ),
+                launch_arguments={
+                    "namespace": ns_name,
+                }.items(),
+                condition=IfCondition(PythonExpression(["'", experiment, "' == 'true'"]))
+            ),
+            Node(
+                package="pez_joy", executable="pez_joy",
+                name="pez_joy_node", output="screen",
+                parameters=[ pez_params ],
+            ),
         ],
-        condition=IfCondition(host_ns_cond),
+        # Sólo si robot == pez   (para bluerov usarías otro group)
+        condition=IfCondition(PythonExpression(['"', robot, '" == "pez"'])),
     )
 
     # ─────────── BlueROV branch ─────────────────────────────
@@ -120,5 +134,5 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription([
         robot_arg, comms_arg, fish_arg,
         joy_arg, ns_arg, teleop_cfg_arg,
-        pez_ns_group, host_ns_group, bluerov_group,
+        pez_group, bluerov_group,
     ])

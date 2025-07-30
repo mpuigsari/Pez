@@ -29,7 +29,7 @@ display_flag = LaunchConfiguration("display_flag", default="true")
 fish_robot        = LaunchConfiguration("fish_robot", default="true",)
 comms_flag   = LaunchConfiguration("comms_flag", default="false")
 
-# ─────────────────── conditional ROS_DOMAIN_ID=22 ───────────────
+"""# ─────────────────── conditional ROS_DOMAIN_ID=22 ───────────────
 pez_comms_cond = PythonExpression(
     ['"', fish_robot, '" == "true" and "', comms_flag, '" == "true" and "', display_flag, '" == "true"']
 )
@@ -38,7 +38,12 @@ set_domain_22 = SetEnvironmentVariable(
     name="ROS_DOMAIN_ID",
     value="22",
     condition=IfCondition(pez_comms_cond),
+rqt_2 = ExecuteProcess(
+    cmd=["rqt", "--perspective-file", perspective],
+    output="screen",
+    condition=IfCondition(pez_comms_cond),
 )
+)"""
 
 # ────────────────────────── GUI processes ───────────────────────
 rqt = ExecuteProcess(
@@ -46,11 +51,7 @@ rqt = ExecuteProcess(
     output="screen",
     condition=IfCondition(display_flag),
 )
-rqt_2 = ExecuteProcess(
-    cmd=["rqt", "--perspective-file", perspective],
-    output="screen",
-    condition=IfCondition(pez_comms_cond),
-)
+
 pj  = ExecuteProcess(
     cmd=["ros2", "run", "plotjuggler", "plotjuggler", "--layout", layout],
     output="screen",
@@ -62,8 +63,6 @@ def generate_launch_description():
     return LaunchDescription(
         [
             rqt,
-            set_domain_22,
-            rqt_2,
             pj,
         ]
     )

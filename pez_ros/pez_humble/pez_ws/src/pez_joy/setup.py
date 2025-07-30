@@ -38,7 +38,9 @@ setup(
         'console_scripts': [
             'bluerov_joy = pez_joy.bluerov_joy:main',
             'pez_joy     = pez_joy.pez_joy:main',
-            'command_player = pez_joy.experiment.experiment_player:main',
+            'command_player = pez_joy.experiment.cmd_svc_player:main',
+            'joy_player = pez_joy.experiment.joy_player:main',
+
         ],
     },
 )
