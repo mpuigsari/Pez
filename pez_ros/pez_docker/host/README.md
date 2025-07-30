@@ -19,5 +19,5 @@ The provided `docker-compose.yml` defines three services:
 | `pez-cable` | `entrypoint.sh cable`           | USB/serial tele-op               |
 | `pez-comms` | `entrypoint.sh comms`           | radio/MAVLink mode               |
 
-Copy this file to your machine and start a mode with `docker compose up pez-cable` (foreground) or `docker compose run --rm pez-dev` for a temporary shell. The compose file pulls the required image automatically. Plug in the joystick and any serial adapters before launching.
+Copy this file to your machine and start a mode with `docker compose up pez-cable` (foreground) or `docker compose run pez-dev` for a temporary shell. The compose file pulls the required image automatically. Plug in the joystick and any serial adapters before launching.
 
