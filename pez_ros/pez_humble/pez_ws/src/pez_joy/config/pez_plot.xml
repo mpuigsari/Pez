@@ -3,44 +3,60 @@
  <tabbed_widget parent="main_window" name="Main Window">
   <Tab containers="1" tab_name="tab1">
    <Container>
-    <DockSplitter count="2" sizes="0.5;0.5" orientation="-">
-     <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
+    <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
+     <DockSplitter orientation="|" sizes="0.5;0.5" count="2">
       <DockArea name="...">
-       <plot flip_x="false" mode="TimeSeries" style="Lines" flip_y="false">
-        <range left="3.549728" bottom="-1.050000" right="8.550575" top="1.050000"/>
+       <plot flip_y="false" style="Lines" flip_x="false" mode="TimeSeries">
+        <range left="169.078313" right="180.581692" bottom="-1.050000" top="1.050000"/>
         <limitY max="1.05" min="-1.05"/>
-        <curve name="/pez/cmd_vel/linear/x" color="#1f77b4"/>
-        <curve name="/pez/cmd_vel/linear/y" color="#d62728"/>
-        <curve name="/pez/cmd_vel/linear/z" color="#1ac938"/>
+        <curve color="#1f77b4" name="/pez/cmd_vel/linear/x"/>
+        <curve color="#d62728" name="/pez/cmd_vel/linear/y"/>
+        <curve color="#1ac938" name="/pez/cmd_vel/linear/z"/>
        </plot>
       </DockArea>
       <DockArea name="...">
-       <plot flip_x="false" mode="TimeSeries" style="Lines" flip_y="false">
-        <range left="3.549728" bottom="149.175000" right="8.550575" top="309.825000"/>
+       <plot flip_y="false" style="Lines" flip_x="false" mode="TimeSeries">
+        <range left="169.078313" right="180.581692" bottom="149.175000" top="309.825000"/>
         <limitY max="309.825" min="149.175"/>
-        <curve name="/pez/pwm/data[1]" color="#f14cc1"/>
-        <curve name="/pez/pwm/data[2]" color="#9467bd"/>
+        <curve color="#f14cc1" name="/pez/pwm/data[1]"/>
+        <curve color="#9467bd" name="/pez/pwm/data[2]"/>
        </plot>
       </DockArea>
      </DockSplitter>
      <DockArea name="...">
-      <plot flip_x="false" mode="TimeSeries" style="LinesAndDots" flip_y="false">
-       <range left="3.549728" bottom="179.125000" right="8.550575" top="425.875000"/>
+      <plot flip_y="false" style="LinesAndDots" flip_x="false" mode="TimeSeries">
+       <range left="169.078313" right="180.581692" bottom="179.125000" top="425.875000"/>
        <limitY max="425.875" min="179.125"/>
-       <curve name="/pez/pwm/data[0]" color="#ff7f0e"/>
+       <curve color="#ff7f0e" name="/pez/pwm/data[0]"/>
       </plot>
      </DockArea>
     </DockSplitter>
    </Container>
   </Tab>
-  <currentTabIndex index="0"/>
+  <Tab containers="1" tab_name="tab2">
+   <Container>
+    <DockSplitter orientation="-" sizes="1" count="1">
+     <DockArea name="...">
+      <plot flip_y="false" style="Sticks" flip_x="false" mode="TimeSeries">
+       <range left="0.000000" right="180.582032" bottom="-0.187651" top="42.495682"/>
+       <limitY/>
+       <curve color="#1f77b4" name="rt_ms_stop"/>
+       <curve color="#d62728" name="rtt_ms_start"/>
+       <curve color="#1ac938" name="rtt_ms_magnet"/>
+       <curve color="#ff7f0e" name="rtt_ms_neutral"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="1"/>
  </tabbed_widget>
  <use_relative_time_offset enabled="1"/>
  <!-- - - - - - - - - - - - - - - -->
  <!-- - - - - - - - - - - - - - - -->
  <Plugins>
   <plugin ID="DataLoad CSV">
-   <parameters time_axis="" delimiter="0"/>
+   <parameters delimiter="0" time_axis=""/>
   </plugin>
   <plugin ID="DataLoad MCAP"/>
   <plugin ID="DataLoad ROS2 bags">
@@ -58,7 +74,7 @@
    <max_array_size value="100"/>
    <boolean_strings_to_number value="true"/>
    <remove_suffix_from_strings value="true"/>
-   <selected_topics value="/pez/cmd_vel;/pez/pwm"/>
+   <selected_topics value="/pez/cmd_vel;/pez/service_rtt_magnet;/pez/service_rtt_neutral;/pez/service_rtt_start;/pez/service_rtt_stop;/pez/pwm"/>
   </plugin>
   <plugin ID="UDP Server"/>
   <plugin ID="WebSocket Server"/>
@@ -76,7 +92,40 @@
  <previouslyLoaded_Datafiles/>
  <previouslyLoaded_Streamer name="ROS2 Topic Subscriber"/>
  <!-- - - - - - - - - - - - - - - -->
- <customMathEquations/>
+ <customMathEquations>
+  <snippet name="rtt_ms_neutral">
+   <global></global>
+   <function>return value/1e6 + v1*1000</function>
+   <linked_source>/pez/service_rtt_neutral/rtt/nanosec</linked_source>
+   <additional_sources>
+    <v1>/pez/service_rtt_neutral/rtt/sec</v1>
+   </additional_sources>
+  </snippet>
+  <snippet name="rtt_ms_magnet">
+   <global></global>
+   <function>return value/1e6 + v1*1000</function>
+   <linked_source>/pez/service_rtt_magnet/rtt/nanosec</linked_source>
+   <additional_sources>
+    <v1>/pez/service_rtt_magnet/rtt/sec</v1>
+   </additional_sources>
+  </snippet>
+  <snippet name="rt_ms_stop">
+   <global></global>
+   <function>return value/1e6 + v1*1000</function>
+   <linked_source>/pez/service_rtt_stop/rtt/nanosec</linked_source>
+   <additional_sources>
+    <v1>/pez/service_rtt_stop/rtt/sec</v1>
+   </additional_sources>
+  </snippet>
+  <snippet name="rtt_ms_start">
+   <global></global>
+   <function>return value/1e6 + v1*1000</function>
+   <linked_source>/pez/service_rtt_start/rtt/nanosec</linked_source>
+   <additional_sources>
+    <v1>/pez/service_rtt_start/rtt/sec</v1>
+   </additional_sources>
+  </snippet>
+ </customMathEquations>
  <snippets/>
  <!-- - - - - - - - - - - - - - - -->
 </root>

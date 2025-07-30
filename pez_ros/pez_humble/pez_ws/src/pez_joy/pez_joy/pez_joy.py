@@ -88,10 +88,17 @@ class JoystickController(Node):
         ns = self.get_namespace().strip('/')
         if ns:
             ns = '/' + ns
-        # /service_rtt publisher
-        self.rtt_pub  = self.create_publisher(ServiceRTT, f"{ns}/service_rtt", 10)
+        
         # monotonically increasing call-ID
         self.call_id  = itertools.count()
+        # ── One RTT topic per service ───────────────────────────────────────────
+        # Map "start" → Publisher(/service_rtt_start), etc.
+        self.rtt_pubs = {}
+        for key in ("start", "stop", "magnet", "neutral"):
+            topic = f"{ns}/service_rtt_{key}"
+            self.rtt_pubs[key] = self.create_publisher(ServiceRTT, topic, 10)
+            self.get_logger().info(f"RTT for {key} will be published on {topic}")
+
 
         # 3) Service clients for teleop calls
         
@@ -202,6 +209,10 @@ class JoystickController(Node):
         fut.add_done_callback(_cb)
 
     def _publish_rtt(self, service_name, t_request, t_response, success):
+        """
+        Publish the RTT message on /service_rtt_<service_name>.
+        Falls back to the generic /service_rtt if the key is not pre-defined.
+        """
         delta = t_response - t_request
         msg   = ServiceRTT()
         msg.service_name   = service_name
@@ -209,11 +220,20 @@ class JoystickController(Node):
         msg.request_stamp  = t_request.to_msg()
         msg.response_stamp = t_response.to_msg()
         msg.rtt            = Duration(
-            sec      = int(delta.nanoseconds // 1_000_000_000),
-            nanosec  = int(delta.nanoseconds %  1_000_000_000))
-        msg.success = success
-        self.rtt_pub.publish(msg)
-        self.get_logger().info(f"Published RTT for {service_name}: {msg.rtt.sec}s {msg.rtt.nanosec}ns, success={success}")
+            sec     = int(delta.nanoseconds // 1_000_000_000),
+            nanosec = int(delta.nanoseconds %  1_000_000_000))
+        msg.success        = success
+
+        pub = self.rtt_pubs.get(service_name)   # fallback allowed
+        if pub is not None:
+            pub.publish(msg)
+        else:
+            self.get_logger().warn(
+                f"No RTT publisher for service '{service_name}'. Message dropped.")
+
+        self.get_logger().debug(
+            f"RTT {service_name}: {msg.rtt.sec}s {msg.rtt.nanosec}ns  ok={success}")
+
 
     def _on_response(self, future, name):
         """
