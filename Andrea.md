@@ -63,16 +63,11 @@ La configuración completa de botones y ejes se encuentra en
    docker compose up pez-comms
    ```
 2. En tu ordenador inicia también el host en modo `pez-comms`:
-   ```bash=======
    ```bash
    cd Pez/pez_ros/pez_docker/pez
    docker compose up pez-comms
    ```
-2. En tu ordenador inicia también el host en modo `pez-comms`:
-   ```bash
-   cd Pez/pez_ros/pez_docker/host
-   docker compose up pez-comms
-   ```
+
 3. Los contenedores lanzarán automáticamente los nodos con la opción de comunicaciones activada.
 
 ## 4. Más información

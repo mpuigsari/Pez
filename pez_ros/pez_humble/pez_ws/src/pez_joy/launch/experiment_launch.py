@@ -36,7 +36,7 @@ def generate_launch_description():
     )
     timer_arg = DeclareLaunchArgument(
         "timer",
-        default_value="4.0",
+        default_value="5.0",
         description="Timer frequency for joy_player (Hz, default=4.0)",
     )
     

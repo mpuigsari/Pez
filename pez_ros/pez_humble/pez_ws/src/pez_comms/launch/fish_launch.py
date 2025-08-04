@@ -35,6 +35,7 @@ def generate_launch_description():
             package='pez_comms',
             executable='comms',
             name='comms_fish',
+            namespace=ns,
             output='screen',
             arguments=[ '--config-file', config ],
 

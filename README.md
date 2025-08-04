@@ -60,10 +60,12 @@ Raspberry Pi and start one of the **modes**. The compose file pulls the tagged
 image automatically:
 
 ```bash
+# Clone and copy compose file
+git clone https://github.com/mpuigsari/Pez
 cp pez_ros/pez_docker/pez/docker-compose.yml .
 
 # Interactive shell for maintenance
-docker compose run --rm pez-dev
+docker compose run pez-dev
 # Tele‑op over umbilical cable
 docker compose up pez-cable
 # Tele‑op with acoustic comms
@@ -83,10 +85,10 @@ Clone the repository, copy the compose file from
 ```bash
 # Clone and copy compose file
 git clone https://github.com/mpuigsari/Pez
-cp Pez/pez_ros/pez_docker/host/docker-compose.yml ./host-compose.yml
+cp Pez/pez_ros/pez_docker/host/docker-compose.yml .
 
 # Short-lived dev shell
-docker compose run --rm pez-dev
+docker compose run pez-dev
 # USB/serial tether
 docker compose up pez-cable
 # Radio/MAVLink comms
@@ -99,10 +101,9 @@ See [host Docker README](pez_ros/pez_docker/host/README.md) for details.
 ### Native ROS2 Build (optional)
 
 ```bash
-cd ~/pez_ws/src
-git clone https://github.com/mpuigsari/Pez pez_core
-git clone https://github.com/mpuigsari/Pez pez_comms
-cd ~/pez_ws
+git clone https://github.com/mpuigsari/Pez
+
+cd Pez/pez_ros/pez_humble/pez_ws
 colcon build
 source install/setup.bash
 ```
@@ -139,6 +140,14 @@ Provides ROS 2 Humble with joystick support, visualization tools and optional ac
 
 ---
 
+## 🖥️ Buoy-side Container
+
+Provides ROS 2 Humble image for buoy to serve as a bridge between host and accoustic modem. The container tag is `mapuigsari/pez:comms-arm64`.
+
+* [pez\_docker/comms](pez_ros/pez_docker/comms/README.md)
+
+---
+
 ## 🔧 Core ROS Packages
 
 * **[`pez_core`](pez_ros/pez_humble/pez_ws/src/pez_core/README.md)**: Teleoperation, actuator control, and sensor nodes.
@@ -151,8 +160,6 @@ Provides ROS 2 Humble with joystick support, visualization tools and optional ac
 
 Custom lightweight packets are defined in `pez_comms/core/packet_def.py`:
 
-* **PacketA_Normal** – 8‑bit thruster commands for simple motion.
-* **PacketB_Command** – 8‑bit service request/response format.
 * **Packet40** – 32‑bit velocity + service field packet for ROS 2 teleop.
 * **PacketB_Full** – 32‑bit service command with CRC protection.
 * **PacketBlueRov** – 32‑bit twist packet for BlueROV2 control.
@@ -164,10 +171,6 @@ These allow a Noetic vehicle and a Humble host to communicate seamlessly over th
 ## 🚧 Future Work & Roadmap
 
 * **Packet C Implementation** – extended packet carrying 6‑DoF pose data
-* **Forward Error Correction (FEC)** – improve reliability of acoustic transmissions
-* **Boya Surface Buoy** – Wi‑Fi link to host and acoustic link to fish for increased range
-* **Additional Architectures** – Docker support for multiple hardware platforms
-* **Enhanced Simulation Environment** – improved simulation tools and automated testing
 
 ---
 
