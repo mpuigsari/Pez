@@ -9,7 +9,7 @@ Esta guía está pensada para usuarios sin experiencia en programación. Explica
 - **Modos**: tanto el Pez como el host comparten tres modos de arranque:
   - `dev` para una consola interactiva,
   - `cable` para teleoperar con el cable USB/serie,
- - `comms` para activar el módem acústico.
+  - `comms` para activar el módem acústico.
 
 
 Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/mapuigsari/pez).
@@ -26,12 +26,13 @@ Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/ma
    ```bash
    docker compose up pez-cable
    ```
-4. Cuando termines, detén los contenedores con `docker compose down`.
-5. Para una terminal temporal dentro del contenedor puedes usar:
+4. Usa el joystick para mover el pez y visualiza datos con RQT o PlotJuggler.
+5. Cuando termines, detén los contenedores con `Ctrl+C` o `docker compose down`.
+6. Para una terminal temporal dentro del contenedor puedes usar:
    ```bash
    docker compose run --rm pez-dev
    ```
-6. Usa el joystick para mover el pez y visualiza datos con RQT o PlotJuggler.
+
 
 ### Mapa básico de botones
 
@@ -40,7 +41,7 @@ Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/ma
 | Iniciar nado         | 7 (Start/Options)     |
 | Detener motores      | 6 (Back/Select)       |
 | Activar electroimán  | 2 (X)                 |
-| Modo neutro          | 4 (Y)                 |
+| Modo neutro          | 4 (LB)                 |
 
 ### Ejes principales
 
@@ -59,12 +60,12 @@ La configuración completa de botones y ejes se encuentra en
 
 1. En el Pez (Raspberry Pi) arranca el modo de comunicaciones:
    ```bash
-   cd Pez/pez_ros/pez_docker/pez
+   cd pez
    docker compose up pez-comms
    ```
 2. En tu ordenador inicia también el host en modo `pez-comms`:
    ```bash
-   cd Pez/pez_ros/pez_docker/pez
+   cd Pez/pez_ros/pez_docker/host
    docker compose up pez-comms
    ```
 
