@@ -72,7 +72,7 @@ class CommandPlayer(Node):
             self.get_logger().warn("No cmd_vel entries found; publishing zeros.")
 
         # ─── Publisher & timer ────────────────────────────────────────────
-        self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.cmd_pub = self.create_publisher(Twist, 'pez/cmd_vel', 10)
 
         self.active_twist = Twist()
         self._update_active_twist(initial=True)

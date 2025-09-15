@@ -28,7 +28,7 @@ def generate_launch_description():
             description='Serial port for fish-side (e.g. /tmp/pez_fish)'),
 
         # 3) Push the fish namespace
-        #PushRosNamespace(ns),
+        PushRosNamespace(ns),
 
         # 4) Launch the generic comms node, passing the YAML + override
         Node(

@@ -150,7 +150,7 @@ class SensorsNode(Node):
         (Re)create publishers for each sensor whose flag is True.
         Stores them in self.sensor_publishers[key] = Publisher or None.
         """
-        ns = self.get_namespace().strip('/')
+        ns = False #self.get_namespace().strip('/')
         prefix = f"{ns}/" if ns else ""
 
         # Clear old publishers

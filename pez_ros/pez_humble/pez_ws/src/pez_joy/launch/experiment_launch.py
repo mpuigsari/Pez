@@ -30,7 +30,7 @@ def generate_launch_description():
 
     mode_arg = DeclareLaunchArgument(
         "mode",
-        default_value="joy",
+        default_value="cmd",
         choices=["cmd", "joy"],
         description='Which executable to launch: "cmd" = command_player, "joy" = joy_player',
     )
@@ -46,12 +46,12 @@ def generate_launch_description():
     rate_hz   = LaunchConfiguration("rate_hz")
     mode      = LaunchConfiguration("mode")
     timer_sec = LaunchConfiguration("timer")
-    """ns_arg = DeclareLaunchArgument(
+    ns_arg = DeclareLaunchArgument(
         "namespace",
         default_value="pez",
         description="ROS namespace for the pez robot (ignored for cmd_player)",
     )
-    namespace = LaunchConfiguration("namespace")"""
+    namespace = LaunchConfiguration("namespace")
 
     # ─────── Nodes with conditions ───────────────────────────────────────
 
@@ -86,12 +86,12 @@ def generate_launch_description():
     # ─────── LaunchDescription ───────────────────────────────────────────
     return LaunchDescription(
         [
-            # set_domain,                 # uncomment if you really need it
+            set_domain,                 # uncomment if you really need it
             script_arg,
             rate_arg,
             mode_arg,
             timer_arg,
-            #ns_arg,
+            ns_arg,
             namespace_group,
         ]
     )
