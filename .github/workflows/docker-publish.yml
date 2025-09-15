@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         include:
-          # AMD64 job: build from pez_humble/Dockerfile, context=pez_ros/pez_humble, tag=:amd64
+          # AMD64 core job: build from pez_humble/Dockerfile, context=pez_ros/pez_humble, tag=:amd64
           - arch: linux/amd64
             context: .
             dockerfile: pez_ros/pez_docker/host/Dockerfile
