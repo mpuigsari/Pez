@@ -15,8 +15,12 @@ Esta guía está pensada para usuarios sin experiencia en programación. Explica
 Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/mapuigsari/pez).
 
 ## 2. Usar el Pez sin módem
-
-1. Clona este repositorio en tu ordenador:
+1a. En el Pez (Raspberry Pi) arranca el modo de teleoperado por cable:
+   ```bash
+   cd pez
+   docker compose up pez-cable
+   ```
+1b. Clona este repositorio en tu ordenador:
    ```bash
    git clone https://github.com/mpuigsari/Pez
    cd Pez/pez_ros/pez_docker/host
@@ -26,9 +30,10 @@ Los contenedores están disponibles en [Docker Hub](https://hub.docker.com/r/ma
    ```bash
    docker compose up pez-cable
    ```
-4. Usa el joystick para mover el pez y visualiza datos con RQT o PlotJuggler.
-5. Cuando termines, detén los contenedores con `Ctrl+C` o `docker compose down`.
-6. Para una terminal temporal dentro del contenedor puedes usar:
+4. Usa el joystick para mover el pez y visualiza datos con RQT o PlotJuggler
+   (para visualizar gráficas de PlotJuggler correctamente, inicia el nado y mueve ambos joysticks antes de ejecutar el Subscriber a los tópicos).
+6. Cuando termines, detén los contenedores con `Ctrl+C` o `docker compose down`.
+7. Para una terminal temporal dentro del contenedor puedes usar:
    ```bash
    docker compose run --rm pez-dev
    ```
