@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'pez_ros/pez_docker/**'
-      - 'pez_ros/pez_humble/src/**'
+      - 'pez_ros/pez_humble/pez_ws/src/**'
       - '.github/workflows/docker-publish.yml'
 
 jobs:
