@@ -9,6 +9,6 @@ cmd_vel:
   - {t: 31.0,  linear: {x:  0.0, y: 0.0, z: 1.0},  angular: {z: 0.0}}
 
 services:
-#  - {t: 0.0, service: pez/teleoperation/toggle_magnet, type: std_srvs/srv/Trigger}
-  - {t: 0.0,  service: pez/teleoperation/swim_start,  type: std_srvs/srv/Trigger}
-  - {t: 36.0, service: pez/teleoperation/swim_stop,   type: std_srvs/srv/Trigger}
+#  - {t: 0.0, service: teleoperation/toggle_magnet, type: std_srvs/srv/Trigger}
+  - {t: 0.0,  service: teleoperation/swim_start,  type: std_srvs/srv/Trigger}
+  - {t: 36.0, service: teleoperation/swim_stop,   type: std_srvs/srv/Trigger}
