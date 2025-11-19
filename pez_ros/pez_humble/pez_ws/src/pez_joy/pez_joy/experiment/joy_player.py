@@ -41,7 +41,7 @@ class JoyScheduler(Node):
 
         # -------------------- Parameters --------------------
         self.declare_parameter('timer_sec', 4.0)   # ⏲️ NEW
-        self.declare_parameter('topic', 'pez/joy')
+        self.declare_parameter('topic', 'joy')
         self.declare_parameter('num_buttons', 12)
         self.declare_parameter('axis_count', 8)
         self.declare_parameter('sequence', [7, 2, 4, 4, 2, 6])
