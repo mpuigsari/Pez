@@ -19,6 +19,8 @@ setup(
             'config/fish_comms.yaml',
             'config/host_comms.yaml',
             'config/bluerov_comms.yaml',
+            'config/fish_comms_test.yaml',
+            'config/host_comms_test.yaml',
         ]),
         ('share/pez_comms/launch', [
             'launch/comms_launch.py',

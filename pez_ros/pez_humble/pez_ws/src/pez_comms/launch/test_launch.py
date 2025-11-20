@@ -13,8 +13,8 @@ def generate_launch_description():
     host_ns   = 'host'
 
     share = FindPackageShare('pez_comms')
-    fish_cfg = PathJoinSubstitution([share, 'config', 'fish_comms.yaml'])
-    host_cfg = PathJoinSubstitution([share, 'config', 'host_comms.yaml'])
+    fish_cfg = PathJoinSubstitution([share, 'config', 'fish_comms_test.yaml'])
+    host_cfg = PathJoinSubstitution([share, 'config', 'host_comms_test.yaml'])
 
     
     socat = ExecuteProcess(
@@ -29,8 +29,8 @@ def generate_launch_description():
     
     return LaunchDescription([
 
-        #socat
-        #socat_log
+        socat,
+        socat_log,
 
         # 2) wait for PTYs, then launch both
         TimerAction(

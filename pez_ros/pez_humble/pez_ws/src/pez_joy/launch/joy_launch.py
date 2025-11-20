@@ -58,8 +58,10 @@ def generate_launch_description() -> LaunchDescription:
         description="BlueROV joystick-mapping YAML.",
     )
     experiment_arg = DeclareLaunchArgument(
-        "experiment", default_value="false",
-        description="true → sustituye joy_node por experiment_launch.",
+        "experiment",
+        default_value="false",
+        choices=["false","cmd", "joy"],
+        description='Which executable to launch: "cmd" = command_player, "joy" = joy_player',
     )
 
     # handles
@@ -101,8 +103,9 @@ def generate_launch_description() -> LaunchDescription:
                 ),
                 launch_arguments={
                     "namespace": ns_name,
+                    "mode": experiment,
                 }.items(),
-                condition=IfCondition(PythonExpression(["'", experiment, "' == 'true'"]))
+                condition=IfCondition(PythonExpression(["'", experiment, "' != 'false'"]))
             ),
             Node(
                 package="pez_joy", executable="pez_joy",
@@ -134,5 +137,6 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription([
         robot_arg, comms_arg, fish_arg,
         joy_arg, ns_arg, teleop_cfg_arg,
+        experiment_arg,
         pez_group, bluerov_group,
     ])

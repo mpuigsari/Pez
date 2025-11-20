@@ -2,7 +2,7 @@
 ros__parameters:
   # 1) Serial port for fish side
   modem_io:
-    port: '/dev/ttyUSB0' #
+    port: '/tmp/pez_fish' #/dev/ttyUSB0 #
     baud: 9600
     timeout: 2
 

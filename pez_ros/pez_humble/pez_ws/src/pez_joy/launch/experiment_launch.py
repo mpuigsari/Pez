@@ -30,8 +30,8 @@ def generate_launch_description():
 
     mode_arg = DeclareLaunchArgument(
         "mode",
-        default_value="cmd",
-        choices=["cmd", "joy"],
+        default_value="joy",
+        choices=["false","cmd", "joy"],
         description='Which executable to launch: "cmd" = command_player, "joy" = joy_player',
     )
     timer_arg = DeclareLaunchArgument(
@@ -69,7 +69,7 @@ def generate_launch_description():
         executable="joy_player",
         name="joy_player",
         output="screen",
-        parameters=[{"timer_sec": timer_sec}],              # ← aquí
+        parameters=[{"timer_sec": timer_sec}],
         condition=IfCondition(PythonExpression(["'", mode, "' == 'joy'"])),
     )
     namespace_group = GroupAction(
