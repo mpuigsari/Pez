@@ -51,8 +51,8 @@ def register(node: Node, cfg: dict):
 
     # Timing parameters
     rate = float(cfg.get('broadcast_rate', 4.0))
-    ack_timeout = float(cfg.get('ack_timeout', 5.0))
-    svc_wait = float(cfg.get('svc_wait', 5.0))
+    ack_timeout = float(cfg.get('ack_timeout', 10.0))
+    svc_wait = float(cfg.get('svc_wait', 10.0))
     cam_id = int(cfg['camera_svc_id'])
 
     # Shared state
@@ -101,17 +101,30 @@ def register(node: Node, cfg: dict):
                     resp.success = False
                     resp.message = 'busy'
                     return resp
+                
+                ack_ready.clear()
+                ack_success = False
+
                 svc_cmd = (svc_id, val)
                 node.get_logger().info(
                     f"Service command queued: svc_id={svc_id}, value={val}")
+                
                 start = time.time()
                 while (rclpy.ok() and not ack_ready.is_set() and
                        (time.time() - start) < ack_timeout):
                     time.sleep(0.01)
-                resp.success = ack_success
-                resp.message = 'ack' if ack_success else 'nack'
-                node.get_logger().info(
-                    f"Service svc_id={svc_id} completed: success={ack_success}")
+
+                # Check if we timed out
+                if not ack_ready.is_set():
+                    node.get_logger().warn(
+                        f"Service svc_id={svc_id} timed out after {ack_timeout}s")
+                    resp.success = False
+                    resp.message = 'timeout'
+                else:
+                    resp.success = ack_success
+                    resp.message = 'ack' if ack_success else 'nack'
+                    node.get_logger().info(
+                        f"Service svc_id={svc_id} completed: success={ack_success}")
                 return resp
             return handler
         # Create start/stop for sid=0, else single call
@@ -203,6 +216,8 @@ def register(node: Node, cfg: dict):
                 else:
                     sid, val = svc_cmd
                     last_seq = 1 - last_seq
+                    ack_ready.clear()
+
                     pkt = packetB.encode(seq=last_seq,
                                         service_id=sid,
                                         value=val)
@@ -226,6 +241,9 @@ def register(node: Node, cfg: dict):
             while rclpy.ok() and not stop_event.is_set():
                 if svc_cmd is not None:
                     sid, val = svc_cmd
+
+                    ack_ready.clear()
+
                     # pass raw floats into Packet40
                     pkt = packet40.encode(
                         seq=last_seq,
@@ -242,7 +260,6 @@ def register(node: Node, cfg: dict):
                     )
 
                     # wait for ACK/NACK
-                    ack_ready.clear()
                     start = time.time()
                     while (rclpy.ok() and not ack_ready.is_set() and
                         (time.time() - start) < svc_wait):

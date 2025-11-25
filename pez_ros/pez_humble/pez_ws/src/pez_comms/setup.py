@@ -28,6 +28,9 @@ setup(
             'launch/host_launch.py',
             'launch/test_launch.py',
         ]),
+        ('share/pez_comms/scripts', [
+            'src/pez_comms/core/serial_emulator.py',
+        ]),
     ],
     entry_points={
         'console_scripts': [

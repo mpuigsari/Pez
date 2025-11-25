@@ -4,7 +4,7 @@ ros__parameters:
   modem_io:
     port: '/tmp/pez_host' #/dev/ttyUSB0 #
     baud: 9600
-    timeout: 2
+    timeout: 3
 
   # 2) Teleop axes (used by legacy A_NORMAL)
   x: 0.0
@@ -32,5 +32,5 @@ ros__parameters:
           "2": teleoperation/toggle_neutral
         camera_svc_id:   3
         broadcast_rate:  1.0            # Hz for legacy A_NORMAL
-        ack_timeout:     5.0            # secs to wait for Packet B
-        svc_wait:        5.0            # secs to wait for fish ACK
+        ack_timeout:     10.0            # secs to wait for Packet B
+        svc_wait:        10.0            # secs to wait for fish ACK

@@ -188,7 +188,7 @@ class JoystickController(Node):
         self.prev_neutral_btn = n_btn
 
     def call_service(self, client, name):
-        if not client.wait_for_service(timeout_sec=5.0):
+        if not client.wait_for_service(timeout_sec=10.0):
             self.get_logger().error(f"{name} service not available")
             return
 
